@@ -3,15 +3,18 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
 import { UserProfile, Achievement } from '../types';
-import { getXPForLevel, getTitleForLevel } from '../utils/levels';
+import { getXPForLevel, getTitleForLevel, calculateLevelFromTotalXP } from '../utils/levels';
 
 interface UserState {
   profile: UserProfile;
   achievements: Achievement[];
   addXP: (amount: number) => void;
+  removeXP: (amount: number) => void;
   addTokens: (amount: number) => void;
+  removeTokens: (amount: number) => void;
   spendTokens: (amount: number) => boolean;
   incrementHabitsCompleted: () => void;
+  decrementHabitsCompleted: () => void;
   incrementMissionsCompleted: () => void;
   updateStreak: (streak: number) => void;
   unlockAchievement: (achievementId: string) => void;
@@ -147,12 +150,39 @@ export const useUserStore = create<UserState>()(
           };
         }),
 
+      removeXP: (amount: number) =>
+        set((state) => {
+          const totalXPEarned = Math.max(0, state.profile.totalXPEarned - amount);
+          const { level, currentXP, xpToNextLevel } = calculateLevelFromTotalXP(totalXPEarned);
+          const title = getTitleForLevel(level);
+
+          return {
+            profile: {
+              ...state.profile,
+              level,
+              currentXP,
+              xpToNextLevel,
+              totalXPEarned,
+              title,
+            },
+          };
+        }),
+
       addTokens: (amount: number) =>
         set((state) => ({
           profile: {
             ...state.profile,
             tokens: state.profile.tokens + amount,
             totalTokensEarned: state.profile.totalTokensEarned + amount,
+          },
+        })),
+
+      removeTokens: (amount: number) =>
+        set((state) => ({
+          profile: {
+            ...state.profile,
+            tokens: Math.max(0, state.profile.tokens - amount),
+            totalTokensEarned: Math.max(0, state.profile.totalTokensEarned - amount),
           },
         })),
 
@@ -179,6 +209,14 @@ export const useUserStore = create<UserState>()(
           profile: {
             ...state.profile,
             totalHabitsCompleted: state.profile.totalHabitsCompleted + 1,
+          },
+        })),
+
+      decrementHabitsCompleted: () =>
+        set((state) => ({
+          profile: {
+            ...state.profile,
+            totalHabitsCompleted: Math.max(0, state.profile.totalHabitsCompleted - 1),
           },
         })),
 

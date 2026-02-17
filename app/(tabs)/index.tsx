@@ -44,8 +44,11 @@ export default function HomeScreen() {
   const toggleHabitCompletion = useHabitStore((s) => s.toggleHabitCompletion);
   const addHabit = useHabitStore((s) => s.addHabit);
   const addXP = useUserStore((s) => s.addXP);
+  const removeXP = useUserStore((s) => s.removeXP);
   const addTokens = useUserStore((s) => s.addTokens);
+  const removeTokens = useUserStore((s) => s.removeTokens);
   const incrementHabitsCompleted = useUserStore((s) => s.incrementHabitsCompleted);
+  const decrementHabitsCompleted = useUserStore((s) => s.decrementHabitsCompleted);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [newHabitName, setNewHabitName] = useState('');
@@ -63,10 +66,16 @@ export default function HomeScreen() {
 
   const handleToggle = (habitId: string) => {
     const { completed, habit } = toggleHabitCompletion(habitId, today);
-    if (completed && habit) {
-      addXP(habit.xpReward);
-      addTokens(habit.tokenReward);
-      incrementHabitsCompleted();
+    if (habit) {
+      if (completed) {
+        addXP(habit.xpReward);
+        addTokens(habit.tokenReward);
+        incrementHabitsCompleted();
+      } else {
+        removeXP(habit.xpReward);
+        removeTokens(habit.tokenReward);
+        decrementHabitsCompleted();
+      }
     }
   };
 
