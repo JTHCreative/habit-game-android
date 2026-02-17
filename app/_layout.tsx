@@ -3,12 +3,13 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import AtomicSplash from '@/src/components/common/AtomicSplash';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -23,6 +24,7 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     if (error) throw error;
@@ -30,15 +32,26 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
+      // Hide the native splash screen once fonts are ready;
+      // our custom animated splash takes over from here
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  const handleSplashFinish = useCallback(() => {
+    setShowSplash(false);
+  }, []);
 
   if (!loaded) {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <>
+      <RootLayoutNav />
+      {showSplash && <AtomicSplash onFinish={handleSplashFinish} />}
+    </>
+  );
 }
 
 function RootLayoutNav() {
