@@ -84,7 +84,7 @@ export default function ProfileScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.profileHeader}
         >
-          <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.7}>
+          <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.7} style={styles.avatarWrapper}>
             <View style={styles.avatarLarge}>
               {profile.profileImageUri ? (
                 <Image
@@ -94,9 +94,9 @@ export default function ProfileScreen() {
               ) : (
                 <FontAwesome name="user" size={48} color="#D4A44C" />
               )}
-              <View style={styles.cameraIcon}>
-                <FontAwesome name="camera" size={12} color="#FFF" />
-              </View>
+            </View>
+            <View style={styles.cameraIcon}>
+              <FontAwesome name="camera" size={12} color="#FFF" />
             </View>
           </TouchableOpacity>
           <View style={styles.nameRow}>
@@ -298,6 +298,10 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: borderRadius.xl,
     borderBottomRightRadius: borderRadius.xl,
   },
+  avatarWrapper: {
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
   avatarLarge: {
     width: 88,
     height: 88,
@@ -305,7 +309,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
     borderWidth: 3,
     borderColor: '#D4A44C',
     overflow: 'hidden',
@@ -318,7 +321,7 @@ const styles = StyleSheet.create({
   cameraIcon: {
     position: 'absolute',
     bottom: 0,
-    right: 0,
+    right: 16,
     backgroundColor: '#D4A44C',
     width: 28,
     height: 28,
