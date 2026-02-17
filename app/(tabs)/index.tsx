@@ -64,6 +64,9 @@ export default function HomeScreen() {
   const [newHabitDescription, setNewHabitDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<HabitCategory>('health');
   const [selectedFrequency, setSelectedFrequency] = useState<HabitFrequency>('daily');
+  const [customTokenReward, setCustomTokenReward] = useState('10');
+  const [customXPReward, setCustomXPReward] = useState('15');
+  const [showRewardInputs, setShowRewardInputs] = useState(false);
 
   const activeHabits = habits.filter((h) => h.isActive);
   const completedToday = activeHabits.filter((h) =>
@@ -125,8 +128,8 @@ export default function HomeScreen() {
       category: selectedCategory,
       frequency: selectedFrequency,
       targetCount: 1,
-      tokenReward: 10,
-      xpReward: 15,
+      tokenReward: parseInt(customTokenReward, 10) || 10,
+      xpReward: parseInt(customXPReward, 10) || 15,
       icon: HABIT_CATEGORY_ICONS[selectedCategory] || 'star',
       color: HABIT_CATEGORY_COLORS[selectedCategory] || '#D4A44C',
     });
@@ -134,6 +137,9 @@ export default function HomeScreen() {
     setNewHabitDescription('');
     setSelectedCategory('health');
     setSelectedFrequency('daily');
+    setCustomTokenReward('10');
+    setCustomXPReward('15');
+    setShowRewardInputs(false);
     setShowAddModal(false);
   };
 
@@ -342,25 +348,86 @@ export default function HomeScreen() {
               {FREQUENCIES.find((f) => f.value === selectedFrequency)?.description}
             </Text>
 
-            <View style={[styles.rewardPreview, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-              <Text style={[styles.rewardPreviewTitle, { color: colors.text }]}>
-                Rewards per completion
-              </Text>
+            <TouchableOpacity
+              style={[
+                styles.rewardPreview,
+                { backgroundColor: colors.surfaceElevated, borderColor: colors.border },
+                showRewardInputs && styles.rewardPreviewExpanded,
+              ]}
+              onPress={() => setShowRewardInputs(!showRewardInputs)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.rewardPreviewHeader}>
+                <Text style={[styles.rewardPreviewTitle, { color: colors.text }]}>
+                  Rewards per completion
+                </Text>
+                <FontAwesome
+                  name={showRewardInputs ? 'chevron-up' : 'chevron-down'}
+                  size={12}
+                  color={colors.textSecondary}
+                />
+              </View>
               <View style={styles.rewardPreviewRow}>
                 <View style={styles.rewardItem}>
                   <FontAwesome name="diamond" size={16} color="#D4A44C" />
                   <Text style={[styles.rewardValue, { color: colors.text }]}>
-                    10 Tokens
+                    {customTokenReward || '0'} Tokens
                   </Text>
                 </View>
                 <View style={styles.rewardItem}>
                   <FontAwesome name="bolt" size={16} color="#E87D2F" />
                   <Text style={[styles.rewardValue, { color: colors.text }]}>
-                    15 XP
+                    {customXPReward || '0'} XP
                   </Text>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
+            {showRewardInputs && (
+              <View style={[styles.rewardInputsContainer, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+                <View style={styles.rewardInputRow}>
+                  <FontAwesome name="diamond" size={16} color="#D4A44C" />
+                  <Text style={[styles.rewardInputLabel, { color: colors.textSecondary }]}>
+                    Tokens
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.rewardInput,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        color: colors.text,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                    value={customTokenReward}
+                    onChangeText={(text) => setCustomTokenReward(text.replace(/[^0-9]/g, ''))}
+                    keyboardType="number-pad"
+                    placeholder="10"
+                    placeholderTextColor={colors.textMuted}
+                  />
+                </View>
+                <View style={styles.rewardInputRow}>
+                  <FontAwesome name="bolt" size={16} color="#E87D2F" />
+                  <Text style={[styles.rewardInputLabel, { color: colors.textSecondary }]}>
+                    XP
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.rewardInput,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        color: colors.text,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                    value={customXPReward}
+                    onChangeText={(text) => setCustomXPReward(text.replace(/[^0-9]/g, ''))}
+                    keyboardType="number-pad"
+                    placeholder="15"
+                    placeholderTextColor={colors.textMuted}
+                  />
+                </View>
+              </View>
+            )}
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -490,10 +557,20 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     borderWidth: 1,
   },
+  rewardPreviewExpanded: {
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    marginBottom: 0,
+  },
+  rewardPreviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
   rewardPreviewTitle: {
     fontSize: fontSize.sm,
     fontWeight: '600',
-    marginBottom: spacing.sm,
   },
   rewardPreviewRow: {
     flexDirection: 'row',
@@ -507,5 +584,32 @@ const styles = StyleSheet.create({
   rewardValue: {
     fontSize: fontSize.md,
     fontWeight: '600',
+  },
+  rewardInputsContainer: {
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    gap: spacing.md,
+  },
+  rewardInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  rewardInputLabel: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    width: 55,
+  },
+  rewardInput: {
+    flex: 1,
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    fontSize: fontSize.md,
+    borderWidth: 1,
+    textAlign: 'center',
   },
 });
