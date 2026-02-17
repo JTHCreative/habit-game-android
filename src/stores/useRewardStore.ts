@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { v4 as uuidv4 } from 'uuid';
+import * as Crypto from 'expo-crypto';
 import { Reward } from '../types';
 
 interface RewardState {
@@ -108,7 +108,7 @@ export const useRewardStore = create<RewardState>()(
             ...state.rewards,
             {
               ...rewardData,
-              id: uuidv4(),
+              id: Crypto.randomUUID(),
               isPurchased: false,
               isRedeemed: false,
             },

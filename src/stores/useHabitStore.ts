@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { v4 as uuidv4 } from 'uuid';
+import * as Crypto from 'expo-crypto';
 import { format } from 'date-fns';
 import { Habit, HabitCategory, HabitFrequency } from '../types';
 import { HABIT_CATEGORY_COLORS } from '../utils/levels';
@@ -25,7 +25,7 @@ export const useHabitStore = create<HabitState>()(
       addHabit: (habitData) => {
         const newHabit: Habit = {
           ...habitData,
-          id: uuidv4(),
+          id: Crypto.randomUUID(),
           createdAt: new Date().toISOString(),
           completedDates: [],
           currentStreak: 0,

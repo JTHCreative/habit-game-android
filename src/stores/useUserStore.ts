@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { v4 as uuidv4 } from 'uuid';
+import * as Crypto from 'expo-crypto';
 import { UserProfile, Achievement } from '../types';
 import { getXPForLevel, getTitleForLevel } from '../utils/levels';
 
@@ -95,7 +95,7 @@ const DEFAULT_ACHIEVEMENTS: Achievement[] = [
 
 function createDefaultProfile(): UserProfile {
   return {
-    id: uuidv4(),
+    id: Crypto.randomUUID(),
     displayName: 'Adventurer',
     level: 1,
     currentXP: 0,
