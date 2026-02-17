@@ -16,7 +16,7 @@ export function XPBadge({ amount, size = 'medium' }: XPBadgeProps) {
 
   return (
     <LinearGradient
-      colors={gradients.primary}
+      colors={gradients.secondary}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={[

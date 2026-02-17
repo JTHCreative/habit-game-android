@@ -67,10 +67,10 @@ export const HABIT_CATEGORY_COLORS: Record<string, string> = {
 };
 
 export const MISSION_DIFFICULTY_COLORS: Record<string, string> = {
-  easy: '#10B981',
-  medium: '#F59E0B',
-  hard: '#EF4444',
-  legendary: '#8B5CF6',
+  easy: '#4CAF50',
+  medium: '#D4A44C',
+  hard: '#E87D2F',
+  legendary: '#C25B28',
 };
 
 export const MISSION_DIFFICULTY_TOKENS: Record<string, number> = {

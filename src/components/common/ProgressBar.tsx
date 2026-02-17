@@ -13,8 +13,8 @@ interface ProgressBarProps {
 export function ProgressBar({
   progress,
   height = 8,
-  gradientColors = ['#6C5CE7', '#A29BFE'],
-  backgroundColor = '#E9ECEF',
+  gradientColors = ['#D4A44C', '#E8C97A'],
+  backgroundColor = '#2D2D47',
 }: ProgressBarProps) {
   const clampedProgress = Math.min(Math.max(progress, 0), 1);
 

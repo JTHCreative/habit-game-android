@@ -43,9 +43,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="missions"
+        name="challenges"
         options={{
-          title: 'Missions',
+          title: 'Challenges',
           tabBarIcon: ({ color }) => (
             <TabBarIcon name="crosshairs" color={color} />
           ),

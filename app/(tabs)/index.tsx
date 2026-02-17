@@ -81,7 +81,7 @@ export default function HomeScreen() {
       tokenReward: 10,
       xpReward: 15,
       icon: HABIT_CATEGORY_ICONS[selectedCategory] || 'star',
-      color: HABIT_CATEGORY_COLORS[selectedCategory] || '#6C5CE7',
+      color: HABIT_CATEGORY_COLORS[selectedCategory] || '#D4A44C',
     });
     setNewHabitName('');
     setNewHabitDescription('');
@@ -258,13 +258,13 @@ export default function HomeScreen() {
               </Text>
               <View style={styles.rewardPreviewRow}>
                 <View style={styles.rewardItem}>
-                  <FontAwesome name="diamond" size={16} color="#FDCB6E" />
+                  <FontAwesome name="diamond" size={16} color="#D4A44C" />
                   <Text style={[styles.rewardValue, { color: colors.text }]}>
                     10 Tokens
                   </Text>
                 </View>
                 <View style={styles.rewardItem}>
-                  <FontAwesome name="bolt" size={16} color="#6C5CE7" />
+                  <FontAwesome name="bolt" size={16} color="#E87D2F" />
                   <Text style={[styles.rewardValue, { color: colors.text }]}>
                     15 XP
                   </Text>
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
+    borderBottomColor: '#3A3A55',
   },
   modalCancel: {
     fontSize: fontSize.md,

@@ -11,11 +11,11 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Reward } from '@/src/types';
 
 const REWARD_CATEGORY_COLORS: Record<string, string> = {
-  self_care: '#A29BFE',
-  entertainment: '#74B9FF',
-  treat: '#FD79A8',
-  experience: '#00CEC9',
-  custom: '#FDCB6E',
+  self_care: '#E8C97A',
+  entertainment: '#E87D2F',
+  treat: '#F0A060',
+  experience: '#D4A44C',
+  custom: '#CF6B30',
 };
 
 const REWARD_ICONS: Record<string, React.ComponentProps<typeof FontAwesome>['name']> = {
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#E9ECEF',
+    borderTopColor: '#3A3A55',
   },
   button: {
     flexDirection: 'row',

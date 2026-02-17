@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
+    borderBottomColor: '#3A3A55',
   },
   modalCancel: {
     fontSize: fontSize.md,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, ScrollView, View } from 'react-native';
+import { StyleSheet, ScrollView, View, TouchableOpacity, Image, Alert } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Card } from '@/src/components/common/Card';
 import { ProgressBar } from '@/src/components/common/ProgressBar';
@@ -10,11 +10,13 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const profile = useUserStore((s) => s.profile);
+  const setProfileImage = useUserStore((s) => s.setProfileImage);
   const achievements = useUserStore((s) => s.achievements);
   const habits = useHabitStore((s) => s.habits);
 
@@ -26,6 +28,28 @@ export default function ProfileScreen() {
   const xpProgress = profile.xpToNextLevel > 0
     ? profile.currentXP / profile.xpToNextLevel
     : 0;
+
+  const handleAvatarPress = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission Required',
+        'Please allow access to your photo library to set a profile picture.'
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setProfileImage(result.assets[0].uri);
+    }
+  };
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -39,9 +63,21 @@ export default function ProfileScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.profileHeader}
         >
-          <View style={styles.avatarLarge}>
-            <FontAwesome name="user" size={48} color="#6C5CE7" />
-          </View>
+          <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.7}>
+            <View style={styles.avatarLarge}>
+              {profile.profileImageUri ? (
+                <Image
+                  source={{ uri: profile.profileImageUri }}
+                  style={styles.avatarImage}
+                />
+              ) : (
+                <FontAwesome name="user" size={48} color="#D4A44C" />
+              )}
+              <View style={styles.cameraIcon}>
+                <FontAwesome name="camera" size={12} color="#FFF" />
+              </View>
+            </View>
+          </TouchableOpacity>
           <Text style={styles.profileName}>{profile.displayName}</Text>
           <Text style={styles.profileTitle}>{profile.title}</Text>
           <View style={styles.levelSection}>
@@ -49,8 +85,8 @@ export default function ProfileScreen() {
             <ProgressBar
               progress={xpProgress}
               height={10}
-              gradientColors={['#FDCB6E', '#E17055']}
-              backgroundColor="rgba(255,255,255,0.2)"
+              gradientColors={['#D4A44C', '#E8C97A']}
+              backgroundColor="rgba(255,255,255,0.15)"
             />
             <Text style={styles.xpText}>
               {profile.currentXP} / {profile.xpToNextLevel} XP
@@ -73,7 +109,7 @@ export default function ProfileScreen() {
               </Text>
             </Card>
             <Card style={styles.statCard}>
-              <FontAwesome name="fire" size={24} color="#E17055" />
+              <FontAwesome name="fire" size={24} color="#E87D2F" />
               <Text style={[styles.statValue, { color: colors.text }]}>
                 {profile.longestStreak}
               </Text>
@@ -82,7 +118,7 @@ export default function ProfileScreen() {
               </Text>
             </Card>
             <Card style={styles.statCard}>
-              <FontAwesome name="diamond" size={24} color="#FDCB6E" />
+              <FontAwesome name="diamond" size={24} color="#D4A44C" />
               <Text style={[styles.statValue, { color: colors.text }]}>
                 {profile.totalTokensEarned}
               </Text>
@@ -91,12 +127,12 @@ export default function ProfileScreen() {
               </Text>
             </Card>
             <Card style={styles.statCard}>
-              <FontAwesome name="crosshairs" size={24} color={colors.primary} />
+              <FontAwesome name="crosshairs" size={24} color="#E87D2F" />
               <Text style={[styles.statValue, { color: colors.text }]}>
                 {profile.totalMissionsCompleted}
               </Text>
               <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                Missions
+                Challenges
               </Text>
             </Card>
           </View>
@@ -107,7 +143,7 @@ export default function ProfileScreen() {
           <ProgressBar
             progress={achievementProgress}
             height={6}
-            gradientColors={['#FDCB6E', '#E17055']}
+            gradientColors={['#D4A44C', '#E87D2F']}
             backgroundColor={colors.inputBackground}
           />
           <View style={styles.achievementGrid}>
@@ -118,7 +154,7 @@ export default function ProfileScreen() {
                   styles.achievementItem,
                   {
                     backgroundColor: achievement.isUnlocked
-                      ? colors.primary + '15'
+                      ? colors.primary + '20'
                       : colors.inputBackground,
                     borderColor: achievement.isUnlocked
                       ? colors.primary
@@ -130,7 +166,7 @@ export default function ProfileScreen() {
                   name={achievement.isUnlocked ? 'trophy' : 'lock'}
                   size={20}
                   color={
-                    achievement.isUnlocked ? '#FDCB6E' : colors.textMuted
+                    achievement.isUnlocked ? '#D4A44C' : colors.textMuted
                   }
                 />
                 <Text
@@ -219,12 +255,31 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
     borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.5)',
+    borderColor: '#D4A44C',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+  },
+  cameraIcon: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#D4A44C',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#2A2A3D',
   },
   profileName: {
     color: '#FFF',
@@ -232,7 +287,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   profileTitle: {
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.7)',
     fontSize: fontSize.md,
     fontWeight: '500',
     marginBottom: spacing.lg,
@@ -248,7 +303,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   xpText: {
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.6)',
     fontSize: fontSize.xs,
     textAlign: 'center',
   },

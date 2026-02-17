@@ -70,7 +70,7 @@ export function HabitCard({ habit, onToggle, date }: HabitCardProps) {
             </View>
             {habit.currentStreak > 0 && (
               <View style={styles.streakBadge}>
-                <FontAwesome name="fire" size={12} color="#E17055" />
+                <FontAwesome name="fire" size={12} color="#E87D2F" />
                 <Text style={[styles.streakText, { color: colors.textSecondary }]}>
                   {habit.currentStreak}
                 </Text>

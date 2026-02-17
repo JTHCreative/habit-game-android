@@ -83,6 +83,7 @@ export interface UserProfile {
   joinedAt: string;
   title: string;
   avatarId: string;
+  profileImageUri?: string;
 }
 
 export interface Achievement {

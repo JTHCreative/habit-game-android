@@ -36,7 +36,7 @@ export function MissionCard({ mission, onClaim }: MissionCardProps) {
   const isClaimed = mission.status === 'claimed';
 
   return (
-    <Card style={[styles.container, isClaimed && styles.claimed]}>
+    <Card style={[styles.container, isClaimed ? styles.claimed : undefined]}>
       <View style={styles.header}>
         <View
           style={[
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#E9ECEF',
+    borderTopColor: '#3A3A55',
   },
   rewardRow: {
     flexDirection: 'row',

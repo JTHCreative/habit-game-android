@@ -10,7 +10,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
-export default function MissionsScreen() {
+export default function ChallengesScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const profile = useUserStore((s) => s.profile);
@@ -46,8 +46,8 @@ export default function MissionsScreen() {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <FontAwesome name="crosshairs" size={28} color="#FFF" />
-          <Text style={styles.headerTitle}>Missions</Text>
+          <FontAwesome name="crosshairs" size={28} color="#D4A44C" />
+          <Text style={styles.headerTitle}>Challenges</Text>
           <Text style={styles.headerSubtitle}>
             Complete objectives to earn big rewards
           </Text>
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   headerSubtitle: {
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.6)',
     fontSize: fontSize.md,
   },
   scrollView: {
