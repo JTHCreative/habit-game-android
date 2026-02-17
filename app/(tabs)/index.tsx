@@ -60,6 +60,7 @@ export default function HomeScreen() {
   const decrementHabitsCompleted = useUserStore((s) => s.decrementHabitsCompleted);
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
   const [newHabitName, setNewHabitName] = useState('');
   const [newHabitDescription, setNewHabitDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<HabitCategory>('health');
@@ -67,6 +68,7 @@ export default function HomeScreen() {
   const [customTokenReward, setCustomTokenReward] = useState('10');
   const [customXPReward, setCustomXPReward] = useState('15');
   const [showRewardInputs, setShowRewardInputs] = useState(false);
+  const isEditing = editingHabitId !== null;
 
   const activeHabits = habits.filter((h) => h.isActive);
   const completedToday = activeHabits.filter((h) =>
@@ -120,19 +122,7 @@ export default function HomeScreen() {
     }
   };
 
-  const handleAddHabit = () => {
-    if (!newHabitName.trim()) return;
-    addHabit({
-      name: newHabitName.trim(),
-      description: newHabitDescription.trim(),
-      category: selectedCategory,
-      frequency: selectedFrequency,
-      targetCount: 1,
-      tokenReward: parseInt(customTokenReward, 10) || 10,
-      xpReward: parseInt(customXPReward, 10) || 15,
-      icon: HABIT_CATEGORY_ICONS[selectedCategory] || 'star',
-      color: HABIT_CATEGORY_COLORS[selectedCategory] || '#D4A44C',
-    });
+  const resetModal = () => {
     setNewHabitName('');
     setNewHabitDescription('');
     setSelectedCategory('health');
@@ -140,6 +130,50 @@ export default function HomeScreen() {
     setCustomTokenReward('10');
     setCustomXPReward('15');
     setShowRewardInputs(false);
+    setEditingHabitId(null);
+  };
+
+  const handleOpenEdit = (habitId: string) => {
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) return;
+    setEditingHabitId(habitId);
+    setNewHabitName(habit.name);
+    setNewHabitDescription(habit.description);
+    setSelectedCategory(habit.category);
+    setSelectedFrequency(habit.frequency);
+    setCustomTokenReward(String(habit.tokenReward));
+    setCustomXPReward(String(habit.xpReward));
+    setShowRewardInputs(false);
+    setShowAddModal(true);
+  };
+
+  const handleSave = () => {
+    if (!newHabitName.trim()) return;
+    if (isEditing) {
+      updateHabit(editingHabitId, {
+        name: newHabitName.trim(),
+        description: newHabitDescription.trim(),
+        category: selectedCategory,
+        frequency: selectedFrequency,
+        tokenReward: parseInt(customTokenReward, 10) || 10,
+        xpReward: parseInt(customXPReward, 10) || 15,
+        icon: HABIT_CATEGORY_ICONS[selectedCategory] || 'star',
+        color: HABIT_CATEGORY_COLORS[selectedCategory] || '#D4A44C',
+      });
+    } else {
+      addHabit({
+        name: newHabitName.trim(),
+        description: newHabitDescription.trim(),
+        category: selectedCategory,
+        frequency: selectedFrequency,
+        targetCount: 1,
+        tokenReward: parseInt(customTokenReward, 10) || 10,
+        xpReward: parseInt(customXPReward, 10) || 15,
+        icon: HABIT_CATEGORY_ICONS[selectedCategory] || 'star',
+        color: HABIT_CATEGORY_COLORS[selectedCategory] || '#D4A44C',
+      });
+    }
+    resetModal();
     setShowAddModal(false);
   };
 
@@ -164,7 +198,7 @@ export default function HomeScreen() {
             </View>
             <TouchableOpacity
               style={[styles.addButton, { backgroundColor: colors.primary }]}
-              onPress={() => setShowAddModal(true)}
+              onPress={() => { resetModal(); setShowAddModal(true); }}
             >
               <FontAwesome name="plus" size={16} color="#FFF" />
             </TouchableOpacity>
@@ -187,6 +221,7 @@ export default function HomeScreen() {
                 habit={habit}
                 date={today}
                 onToggle={() => handleToggle(habit.id)}
+                onLongPress={() => handleOpenEdit(habit.id)}
               />
             ))
           )}
@@ -197,21 +232,21 @@ export default function HomeScreen() {
         visible={showAddModal}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setShowAddModal(false)}
+        onRequestClose={() => { resetModal(); setShowAddModal(false); }}
       >
         <SafeAreaView
           style={[styles.modalContainer, { backgroundColor: colors.background }]}
         >
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowAddModal(false)}>
+            <TouchableOpacity onPress={() => { resetModal(); setShowAddModal(false); }}>
               <Text style={[styles.modalCancel, { color: colors.textSecondary }]}>
                 Cancel
               </Text>
             </TouchableOpacity>
             <Text style={[styles.modalTitle, { color: colors.text }]}>
-              New Habit
+              {isEditing ? 'Edit Habit' : 'New Habit'}
             </Text>
-            <TouchableOpacity onPress={handleAddHabit}>
+            <TouchableOpacity onPress={handleSave}>
               <Text
                 style={[
                   styles.modalSave,
@@ -227,7 +262,10 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.modalBody}>
+          <ScrollView
+            style={styles.modalBody}
+            contentContainerStyle={styles.modalBodyContent}
+          >
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
               Habit Name
             </Text>
@@ -512,6 +550,9 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     padding: spacing.lg,
+  },
+  modalBodyContent: {
+    paddingBottom: spacing.xxl * 2,
   },
   inputLabel: {
     fontSize: fontSize.sm,

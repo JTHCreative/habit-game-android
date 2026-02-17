@@ -26,10 +26,11 @@ const FREQUENCY_COLORS: Record<string, string> = {
 interface HabitCardProps {
   habit: Habit;
   onToggle: () => void;
+  onLongPress?: () => void;
   date?: string;
 }
 
-export function HabitCard({ habit, onToggle }: HabitCardProps) {
+export function HabitCard({ habit, onToggle, onLongPress }: HabitCardProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const isCompleted = isHabitCompletedForPeriod(habit.frequency, habit.completedDates);
@@ -41,6 +42,8 @@ export function HabitCard({ habit, onToggle }: HabitCardProps) {
       <TouchableOpacity
         style={styles.row}
         onPress={onToggle}
+        onLongPress={onLongPress}
+        delayLongPress={400}
         activeOpacity={0.7}
       >
         <TouchableOpacity
