@@ -18,6 +18,7 @@ interface UserState {
   incrementMissionsCompleted: () => void;
   updateStreak: (streak: number) => void;
   unlockAchievement: (achievementId: string) => void;
+  setDisplayName: (name: string) => void;
   setProfileImage: (uri: string) => void;
   resetProfile: () => void;
 }
@@ -244,6 +245,14 @@ export const useUserStore = create<UserState>()(
               ? { ...a, isUnlocked: true, unlockedAt: new Date().toISOString() }
               : a
           ),
+        })),
+
+      setDisplayName: (name: string) =>
+        set((state) => ({
+          profile: {
+            ...state.profile,
+            displayName: name,
+          },
         })),
 
       setProfileImage: (uri: string) =>

@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, ScrollView, View, TouchableOpacity, Image, Alert } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { StyleSheet, ScrollView, View, TouchableOpacity, Image, Alert, TextInput } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Card } from '@/src/components/common/Card';
 import { ProgressBar } from '@/src/components/common/ProgressBar';
@@ -17,8 +17,13 @@ export default function ProfileScreen() {
   const colors = Colors[colorScheme];
   const profile = useUserStore((s) => s.profile);
   const setProfileImage = useUserStore((s) => s.setProfileImage);
+  const setDisplayName = useUserStore((s) => s.setDisplayName);
   const achievements = useUserStore((s) => s.achievements);
   const habits = useHabitStore((s) => s.habits);
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(profile.displayName);
+  const nameInputRef = useRef<TextInput>(null);
 
   const unlockedAchievements = achievements.filter((a) => a.isUnlocked);
   const achievementProgress = achievements.length > 0
@@ -51,6 +56,22 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleEditName = () => {
+    setEditedName(profile.displayName);
+    setIsEditingName(true);
+    setTimeout(() => nameInputRef.current?.focus(), 100);
+  };
+
+  const handleSaveName = () => {
+    const trimmed = editedName.trim();
+    if (trimmed.length > 0) {
+      setDisplayName(trimmed);
+    } else {
+      setEditedName(profile.displayName);
+    }
+    setIsEditingName(false);
+  };
+
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <ScrollView
@@ -78,7 +99,33 @@ export default function ProfileScreen() {
               </View>
             </View>
           </TouchableOpacity>
-          <Text style={styles.profileName}>{profile.displayName}</Text>
+          <View style={styles.nameRow}>
+            {isEditingName ? (
+              <TextInput
+                ref={nameInputRef}
+                style={styles.nameInput}
+                value={editedName}
+                onChangeText={setEditedName}
+                onBlur={handleSaveName}
+                onSubmitEditing={handleSaveName}
+                maxLength={20}
+                returnKeyType="done"
+                selectTextOnFocus
+              />
+            ) : (
+              <Text style={styles.profileName}>{profile.displayName}</Text>
+            )}
+            <TouchableOpacity
+              onPress={isEditingName ? handleSaveName : handleEditName}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <FontAwesome
+                name={isEditingName ? 'check' : 'pencil'}
+                size={16}
+                color="rgba(255,255,255,0.6)"
+              />
+            </TouchableOpacity>
+          </View>
           <Text style={styles.profileTitle}>{profile.title}</Text>
           <View style={styles.levelSection}>
             <Text style={styles.levelLabel}>Level {profile.level}</Text>
@@ -280,6 +327,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#2A2A3D',
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  nameInput: {
+    color: '#FFF',
+    fontSize: fontSize.xxl,
+    fontWeight: '800',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.4)',
+    paddingVertical: 0,
+    paddingHorizontal: 2,
+    minWidth: 100,
   },
   profileName: {
     color: '#FFF',
