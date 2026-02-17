@@ -342,6 +342,7 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
     paddingHorizontal: 2,
     minWidth: 100,
+    textAlign: 'center',
   },
   profileName: {
     color: '#FFF',
