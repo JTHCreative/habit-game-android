@@ -7,6 +7,7 @@ import { Reward } from '../types';
 interface RewardState {
   rewards: Reward[];
   addReward: (reward: Omit<Reward, 'id' | 'isPurchased' | 'isRedeemed'>) => void;
+  updateReward: (id: string, updates: Partial<Pick<Reward, 'name' | 'description' | 'tokenCost' | 'category'>>) => void;
   removeReward: (id: string) => void;
   purchaseReward: (id: string) => void;
   redeemReward: (id: string) => void;
@@ -113,6 +114,13 @@ export const useRewardStore = create<RewardState>()(
               isRedeemed: false,
             },
           ],
+        })),
+
+      updateReward: (id, updates) =>
+        set((state) => ({
+          rewards: state.rewards.map((r) =>
+            r.id === id ? { ...r, ...updates } : r
+          ),
         })),
 
       removeReward: (id) =>

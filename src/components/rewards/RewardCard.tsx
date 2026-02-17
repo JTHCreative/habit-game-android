@@ -34,6 +34,7 @@ interface RewardCardProps {
   canAfford: boolean;
   onPurchase?: () => void;
   onRedeem?: () => void;
+  onLongPress?: () => void;
 }
 
 export function RewardCard({
@@ -41,6 +42,7 @@ export function RewardCard({
   canAfford,
   onPurchase,
   onRedeem,
+  onLongPress,
 }: RewardCardProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
@@ -48,6 +50,11 @@ export function RewardCard({
   const iconName = REWARD_ICONS[reward.icon] || 'star';
 
   return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onLongPress={onLongPress}
+      delayLongPress={400}
+    >
     <Card style={styles.container}>
       <View style={styles.row}>
         <View
@@ -114,6 +121,7 @@ export function RewardCard({
         )}
       </View>
     </Card>
+    </TouchableOpacity>
   );
 }
 

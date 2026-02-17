@@ -39,8 +39,12 @@ export default function RewardsScreen() {
   const purchaseReward = useRewardStore((s) => s.purchaseReward);
   const redeemReward = useRewardStore((s) => s.redeemReward);
   const addReward = useRewardStore((s) => s.addReward);
+  const updateReward = useRewardStore((s) => s.updateReward);
+  const removeReward = useRewardStore((s) => s.removeReward);
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingRewardId, setEditingRewardId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [newCost, setNewCost] = useState('100');
@@ -65,20 +69,53 @@ export default function RewardsScreen() {
     redeemReward(rewardId);
   };
 
-  const handleAddReward = () => {
-    if (!newName.trim()) return;
-    addReward({
-      name: newName.trim(),
-      description: newDescription.trim(),
-      tokenCost: parseInt(newCost, 10) || 100,
-      icon: 'star',
-      category: selectedCategory,
-    });
+  const resetModal = () => {
     setNewName('');
     setNewDescription('');
     setNewCost('100');
     setSelectedCategory('custom');
+    setIsEditing(false);
+    setEditingRewardId(null);
+  };
+
+  const handleEditReward = (reward: Reward) => {
+    setIsEditing(true);
+    setEditingRewardId(reward.id);
+    setNewName(reward.name);
+    setNewDescription(reward.description);
+    setNewCost(String(reward.tokenCost));
+    setSelectedCategory(reward.category);
+    setShowAddModal(true);
+  };
+
+  const handleSaveReward = () => {
+    if (!newName.trim()) return;
+    if (isEditing && editingRewardId) {
+      updateReward(editingRewardId, {
+        name: newName.trim(),
+        description: newDescription.trim(),
+        tokenCost: parseInt(newCost, 10) || 100,
+        category: selectedCategory,
+      });
+    } else {
+      addReward({
+        name: newName.trim(),
+        description: newDescription.trim(),
+        tokenCost: parseInt(newCost, 10) || 100,
+        icon: 'star',
+        category: selectedCategory,
+      });
+    }
+    resetModal();
     setShowAddModal(false);
+  };
+
+  const handleDeleteReward = () => {
+    if (editingRewardId) {
+      removeReward(editingRewardId);
+      resetModal();
+      setShowAddModal(false);
+    }
   };
 
   return (
@@ -142,7 +179,10 @@ export default function RewardsScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.addSmallButton, { backgroundColor: colors.primary }]}
-          onPress={() => setShowAddModal(true)}
+          onPress={() => {
+            resetModal();
+            setShowAddModal(true);
+          }}
         >
           <FontAwesome name="plus" size={14} color="#FFF" />
         </TouchableOpacity>
@@ -179,6 +219,7 @@ export default function RewardsScreen() {
               canAfford={profile.tokens >= reward.tokenCost}
               onPurchase={() => handlePurchase(reward.id)}
               onRedeem={() => handleRedeem(reward.id)}
+              onLongPress={() => handleEditReward(reward)}
             />
           ))
         )}
@@ -188,21 +229,27 @@ export default function RewardsScreen() {
         visible={showAddModal}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setShowAddModal(false)}
+        onRequestClose={() => {
+          resetModal();
+          setShowAddModal(false);
+        }}
       >
         <SafeAreaView
           style={[styles.modalContainer, { backgroundColor: colors.background }]}
         >
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowAddModal(false)}>
+            <TouchableOpacity onPress={() => {
+              resetModal();
+              setShowAddModal(false);
+            }}>
               <Text style={[styles.modalCancel, { color: colors.textSecondary }]}>
                 Cancel
               </Text>
             </TouchableOpacity>
             <Text style={[styles.modalTitle, { color: colors.text }]}>
-              New Reward
+              {isEditing ? 'Edit Reward' : 'New Reward'}
             </Text>
-            <TouchableOpacity onPress={handleAddReward}>
+            <TouchableOpacity onPress={handleSaveReward}>
               <Text
                 style={[
                   styles.modalSave,
@@ -313,6 +360,16 @@ export default function RewardsScreen() {
                 </TouchableOpacity>
               ))}
             </View>
+
+            {isEditing && (
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={handleDeleteReward}
+              >
+                <FontAwesome name="trash" size={16} color="#EF4444" />
+                <Text style={styles.deleteButtonText}>Delete Reward</Text>
+              </TouchableOpacity>
+            )}
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -456,5 +513,18 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     fontWeight: '600',
     textTransform: 'capitalize',
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xl,
+    paddingVertical: spacing.md,
+  },
+  deleteButtonText: {
+    color: '#EF4444',
+    fontSize: fontSize.md,
+    fontWeight: '600',
   },
 });
