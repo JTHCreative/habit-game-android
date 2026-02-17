@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: borderRadius.xl,
   },
   avatarWrapper: {
-    alignItems: 'center',
+    alignSelf: 'center',
     marginBottom: spacing.md,
   },
   avatarLarge: {
@@ -320,8 +320,8 @@ const styles = StyleSheet.create({
   },
   cameraIcon: {
     position: 'absolute',
-    bottom: 0,
-    right: 16,
+    bottom: -1,
+    right: -1,
     backgroundColor: '#D4A44C',
     width: 28,
     height: 28,
