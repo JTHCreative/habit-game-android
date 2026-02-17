@@ -52,6 +52,7 @@ export default function HomeScreen() {
   const toggleHabitCompletion = useHabitStore((s) => s.toggleHabitCompletion);
   const addHabit = useHabitStore((s) => s.addHabit);
   const updateHabit = useHabitStore((s) => s.updateHabit);
+  const removeHabit = useHabitStore((s) => s.removeHabit);
   const addXP = useUserStore((s) => s.addXP);
   const removeXP = useUserStore((s) => s.removeXP);
   const addTokens = useUserStore((s) => s.addTokens);
@@ -466,6 +467,19 @@ export default function HomeScreen() {
                 </View>
               </View>
             )}
+            {isEditing && (
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => {
+                  removeHabit(editingHabitId);
+                  resetModal();
+                  setShowAddModal(false);
+                }}
+              >
+                <FontAwesome name="trash" size={16} color="#EF4444" />
+                <Text style={styles.deleteButtonText}>Delete Habit</Text>
+              </TouchableOpacity>
+            )}
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -652,5 +666,18 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     borderWidth: 1,
     textAlign: 'center',
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xl,
+    paddingVertical: spacing.md,
+  },
+  deleteButtonText: {
+    color: '#EF4444',
+    fontSize: fontSize.md,
+    fontWeight: '600',
   },
 });
