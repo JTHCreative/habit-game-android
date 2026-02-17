@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { Text } from '@/components/Themed';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { format } from 'date-fns';
 import { PlayerHeader } from '@/src/components/profile/PlayerHeader';
 import { HabitCard } from '@/src/components/habits/HabitCard';
 import { useHabitStore } from '@/src/stores/useHabitStore';
@@ -18,10 +17,13 @@ import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { HabitCategory } from '@/src/types';
+import { HabitCategory, HabitFrequency } from '@/src/types';
 import {
   HABIT_CATEGORY_COLORS,
   HABIT_CATEGORY_ICONS,
+  getPSTDateString,
+  isHabitCompletedForPeriod,
+  getCompletedDateForCurrentPeriod,
 } from '@/src/utils/levels';
 
 const CATEGORIES: HabitCategory[] = [
@@ -35,14 +37,21 @@ const CATEGORIES: HabitCategory[] = [
   'custom',
 ];
 
+const FREQUENCIES: { value: HabitFrequency; label: string; description: string }[] = [
+  { value: 'daily', label: 'Daily', description: 'Resets daily at 12am PST' },
+  { value: 'weekly', label: 'Weekly', description: 'Resets Sundays at 12am PST' },
+  { value: 'one_time', label: 'One-time', description: 'Disappears when completed' },
+];
+
 export default function HomeScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
-  const today = format(new Date(), 'yyyy-MM-dd');
+  const today = getPSTDateString();
 
   const habits = useHabitStore((s) => s.habits);
   const toggleHabitCompletion = useHabitStore((s) => s.toggleHabitCompletion);
   const addHabit = useHabitStore((s) => s.addHabit);
+  const updateHabit = useHabitStore((s) => s.updateHabit);
   const addXP = useUserStore((s) => s.addXP);
   const removeXP = useUserStore((s) => s.removeXP);
   const addTokens = useUserStore((s) => s.addTokens);
@@ -54,10 +63,11 @@ export default function HomeScreen() {
   const [newHabitName, setNewHabitName] = useState('');
   const [newHabitDescription, setNewHabitDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<HabitCategory>('health');
+  const [selectedFrequency, setSelectedFrequency] = useState<HabitFrequency>('daily');
 
   const activeHabits = habits.filter((h) => h.isActive);
   const completedToday = activeHabits.filter((h) =>
-    h.completedDates.includes(today)
+    isHabitCompletedForPeriod(h.frequency, h.completedDates)
   );
   const completionRate =
     activeHabits.length > 0
@@ -65,16 +75,44 @@ export default function HomeScreen() {
       : 0;
 
   const handleToggle = (habitId: string) => {
-    const { completed, habit } = toggleHabitCompletion(habitId, today);
-    if (habit) {
-      if (completed) {
-        addXP(habit.xpReward);
-        addTokens(habit.tokenReward);
-        incrementHabitsCompleted();
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) return;
+
+    if (habit.frequency === 'weekly') {
+      const existingDate = getCompletedDateForCurrentPeriod(habit.frequency, habit.completedDates);
+      if (existingDate) {
+        // Un-mark: remove the date that was completed this week
+        const { completed, habit: updated } = toggleHabitCompletion(habitId, existingDate);
+        if (updated && !completed) {
+          removeXP(updated.xpReward);
+          removeTokens(updated.tokenReward);
+          decrementHabitsCompleted();
+        }
       } else {
-        removeXP(habit.xpReward);
-        removeTokens(habit.tokenReward);
-        decrementHabitsCompleted();
+        // Mark: add today's PST date
+        const { completed, habit: updated } = toggleHabitCompletion(habitId, today);
+        if (updated && completed) {
+          addXP(updated.xpReward);
+          addTokens(updated.tokenReward);
+          incrementHabitsCompleted();
+        }
+      }
+    } else {
+      // daily or one_time
+      const { completed, habit: updated } = toggleHabitCompletion(habitId, today);
+      if (updated) {
+        if (completed) {
+          addXP(updated.xpReward);
+          addTokens(updated.tokenReward);
+          incrementHabitsCompleted();
+          if (habit.frequency === 'one_time') {
+            updateHabit(habitId, { isActive: false });
+          }
+        } else {
+          removeXP(updated.xpReward);
+          removeTokens(updated.tokenReward);
+          decrementHabitsCompleted();
+        }
       }
     }
   };
@@ -85,7 +123,7 @@ export default function HomeScreen() {
       name: newHabitName.trim(),
       description: newHabitDescription.trim(),
       category: selectedCategory,
-      frequency: 'daily',
+      frequency: selectedFrequency,
       targetCount: 1,
       tokenReward: 10,
       xpReward: 15,
@@ -95,6 +133,7 @@ export default function HomeScreen() {
     setNewHabitName('');
     setNewHabitDescription('');
     setSelectedCategory('health');
+    setSelectedFrequency('daily');
     setShowAddModal(false);
   };
 
@@ -261,6 +300,48 @@ export default function HomeScreen() {
               ))}
             </View>
 
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              Frequency
+            </Text>
+            <View style={styles.categoryGrid}>
+              {FREQUENCIES.map((freq) => (
+                <TouchableOpacity
+                  key={freq.value}
+                  style={[
+                    styles.categoryChip,
+                    {
+                      backgroundColor:
+                        selectedFrequency === freq.value
+                          ? colors.primary
+                          : colors.inputBackground,
+                      borderColor:
+                        selectedFrequency === freq.value
+                          ? colors.primary
+                          : colors.border,
+                    },
+                  ]}
+                  onPress={() => setSelectedFrequency(freq.value)}
+                >
+                  <Text
+                    style={[
+                      styles.categoryChipText,
+                      {
+                        color:
+                          selectedFrequency === freq.value
+                            ? '#FFF'
+                            : colors.textSecondary,
+                      },
+                    ]}
+                  >
+                    {freq.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={[styles.frequencyDescription, { color: colors.textMuted }]}>
+              {FREQUENCIES.find((f) => f.value === selectedFrequency)?.description}
+            </Text>
+
             <View style={[styles.rewardPreview, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
               <Text style={[styles.rewardPreviewTitle, { color: colors.text }]}>
                 Rewards per completion
@@ -398,6 +479,10 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     fontWeight: '600',
     textTransform: 'capitalize',
+  },
+  frequencyDescription: {
+    fontSize: fontSize.xs,
+    marginTop: spacing.xs,
   },
   rewardPreview: {
     marginTop: spacing.xl,

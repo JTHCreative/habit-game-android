@@ -44,6 +44,51 @@ export function calculateLevelFromTotalXP(totalXP: number): {
   };
 }
 
+// --- PST date helpers for frequency-aware habit tracking ---
+
+export function getPSTDateString(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+}
+
+export function getPSTWeekStartString(): string {
+  const todayPST = getPSTDateString();
+  const [year, month, day] = todayPST.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const dayOfWeek = date.getDay(); // 0 = Sunday
+  date.setDate(date.getDate() - dayOfWeek);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+export function isHabitCompletedForPeriod(
+  frequency: 'one_time' | 'daily' | 'weekly',
+  completedDates: string[]
+): boolean {
+  if (frequency === 'one_time') {
+    return completedDates.length > 0;
+  }
+  if (frequency === 'weekly') {
+    const weekStart = getPSTWeekStartString();
+    return completedDates.some((d) => d >= weekStart);
+  }
+  // daily
+  return completedDates.includes(getPSTDateString());
+}
+
+export function getCompletedDateForCurrentPeriod(
+  frequency: 'one_time' | 'daily' | 'weekly',
+  completedDates: string[]
+): string | undefined {
+  if (frequency === 'weekly') {
+    const weekStart = getPSTWeekStartString();
+    return completedDates.find((d) => d >= weekStart);
+  }
+  const todayPST = getPSTDateString();
+  return completedDates.includes(todayPST) ? todayPST : undefined;
+}
+
 export const HABIT_CATEGORY_ICONS: Record<string, string> = {
   health: 'heart',
   fitness: 'dumbbell',

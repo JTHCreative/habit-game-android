@@ -1,4 +1,4 @@
-export type HabitFrequency = 'daily' | 'weekly' | 'monthly';
+export type HabitFrequency = 'one_time' | 'daily' | 'weekly';
 
 export type HabitCategory =
   | 'health'

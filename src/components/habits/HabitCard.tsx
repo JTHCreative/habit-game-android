@@ -5,12 +5,23 @@ import { Card } from '../common/Card';
 import { TokenBadge } from '../common/TokenBadge';
 import { XPBadge } from '../common/XPBadge';
 import { Habit } from '@/src/types';
-import { HABIT_CATEGORY_COLORS, HABIT_CATEGORY_ICONS } from '@/src/utils/levels';
+import { HABIT_CATEGORY_COLORS, isHabitCompletedForPeriod } from '@/src/utils/levels';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { format } from 'date-fns';
+
+const FREQUENCY_LABELS: Record<string, string> = {
+  one_time: 'One-time',
+  daily: 'Daily',
+  weekly: 'Weekly',
+};
+
+const FREQUENCY_COLORS: Record<string, string> = {
+  one_time: '#9CA3AF',
+  daily: '#3B82F6',
+  weekly: '#8B5CF6',
+};
 
 interface HabitCardProps {
   habit: Habit;
@@ -18,12 +29,12 @@ interface HabitCardProps {
   date?: string;
 }
 
-export function HabitCard({ habit, onToggle, date }: HabitCardProps) {
+export function HabitCard({ habit, onToggle }: HabitCardProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
-  const dateStr = date || format(new Date(), 'yyyy-MM-dd');
-  const isCompleted = habit.completedDates.includes(dateStr);
+  const isCompleted = isHabitCompletedForPeriod(habit.frequency, habit.completedDates);
   const categoryColor = HABIT_CATEGORY_COLORS[habit.category] || colors.primary;
+  const frequencyColor = FREQUENCY_COLORS[habit.frequency] || colors.textSecondary;
 
   return (
     <Card style={styles.container}>
@@ -66,6 +77,16 @@ export function HabitCard({ habit, onToggle, date }: HabitCardProps) {
             >
               <Text style={[styles.categoryText, { color: categoryColor }]}>
                 {habit.category}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.categoryBadge,
+                { backgroundColor: frequencyColor + '20' },
+              ]}
+            >
+              <Text style={[styles.categoryText, { color: frequencyColor }]}>
+                {FREQUENCY_LABELS[habit.frequency]}
               </Text>
             </View>
             {habit.currentStreak > 0 && (
