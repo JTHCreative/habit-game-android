@@ -1,13 +1,54 @@
 const TITLES: Record<number, string> = {
   1: 'Newcomer',
-  5: 'Apprentice',
-  10: 'Habit Builder',
-  15: 'Streak Master',
-  20: 'Discipline Knight',
-  25: 'Willpower Wizard',
-  30: 'Legendary Achiever',
-  40: 'Grand Champion',
-  50: 'Habit Overlord',
+  2: 'Day Starter',
+  3: 'Streak Seeker',
+  4: 'Intentional Actor',
+  5: 'Routine Recruit',
+  6: 'Habitualist',
+  7: 'Consistency Cadet',
+  8: 'Repeat Performer',
+  9: 'Focused Follower',
+  10: 'Daily Disciplinarian',
+  11: 'Pattern Finder',
+  12: 'Momentum Maker',
+  13: 'Standard Setter',
+  14: 'Systemic Student',
+  15: 'Steady State',
+  16: 'Iron-Willed',
+  17: 'Ritualist',
+  18: 'Method Actor',
+  19: 'Protocol Pilot',
+  20: 'The Architect',
+  21: 'Efficiency Expert',
+  22: 'Flow State',
+  23: 'Compound Gainer',
+  24: 'Optimization Lead',
+  25: 'Bio-Hacker',
+  26: 'Performance Pilot',
+  27: 'Discipline Director',
+  28: 'Logic Master',
+  29: 'System Sovereign',
+  30: 'Unshakable Professional',
+  31: 'Subconscious Striker',
+  32: 'Reflexive Leader',
+  33: 'Instinctualist',
+  34: 'Cognitive Commander',
+  35: 'High-Frequency Hero',
+  36: 'Neural Navigator',
+  37: 'Precision Pioneer',
+  38: 'Absolute Automator',
+  39: 'Grandmaster of Will',
+  40: 'The Catalyst',
+  41: 'Fission Of Focus',
+  42: 'Molecular Consistency',
+  43: 'Proton Pulse',
+  44: 'Isotope Individual',
+  45: 'Kinetic King',
+  46: 'Nucleus Navigator',
+  47: 'Quantum Controller',
+  48: 'Reactor Soul',
+  49: 'Singularity Specialist',
+  50: 'Atomic Legend',
 };
 
 export function getXPForLevel(level: number): number {
@@ -15,13 +56,8 @@ export function getXPForLevel(level: number): number {
 }
 
 export function getTitleForLevel(level: number): string {
-  let title = 'Newcomer';
-  for (const [lvl, t] of Object.entries(TITLES)) {
-    if (level >= Number(lvl)) {
-      title = t;
-    }
-  }
-  return title;
+  if (level >= 50) return TITLES[50];
+  return TITLES[level] ?? 'Newcomer';
 }
 
 export function calculateLevelFromTotalXP(totalXP: number): {
