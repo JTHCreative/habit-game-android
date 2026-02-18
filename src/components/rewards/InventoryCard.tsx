@@ -50,30 +50,19 @@ export function InventoryCard({ item, onRedeem }: InventoryCardProps) {
 
       <View style={styles.footer}>
         <View style={styles.footerLeft}>
-          {allRedeemed ? (
-            <View style={styles.redeemedBadge}>
-              <FontAwesome name="check-circle" size={14} color={MUTED_GREY} />
-              <Text style={[styles.redeemedText, { color: MUTED_GREY }]}>
-                Redeemed
+          {item.redeemedCount > 0 && (
+            <View style={styles.greenBadge}>
+              <FontAwesome name="check" size={10} color="#22C55E" />
+              <Text style={styles.greenBadgeText}>
+                {item.redeemedCount} redeemed
               </Text>
             </View>
-          ) : (
-            <>
-              {item.redeemedCount > 0 && (
-                <View style={styles.greenBadge}>
-                  <FontAwesome name="check" size={10} color="#22C55E" />
-                  <Text style={styles.greenBadgeText}>
-                    {item.redeemedCount} redeemed
-                  </Text>
-                </View>
-              )}
-              <View style={[styles.remainingBadge, { backgroundColor: categoryColor + '20' }]}>
-                <Text style={[styles.remainingText, { color: categoryColor }]}>
-                  {remaining} left {periodLabel}
-                </Text>
-              </View>
-            </>
           )}
+          <View style={[styles.remainingBadge, { backgroundColor: displayColor + '20' }]}>
+            <Text style={[styles.remainingText, { color: displayColor }]}>
+              {remaining} left {periodLabel}
+            </Text>
+          </View>
         </View>
 
         {allRedeemed ? (
