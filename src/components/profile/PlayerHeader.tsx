@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Image } from 'react-native';
+import { StyleSheet, View, Image, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/Themed';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ProgressBar } from '../common/ProgressBar';
@@ -8,9 +8,11 @@ import { useUserStore } from '@/src/stores/useUserStore';
 import { gradients } from '@/constants/Colors';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useRouter } from 'expo-router';
 
 export function PlayerHeader() {
   const profile = useUserStore((s) => s.profile);
+  const router = useRouter();
   const xpProgress = profile.xpToNextLevel > 0
     ? profile.currentXP / profile.xpToNextLevel
     : 0;
@@ -64,7 +66,11 @@ export function PlayerHeader() {
         />
       </View>
 
-      <View style={styles.statsRow}>
+      <TouchableOpacity
+        style={styles.statsRow}
+        activeOpacity={0.7}
+        onPress={() => router.push('/history')}
+      >
         <View style={styles.stat}>
           <FontAwesome name="fire" size={14} color="#E87D2F" />
           <Text style={styles.statValue}>{profile.currentStreak}</Text>
@@ -82,7 +88,7 @@ export function PlayerHeader() {
           <Text style={styles.statValue}>{profile.totalMissionsCompleted}</Text>
           <Text style={styles.statLabel}>Challenges</Text>
         </View>
-      </View>
+      </TouchableOpacity>
     </LinearGradient>
   );
 }
