@@ -50,7 +50,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Habits',
-          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="check-square-o" color={color} />,
         }}
       />
       <Tabs.Screen
