@@ -45,6 +45,7 @@ export interface MissionObjective {
   targetCount: number;
   currentCount: number;
   habitCategory?: HabitCategory;
+  trackStreak?: boolean;
 }
 
 export interface Mission {

@@ -21,6 +21,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DynamicIcon } from '@/src/components/common/DynamicIcon';
 import { HabitCategory, HabitFrequency } from '@/src/types';
 import { useCategoryStore, DEFAULT_CATEGORY_IDS } from '@/src/stores/useCustomCategoryStore';
+import { useMissionStore } from '@/src/stores/useMissionStore';
 import {
   getPSTDateString,
   isHabitCompletedForPeriod,
@@ -77,6 +78,9 @@ export default function HomeScreen() {
   const removeTokens = useUserStore((s) => s.removeTokens);
   const incrementHabitsCompleted = useUserStore((s) => s.incrementHabitsCompleted);
   const decrementHabitsCompleted = useUserStore((s) => s.decrementHabitsCompleted);
+
+  const onHabitCompleted = useMissionStore((s) => s.onHabitCompleted);
+  const onStreakUpdated = useMissionStore((s) => s.onStreakUpdated);
 
   const categories = useCategoryStore((s) => s.categories);
   const addCategory = useCategoryStore((s) => s.addCategory);
@@ -140,6 +144,8 @@ export default function HomeScreen() {
           addXP(updated.xpReward);
           addTokens(updated.tokenReward);
           incrementHabitsCompleted();
+          onHabitCompleted(habit.category);
+          onStreakUpdated(updated.currentStreak);
         }
       }
     } else {
@@ -150,6 +156,8 @@ export default function HomeScreen() {
           addXP(updated.xpReward);
           addTokens(updated.tokenReward);
           incrementHabitsCompleted();
+          onHabitCompleted(habit.category);
+          onStreakUpdated(updated.currentStreak);
           if (habit.frequency === 'one_time') {
             updateHabit(habitId, { isActive: false });
           }

@@ -46,7 +46,7 @@ export default function ChallengesScreen() {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <FontAwesome name="crosshairs" size={28} color="#D4A44C" />
+          <FontAwesome name="bullseye" size={28} color="#D4A44C" />
           <Text style={styles.headerTitle}>Challenges</Text>
           <Text style={styles.headerSubtitle}>
             Complete objectives to earn big rewards
