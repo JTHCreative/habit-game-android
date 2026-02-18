@@ -59,15 +59,16 @@ export default function RewardsScreen() {
   const [selectedCategory, setSelectedCategory] = useState<RewardCategory>('custom');
   const [selectedPeriod, setSelectedPeriod] = useState<ReplenishPeriod>('daily');
 
-  const [filter, setFilter] = useState<'available' | 'out_of_stock'>('available');
-
   useEffect(() => {
     replenishRewards();
   }, [replenishRewards]);
 
-  const available = rewards.filter((r) => r.remainingQuantity > 0);
-  const outOfStock = rewards.filter((r) => r.remainingQuantity === 0);
-  const displayed = filter === 'available' ? available : outOfStock;
+  // Show all rewards: available first, then out-of-stock
+  const displayed = [...rewards].sort((a, b) => {
+    const aStock = a.remainingQuantity > 0 ? 0 : 1;
+    const bStock = b.remainingQuantity > 0 ? 0 : 1;
+    return aStock - bStock;
+  });
 
   const handlePurchase = (rewardId: string) => {
     const reward = rewards.find((r) => r.id === rewardId);
@@ -155,46 +156,9 @@ export default function RewardsScreen() {
       </LinearGradient>
 
       <View style={styles.filterRow}>
-        <TouchableOpacity
-          style={[
-            styles.filterTab,
-            filter === 'available' && {
-              backgroundColor: colors.primary,
-            },
-          ]}
-          onPress={() => setFilter('available')}
-        >
-          <Text
-            style={[
-              styles.filterText,
-              {
-                color: filter === 'available' ? '#FFF' : colors.textSecondary,
-              },
-            ]}
-          >
-            Available ({available.length})
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterTab,
-            filter === 'out_of_stock' && {
-              backgroundColor: colors.primary,
-            },
-          ]}
-          onPress={() => setFilter('out_of_stock')}
-        >
-          <Text
-            style={[
-              styles.filterText,
-              {
-                color: filter === 'out_of_stock' ? '#FFF' : colors.textSecondary,
-              },
-            ]}
-          >
-            Out of Stock ({outOfStock.length})
-          </Text>
-        </TouchableOpacity>
+        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
+          {rewards.length} {rewards.length === 1 ? 'Reward' : 'Rewards'}
+        </Text>
         <TouchableOpacity
           style={[styles.addSmallButton, { backgroundColor: colors.primary }]}
           onPress={() => {
@@ -214,19 +178,15 @@ export default function RewardsScreen() {
         {displayed.length === 0 ? (
           <View style={[styles.emptyState, { borderColor: colors.border }]}>
             <FontAwesome
-              name={filter === 'available' ? 'shopping-cart' : 'clock-o'}
+              name="shopping-cart"
               size={48}
               color={colors.textMuted}
             />
             <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
-              {filter === 'available'
-                ? 'No rewards available'
-                : 'No out of stock rewards'}
+              No rewards yet
             </Text>
             <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-              {filter === 'available'
-                ? 'Add custom rewards or check back later!'
-                : 'All rewards are in stock!'}
+              Add custom rewards to start earning!
             </Text>
           </View>
         ) : (
@@ -488,16 +448,13 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.sm,
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  filterTab: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    alignItems: 'center',
-  },
-  filterText: {
+  sectionLabel: {
     fontSize: fontSize.sm,
     fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   addSmallButton: {
     width: 36,

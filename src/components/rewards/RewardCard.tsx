@@ -57,28 +57,38 @@ export function RewardCard({
   const canBuy = canAfford && hasStock;
   const periodLabel = PERIOD_LABELS[reward.replenishPeriod] || '';
 
+  const MUTED_GREY = '#9CA3AF';
+  const displayColor = hasStock ? categoryColor : MUTED_GREY;
+
   return (
     <TouchableOpacity
       activeOpacity={0.7}
       onLongPress={onLongPress}
       delayLongPress={400}
     >
-    <Card style={styles.container}>
+    <Card style={[styles.container, !hasStock && { opacity: 0.75 }]}>
       <View style={styles.row}>
         <View
           style={[
             styles.iconContainer,
-            { backgroundColor: categoryColor + '20' },
+            { backgroundColor: displayColor + '20' },
           ]}
         >
-          <FontAwesome name={iconName} size={24} color={categoryColor} />
+          <FontAwesome name={iconName} size={24} color={displayColor} />
         </View>
 
         <View style={styles.content}>
-          <Text style={[styles.name, { color: colors.text }]}>
-            {reward.name}
-          </Text>
-          <Text style={[styles.description, { color: colors.textSecondary }]}>
+          <View style={styles.nameRow}>
+            <Text style={[styles.name, { color: hasStock ? colors.text : colors.textMuted }]}>
+              {reward.name}
+            </Text>
+            {!hasStock && (
+              <View style={styles.outOfStockStatus}>
+                <Text style={styles.outOfStockStatusText}>Out of Stock</Text>
+              </View>
+            )}
+          </View>
+          <Text style={[styles.description, { color: hasStock ? colors.textSecondary : colors.textMuted }]}>
             {reward.description}
           </Text>
         </View>
@@ -87,8 +97,8 @@ export function RewardCard({
       <View style={styles.footer}>
         <View style={styles.footerLeft}>
           <TokenBadge amount={reward.tokenCost} size="medium" />
-          <View style={[styles.quantityBadge, { backgroundColor: hasStock ? categoryColor + '20' : '#EF444420' }]}>
-            <Text style={[styles.quantityText, { color: hasStock ? categoryColor : '#EF4444' }]}>
+          <View style={[styles.quantityBadge, { backgroundColor: hasStock ? categoryColor + '20' : MUTED_GREY + '20' }]}>
+            <Text style={[styles.quantityText, { color: hasStock ? categoryColor : MUTED_GREY }]}>
               {reward.remainingQuantity} remaining {periodLabel}
             </Text>
           </View>
@@ -151,8 +161,25 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.xs,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
   name: {
     fontSize: fontSize.lg,
+    fontWeight: '700',
+    flexShrink: 1,
+  },
+  outOfStockStatus: {
+    backgroundColor: '#EF444420',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+  },
+  outOfStockStatusText: {
+    color: '#EF4444',
+    fontSize: fontSize.xs,
     fontWeight: '700',
   },
   description: {
