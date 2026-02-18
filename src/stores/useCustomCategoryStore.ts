@@ -6,7 +6,7 @@ import { Category } from '../types';
 
 export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'health', name: 'Health', color: '#FF6B6B', icon: 'heart' },
-  { id: 'fitness', name: 'Fitness', color: '#4ECDC4', icon: 'dumbbell' },
+  { id: 'fitness', name: 'Fitness', color: '#4ECDC4', icon: 'mci:dumbbell' },
   { id: 'mindfulness', name: 'Mindfulness', color: '#A78BFA', icon: 'leaf' },
   { id: 'productivity', name: 'Productivity', color: '#F59E0B', icon: 'rocket' },
   { id: 'learning', name: 'Learning', color: '#3B82F6', icon: 'book' },

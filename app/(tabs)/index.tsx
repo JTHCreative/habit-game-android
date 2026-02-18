@@ -17,6 +17,7 @@ import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { DynamicIcon } from '@/src/components/common/DynamicIcon';
 import { HabitCategory, HabitFrequency } from '@/src/types';
 import { useCategoryStore, DEFAULT_CATEGORY_IDS } from '@/src/stores/useCustomCategoryStore';
 import {
@@ -34,7 +35,7 @@ const COLOR_PALETTE = [
 
 const ICON_OPTIONS: { value: string; label: string }[] = [
   { value: 'heart', label: 'heart' },
-  { value: 'dumbbell', label: 'dumbbell' },
+  { value: 'mci:dumbbell', label: 'dumbbell' },
   { value: 'leaf', label: 'leaf' },
   { value: 'rocket', label: 'rocket' },
   { value: 'book', label: 'book' },
@@ -776,7 +777,7 @@ export default function HomeScreen() {
                         { backgroundColor: cc.color + '20' },
                       ]}
                     >
-                      <FontAwesome name={cc.icon as any} size={20} color={cc.color} />
+                      <DynamicIcon name={cc.icon} size={20} color={cc.color} />
                     </View>
                     <Text
                       style={[styles.customCategoryCardName, { color: colors.text }]}
@@ -877,8 +878,8 @@ export default function HomeScreen() {
                       ]}
                       onPress={() => setNewCategoryIcon(ic.value)}
                     >
-                      <FontAwesome
-                        name={ic.value as any}
+                      <DynamicIcon
+                        name={ic.value}
                         size={18}
                         color={newCategoryIcon === ic.value ? newCategoryColor : colors.textSecondary}
                       />
