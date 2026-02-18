@@ -76,7 +76,12 @@ export function InventoryCard({ item, onRedeem }: InventoryCardProps) {
           )}
         </View>
 
-        {!allRedeemed && onRedeem && (
+        {allRedeemed ? (
+          <View style={[styles.redeemButton, { backgroundColor: '#3A3A55' }]}>
+            <FontAwesome name="check" size={12} color="#E8C97A" />
+            <Text style={[styles.redeemButtonText, { color: '#E8C97A' }]}>Redeemed</Text>
+          </View>
+        ) : onRedeem ? (
           <TouchableOpacity
             style={[styles.redeemButton, { backgroundColor: '#22C55E' }]}
             onPress={onRedeem}
@@ -84,7 +89,7 @@ export function InventoryCard({ item, onRedeem }: InventoryCardProps) {
             <FontAwesome name="check" size={12} color="#FFF" />
             <Text style={styles.redeemButtonText}>Redeem</Text>
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
     </Card>
   );

@@ -49,6 +49,7 @@ export default function RewardsScreen() {
   const updateReward = useRewardStore((s) => s.updateReward);
   const removeReward = useRewardStore((s) => s.removeReward);
   const replenishRewards = useRewardStore((s) => s.replenishRewards);
+  const inventory = useRewardStore((s) => s.inventory);
   const getActiveInventory = useRewardStore((s) => s.getActiveInventory);
   const redeemInventoryItem = useRewardStore((s) => s.redeemInventoryItem);
 
