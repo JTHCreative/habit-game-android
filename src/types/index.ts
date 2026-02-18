@@ -10,11 +10,19 @@ export type HabitCategory =
   | 'finance'
   | 'custom';
 
+export interface CustomCategory {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+}
+
 export interface Habit {
   id: string;
   name: string;
   description: string;
   category: HabitCategory;
+  customCategoryId?: string;
   frequency: HabitFrequency;
   targetCount: number;
   currentStreak: number;
