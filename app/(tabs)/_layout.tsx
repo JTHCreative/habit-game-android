@@ -52,20 +52,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="challenges"
-        options={{
-          title: 'Challenges',
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="crosshairs" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="history"
         options={{
           title: 'History',
           tabBarIcon: ({ color }) => (
             <TabBarIcon name="bar-chart" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="challenges"
+        options={{
+          title: 'Challenges',
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="crosshairs" color={color} />
           ),
         }}
       />
