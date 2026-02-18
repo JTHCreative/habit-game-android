@@ -315,7 +315,7 @@ export default function RewardsScreen() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.modalBody}>
+          <ScrollView style={styles.modalBody} contentContainerStyle={styles.modalBodyContent}>
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
               Reward Name
             </Text>
@@ -604,7 +604,9 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     padding: spacing.lg,
-    paddingBottom: spacing.xxl * 2,
+  },
+  modalBodyContent: {
+    paddingBottom: spacing.xxl * 3,
   },
   inputLabel: {
     fontSize: fontSize.sm,
