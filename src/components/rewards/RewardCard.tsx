@@ -30,10 +30,10 @@ const REWARD_ICONS: Record<string, React.ComponentProps<typeof FontAwesome>['nam
 };
 
 const PERIOD_LABELS: Record<string, string> = {
-  daily: '/day',
-  weekly: '/week',
-  monthly: '/month',
-  yearly: '/year',
+  daily: 'today',
+  weekly: 'this week',
+  monthly: 'this month',
+  yearly: 'this year',
 };
 
 interface RewardCardProps {
@@ -89,7 +89,7 @@ export function RewardCard({
           <TokenBadge amount={reward.tokenCost} size="medium" />
           <View style={[styles.quantityBadge, { backgroundColor: hasStock ? categoryColor + '20' : '#EF444420' }]}>
             <Text style={[styles.quantityText, { color: hasStock ? categoryColor : '#EF4444' }]}>
-              {reward.remainingQuantity}/{reward.maxQuantity}{periodLabel}
+              {reward.remainingQuantity} remaining {periodLabel}
             </Text>
           </View>
         </View>
