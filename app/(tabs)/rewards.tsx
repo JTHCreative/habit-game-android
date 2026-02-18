@@ -11,6 +11,7 @@ import { Text } from '@/components/Themed';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RewardCard } from '@/src/components/rewards/RewardCard';
+import { InventoryCard } from '@/src/components/rewards/InventoryCard';
 import { TokenBadge } from '@/src/components/common/TokenBadge';
 import { useRewardStore } from '@/src/stores/useRewardStore';
 import { useUserStore } from '@/src/stores/useUserStore';
@@ -48,7 +49,10 @@ export default function RewardsScreen() {
   const updateReward = useRewardStore((s) => s.updateReward);
   const removeReward = useRewardStore((s) => s.removeReward);
   const replenishRewards = useRewardStore((s) => s.replenishRewards);
+  const getActiveInventory = useRewardStore((s) => s.getActiveInventory);
+  const redeemInventoryItem = useRewardStore((s) => s.redeemInventoryItem);
 
+  const [activeTab, setActiveTab] = useState<'shop' | 'inventory'>('shop');
   const [showAddModal, setShowAddModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingRewardId, setEditingRewardId] = useState<string | null>(null);
@@ -69,6 +73,8 @@ export default function RewardsScreen() {
     const bStock = b.remainingQuantity > 0 ? 0 : 1;
     return aStock - bStock;
   });
+
+  const activeInventory = getActiveInventory();
 
   const handlePurchase = (rewardId: string) => {
     const reward = rewards.find((r) => r.id === rewardId);
@@ -147,7 +153,7 @@ export default function RewardsScreen() {
       >
         <View style={styles.headerContent}>
           <FontAwesome name="diamond" size={28} color="#FFF" />
-          <Text style={styles.headerTitle}>Rewards Shop</Text>
+          <Text style={styles.headerTitle}>Rewards</Text>
           <View style={styles.balanceRow}>
             <Text style={styles.balanceLabel}>Your Balance:</Text>
             <TokenBadge amount={profile.tokens} size="large" />
@@ -155,19 +161,60 @@ export default function RewardsScreen() {
         </View>
       </LinearGradient>
 
-      <View style={styles.filterRow}>
-        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
-          {rewards.length} {rewards.length === 1 ? 'Reward' : 'Rewards'}
-        </Text>
+      <View style={styles.tabRow}>
         <TouchableOpacity
-          style={[styles.addSmallButton, { backgroundColor: colors.primary }]}
-          onPress={() => {
-            resetModal();
-            setShowAddModal(true);
-          }}
+          style={[
+            styles.tab,
+            activeTab === 'shop' && { backgroundColor: colors.primary },
+          ]}
+          onPress={() => setActiveTab('shop')}
         >
-          <FontAwesome name="plus" size={14} color="#FFF" />
+          <FontAwesome
+            name="shopping-cart"
+            size={14}
+            color={activeTab === 'shop' ? '#FFF' : colors.textSecondary}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              { color: activeTab === 'shop' ? '#FFF' : colors.textSecondary },
+            ]}
+          >
+            Shop
+          </Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.tab,
+            activeTab === 'inventory' && { backgroundColor: colors.primary },
+          ]}
+          onPress={() => setActiveTab('inventory')}
+        >
+          <FontAwesome
+            name="archive"
+            size={14}
+            color={activeTab === 'inventory' ? '#FFF' : colors.textSecondary}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              { color: activeTab === 'inventory' ? '#FFF' : colors.textSecondary },
+            ]}
+          >
+            Inventory ({activeInventory.length})
+          </Text>
+        </TouchableOpacity>
+        {activeTab === 'shop' && (
+          <TouchableOpacity
+            style={[styles.addSmallButton, { backgroundColor: colors.primary }]}
+            onPress={() => {
+              resetModal();
+              setShowAddModal(true);
+            }}
+          >
+            <FontAwesome name="plus" size={14} color="#FFF" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView
@@ -175,30 +222,56 @@ export default function RewardsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {displayed.length === 0 ? (
-          <View style={[styles.emptyState, { borderColor: colors.border }]}>
-            <FontAwesome
-              name="shopping-cart"
-              size={48}
-              color={colors.textMuted}
-            />
-            <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
-              No rewards yet
-            </Text>
-            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-              Add custom rewards to start earning!
-            </Text>
-          </View>
+        {activeTab === 'shop' ? (
+          displayed.length === 0 ? (
+            <View style={[styles.emptyState, { borderColor: colors.border }]}>
+              <FontAwesome
+                name="shopping-cart"
+                size={48}
+                color={colors.textMuted}
+              />
+              <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+                No rewards yet
+              </Text>
+              <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+                Add custom rewards to start earning!
+              </Text>
+            </View>
+          ) : (
+            displayed.map((reward) => (
+              <RewardCard
+                key={reward.id}
+                reward={reward}
+                canAfford={profile.tokens >= reward.tokenCost}
+                onPurchase={() => handlePurchase(reward.id)}
+                onLongPress={() => handleEditReward(reward)}
+              />
+            ))
+          )
         ) : (
-          displayed.map((reward) => (
-            <RewardCard
-              key={reward.id}
-              reward={reward}
-              canAfford={profile.tokens >= reward.tokenCost}
-              onPurchase={() => handlePurchase(reward.id)}
-              onLongPress={() => handleEditReward(reward)}
-            />
-          ))
+          activeInventory.length === 0 ? (
+            <View style={[styles.emptyState, { borderColor: colors.border }]}>
+              <FontAwesome
+                name="archive"
+                size={48}
+                color={colors.textMuted}
+              />
+              <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+                No claimed rewards
+              </Text>
+              <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+                Claim rewards from the shop to see them here!
+              </Text>
+            </View>
+          ) : (
+            activeInventory.map((item) => (
+              <InventoryCard
+                key={item.id}
+                item={item}
+                onRedeem={() => redeemInventoryItem(item.id)}
+              />
+            ))
+          )
         )}
       </ScrollView>
 
@@ -443,18 +516,24 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     fontWeight: '500',
   },
-  filterRow: {
+  tabRow: {
     flexDirection: 'row',
     padding: spacing.md,
     gap: spacing.sm,
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
-  sectionLabel: {
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+  },
+  tabText: {
     fontSize: fontSize.sm,
     fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   addSmallButton: {
     width: 36,

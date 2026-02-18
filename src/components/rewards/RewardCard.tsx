@@ -10,7 +10,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 import { Reward } from '@/src/types';
 
-const REWARD_CATEGORY_COLORS: Record<string, string> = {
+export const REWARD_CATEGORY_COLORS: Record<string, string> = {
   self_care: '#E8C97A',
   entertainment: '#E87D2F',
   treat: '#F0A060',
@@ -18,7 +18,7 @@ const REWARD_CATEGORY_COLORS: Record<string, string> = {
   custom: '#CF6B30',
 };
 
-const REWARD_ICONS: Record<string, React.ComponentProps<typeof FontAwesome>['name']> = {
+export const REWARD_ICONS: Record<string, React.ComponentProps<typeof FontAwesome>['name']> = {
   film: 'film',
   coffee: 'coffee',
   moon: 'moon-o',
@@ -29,7 +29,7 @@ const REWARD_ICONS: Record<string, React.ComponentProps<typeof FontAwesome>['nam
   sun: 'sun-o',
 };
 
-const PERIOD_LABELS: Record<string, string> = {
+export const PERIOD_LABELS: Record<string, string> = {
   daily: 'today',
   weekly: 'this week',
   monthly: 'this month',

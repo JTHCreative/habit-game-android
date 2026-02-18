@@ -72,6 +72,20 @@ export interface Reward {
   redeemedAt?: string;
 }
 
+export interface InventoryItem {
+  id: string;
+  rewardId: string;
+  rewardName: string;
+  rewardDescription: string;
+  rewardIcon: string;
+  rewardCategory: Reward['category'];
+  tokenCost: number;
+  replenishPeriod: ReplenishPeriod;
+  quantity: number;
+  redeemedCount: number;
+  periodStart: string;
+}
+
 export interface UserProfile {
   id: string;
   displayName: string;

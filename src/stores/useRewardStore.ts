@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
-import { ReplenishPeriod, Reward } from '../types';
+import { InventoryItem, ReplenishPeriod, Reward } from '../types';
 
 function getPeriodStart(period: ReplenishPeriod, date: Date): string {
   const year = date.getFullYear();
@@ -34,12 +34,15 @@ function shouldReplenish(reward: Reward): boolean {
 
 interface RewardState {
   rewards: Reward[];
+  inventory: InventoryItem[];
   addReward: (reward: Omit<Reward, 'id' | 'isPurchased' | 'isRedeemed' | 'remainingQuantity' | 'lastReplenishedAt'>) => void;
   updateReward: (id: string, updates: Partial<Pick<Reward, 'name' | 'description' | 'tokenCost' | 'category' | 'maxQuantity' | 'replenishPeriod'>>) => void;
   removeReward: (id: string) => void;
   purchaseReward: (id: string) => void;
   redeemReward: (id: string) => void;
+  redeemInventoryItem: (inventoryId: string) => void;
   replenishRewards: () => void;
+  getActiveInventory: () => InventoryItem[];
   getPurchasedRewards: () => Reward[];
   getAvailableRewards: () => Reward[];
 }
@@ -163,6 +166,7 @@ export const useRewardStore = create<RewardState>()(
   persist(
     (set, get) => ({
       rewards: DEFAULT_REWARDS,
+      inventory: [] as InventoryItem[],
 
       addReward: (rewardData) =>
         set((state) => ({
@@ -197,17 +201,57 @@ export const useRewardStore = create<RewardState>()(
         })),
 
       purchaseReward: (id) =>
-        set((state) => ({
-          rewards: state.rewards.map((r) =>
-            r.id === id && r.remainingQuantity > 0
-              ? {
-                  ...r,
-                  remainingQuantity: r.remainingQuantity - 1,
-                  purchasedAt: new Date().toISOString(),
-                }
-              : r
-          ),
-        })),
+        set((state) => {
+          const reward = state.rewards.find((r) => r.id === id);
+          if (!reward || reward.remainingQuantity <= 0) return state;
+
+          const now = new Date();
+          const periodStart = getPeriodStart(reward.replenishPeriod, now);
+
+          // Check for existing inventory item for same reward in same period
+          const existingIdx = state.inventory.findIndex(
+            (item) => item.rewardId === id && item.periodStart === periodStart
+          );
+
+          let newInventory: InventoryItem[];
+          if (existingIdx >= 0) {
+            newInventory = state.inventory.map((item, idx) =>
+              idx === existingIdx
+                ? { ...item, quantity: item.quantity + 1 }
+                : item
+            );
+          } else {
+            newInventory = [
+              ...state.inventory,
+              {
+                id: Crypto.randomUUID(),
+                rewardId: reward.id,
+                rewardName: reward.name,
+                rewardDescription: reward.description,
+                rewardIcon: reward.icon,
+                rewardCategory: reward.category,
+                tokenCost: reward.tokenCost,
+                replenishPeriod: reward.replenishPeriod,
+                quantity: 1,
+                redeemedCount: 0,
+                periodStart,
+              },
+            ];
+          }
+
+          return {
+            rewards: state.rewards.map((r) =>
+              r.id === id
+                ? {
+                    ...r,
+                    remainingQuantity: r.remainingQuantity - 1,
+                    purchasedAt: now.toISOString(),
+                  }
+                : r
+            ),
+            inventory: newInventory,
+          };
+        }),
 
       redeemReward: (id) =>
         set((state) => ({
@@ -218,19 +262,44 @@ export const useRewardStore = create<RewardState>()(
           ),
         })),
 
-      replenishRewards: () =>
+      redeemInventoryItem: (inventoryId) =>
         set((state) => ({
-          rewards: state.rewards.map((r) => {
-            if (shouldReplenish(r)) {
-              return {
-                ...r,
-                remainingQuantity: r.maxQuantity,
-                lastReplenishedAt: new Date().toISOString(),
-              };
-            }
-            return r;
-          }),
+          inventory: state.inventory.map((item) =>
+            item.id === inventoryId && item.redeemedCount < item.quantity
+              ? { ...item, redeemedCount: item.redeemedCount + 1 }
+              : item
+          ),
         })),
+
+      replenishRewards: () =>
+        set((state) => {
+          const now = new Date();
+          return {
+            rewards: state.rewards.map((r) => {
+              if (shouldReplenish(r)) {
+                return {
+                  ...r,
+                  remainingQuantity: r.maxQuantity,
+                  lastReplenishedAt: now.toISOString(),
+                };
+              }
+              return r;
+            }),
+            // Remove expired inventory items (from previous periods)
+            inventory: state.inventory.filter((item) => {
+              const currentPeriodStart = getPeriodStart(item.replenishPeriod, now);
+              return item.periodStart === currentPeriodStart;
+            }),
+          };
+        }),
+
+      getActiveInventory: () => {
+        const now = new Date();
+        return get().inventory.filter((item) => {
+          const currentPeriodStart = getPeriodStart(item.replenishPeriod, now);
+          return item.periodStart === currentPeriodStart;
+        });
+      },
 
       getPurchasedRewards: () =>
         get().rewards.filter((r) => r.remainingQuantity === 0),
@@ -253,6 +322,7 @@ export const useRewardStore = create<RewardState>()(
             lastReplenishedAt: new Date().toISOString(),
             ...r,
           })),
+          inventory: state.inventory || [],
         };
       },
     }
