@@ -153,7 +153,18 @@ export default function RewardsScreen() {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <FontAwesome name="diamond" size={28} color="#FFF" />
+          <View style={styles.headerTopRow}>
+            <FontAwesome name="diamond" size={28} color="#FFF" />
+            <TouchableOpacity
+              style={styles.addHeaderButton}
+              onPress={() => {
+                resetModal();
+                setShowAddModal(true);
+              }}
+            >
+              <FontAwesome name="plus" size={16} color="#FFF" />
+            </TouchableOpacity>
+          </View>
           <Text style={styles.headerTitle}>Rewards</Text>
           <View style={styles.balanceRow}>
             <Text style={styles.balanceLabel}>Your Balance:</Text>
@@ -205,17 +216,6 @@ export default function RewardsScreen() {
             Inventory ({activeInventory.length})
           </Text>
         </TouchableOpacity>
-        {activeTab === 'shop' && (
-          <TouchableOpacity
-            style={[styles.addSmallButton, { backgroundColor: colors.primary }]}
-            onPress={() => {
-              resetModal();
-              setShowAddModal(true);
-            }}
-          >
-            <FontAwesome name="plus" size={14} color="#FFF" />
-          </TouchableOpacity>
-        )}
       </View>
 
       <ScrollView
@@ -500,6 +500,19 @@ const styles = StyleSheet.create({
   headerContent: {
     gap: spacing.xs,
   },
+  headerTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  addHeaderButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   headerTitle: {
     color: '#FFF',
     fontSize: fontSize.xxxl,
@@ -535,13 +548,6 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: fontSize.sm,
     fontWeight: '600',
-  },
-  addSmallButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   scrollView: {
     flex: 1,
