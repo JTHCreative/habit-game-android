@@ -153,8 +153,13 @@ export default function RewardsScreen() {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <View style={styles.headerTopRow}>
-            <FontAwesome name="diamond" size={28} color="#FFF" />
+          <FontAwesome name="diamond" size={28} color="#FFF" />
+          <Text style={styles.headerTitle}>Rewards</Text>
+          <View style={styles.headerBottomRow}>
+            <View style={styles.balanceRow}>
+              <Text style={styles.balanceLabel}>Your Balance:</Text>
+              <TokenBadge amount={profile.tokens} size="large" />
+            </View>
             <TouchableOpacity
               style={styles.addHeaderButton}
               onPress={() => {
@@ -162,13 +167,9 @@ export default function RewardsScreen() {
                 setShowAddModal(true);
               }}
             >
-              <FontAwesome name="plus" size={16} color="#FFF" />
+              <FontAwesome name="plus" size={14} color="#FFF" />
+              <Text style={styles.addHeaderButtonText}>Add Reward</Text>
             </TouchableOpacity>
-          </View>
-          <Text style={styles.headerTitle}>Rewards</Text>
-          <View style={styles.balanceRow}>
-            <Text style={styles.balanceLabel}>Your Balance:</Text>
-            <TokenBadge amount={profile.tokens} size="large" />
           </View>
         </View>
       </LinearGradient>
@@ -500,18 +501,25 @@ const styles = StyleSheet.create({
   headerContent: {
     gap: spacing.xs,
   },
-  headerTopRow: {
+  headerBottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: spacing.sm,
   },
   addHeaderButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+  },
+  addHeaderButtonText: {
+    color: '#FFF',
+    fontSize: fontSize.sm,
+    fontWeight: '700',
   },
   headerTitle: {
     color: '#FFF',
@@ -523,7 +531,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginTop: spacing.sm,
   },
   balanceLabel: {
     color: 'rgba(255,255,255,0.8)',
