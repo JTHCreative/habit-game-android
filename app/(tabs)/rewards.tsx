@@ -554,6 +554,7 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     padding: spacing.lg,
+    paddingBottom: spacing.xxl * 2,
   },
   inputLabel: {
     fontSize: fontSize.sm,
