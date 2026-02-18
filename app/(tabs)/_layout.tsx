@@ -55,7 +55,7 @@ export default function TabLayout() {
         options={{
           title: 'Rewards',
           tabBarIcon: ({ color }) => (
-            <TabBarMCIcon name="coins" color={color} />
+            <TabBarMCIcon name="cash-multiple" color={color} />
           ),
         }}
       />
