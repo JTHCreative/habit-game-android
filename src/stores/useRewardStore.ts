@@ -316,11 +316,11 @@ export const useRewardStore = create<RewardState>()(
         return {
           ...current,
           rewards: state.rewards.map((r) => ({
-            maxQuantity: 1,
-            remainingQuantity: 1,
-            replenishPeriod: 'daily' as ReplenishPeriod,
-            lastReplenishedAt: new Date().toISOString(),
             ...r,
+            maxQuantity: r.maxQuantity ?? 1,
+            remainingQuantity: r.remainingQuantity ?? 1,
+            replenishPeriod: r.replenishPeriod ?? ('daily' as ReplenishPeriod),
+            lastReplenishedAt: r.lastReplenishedAt ?? new Date().toISOString(),
           })),
           inventory: state.inventory || [],
         };
