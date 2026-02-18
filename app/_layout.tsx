@@ -11,6 +11,16 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/components/useColorScheme';
 import AtomicSplash from '@/src/components/common/AtomicSplash';
 
+// Google Fonts imports
+import { Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter';
+import { Poppins_400Regular, Poppins_700Bold } from '@expo-google-fonts/poppins';
+import { Nunito_400Regular, Nunito_700Bold } from '@expo-google-fonts/nunito';
+import { Raleway_400Regular, Raleway_700Bold } from '@expo-google-fonts/raleway';
+import { PlayfairDisplay_400Regular, PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display';
+import { Lora_400Regular, Lora_700Bold } from '@expo-google-fonts/lora';
+import { Merriweather_400Regular, Merriweather_700Bold } from '@expo-google-fonts/merriweather';
+import { SourceSerif4_400Regular, SourceSerif4_700Bold } from '@expo-google-fonts/source-serif-4';
+
 export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
@@ -23,6 +33,23 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
+    // Google Fonts
+    Inter_400Regular,
+    Inter_700Bold,
+    Poppins_400Regular,
+    Poppins_700Bold,
+    Nunito_400Regular,
+    Nunito_700Bold,
+    Raleway_400Regular,
+    Raleway_700Bold,
+    PlayfairDisplay_400Regular,
+    PlayfairDisplay_700Bold,
+    Lora_400Regular,
+    Lora_700Bold,
+    Merriweather_400Regular,
+    Merriweather_700Bold,
+    SourceSerif4_400Regular,
+    SourceSerif4_700Bold,
   });
   const [showSplash, setShowSplash] = useState(true);
 
@@ -62,6 +89,13 @@ function RootLayoutNav() {
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="settings"
+            options={{
+              headerShown: false,
+              presentation: 'modal',
+            }}
+          />
         </Stack>
       </ThemeProvider>
     </GestureHandlerRootView>

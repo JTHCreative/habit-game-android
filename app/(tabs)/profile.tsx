@@ -11,6 +11,7 @@ import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme() ?? 'light';
@@ -21,6 +22,7 @@ export default function ProfileScreen() {
   const achievements = useUserStore((s) => s.achievements);
   const habits = useHabitStore((s) => s.habits);
 
+  const router = useRouter();
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(profile.displayName);
   const nameInputRef = useRef<TextInput>(null);
@@ -84,6 +86,13 @@ export default function ProfileScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.profileHeader}
         >
+          <TouchableOpacity
+            onPress={() => router.push('/settings')}
+            style={styles.settingsButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <FontAwesome name="cog" size={22} color="rgba(255,255,255,0.7)" />
+          </TouchableOpacity>
           <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.7} style={styles.avatarWrapper}>
             <View style={styles.avatarLarge}>
               {profile.profileImageUri ? (
@@ -297,6 +306,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomLeftRadius: borderRadius.xl,
     borderBottomRightRadius: borderRadius.xl,
+  },
+  settingsButton: {
+    position: 'absolute',
+    top: spacing.xxl + spacing.sm,
+    right: spacing.md,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
   },
   avatarWrapper: {
     alignSelf: 'center',
