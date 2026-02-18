@@ -1,4 +1,5 @@
 import React from 'react';
+import { View } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Tabs } from 'expo-router';
@@ -7,18 +8,28 @@ import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAppFont } from '@/components/Themed';
 
+const ICON_BOX = { width: 28, height: 28, alignItems: 'center' as const, justifyContent: 'center' as const };
+
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
   color: string;
 }) {
-  return <FontAwesome size={24} style={{ marginBottom: -3 }} {...props} />;
+  return (
+    <View style={ICON_BOX}>
+      <FontAwesome size={22} {...props} />
+    </View>
+  );
 }
 
 function TabBarMCIcon(props: {
   name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   color: string;
 }) {
-  return <MaterialCommunityIcons size={24} style={{ marginBottom: -3 }} {...props} />;
+  return (
+    <View style={ICON_BOX}>
+      <MaterialCommunityIcons size={24} {...props} />
+    </View>
+  );
 }
 
 export default function TabLayout() {
