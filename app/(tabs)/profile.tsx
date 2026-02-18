@@ -184,7 +184,7 @@ export default function ProfileScreen() {
               </Text>
             </Card>
             <Card style={styles.statCard}>
-              <FontAwesome name="crosshairs" size={24} color="#E87D2F" />
+              <FontAwesome name="bullseye" size={24} color="#E87D2F" />
               <Text style={[styles.statValue, { color: colors.text }]}>
                 {profile.totalMissionsCompleted}
               </Text>
