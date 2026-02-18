@@ -62,6 +62,9 @@ export default function HomeScreen() {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterCategory, setFilterCategory] = useState<HabitCategory | null>(null);
+  const [filterFrequency, setFilterFrequency] = useState<HabitFrequency | null>(null);
   const [newHabitName, setNewHabitName] = useState('');
   const [newHabitDescription, setNewHabitDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<HabitCategory>('health');
@@ -79,6 +82,13 @@ export default function HomeScreen() {
     activeHabits.length > 0
       ? Math.round((completedToday.length / activeHabits.length) * 100)
       : 0;
+
+  const filteredHabits = activeHabits.filter((h) => {
+    if (filterCategory && h.category !== filterCategory) return false;
+    if (filterFrequency && h.frequency !== filterFrequency) return false;
+    return true;
+  });
+  const hasActiveFilters = filterCategory !== null || filterFrequency !== null;
 
   const handleToggle = (habitId: string) => {
     const habit = habits.find((h) => h.id === habitId);
@@ -197,13 +207,137 @@ export default function HomeScreen() {
                 {completedToday.length}/{activeHabits.length} completed ({completionRate}%)
               </Text>
             </View>
-            <TouchableOpacity
-              style={[styles.addButton, { backgroundColor: colors.primary }]}
-              onPress={() => { resetModal(); setShowAddModal(true); }}
-            >
-              <FontAwesome name="plus" size={16} color="#FFF" />
-            </TouchableOpacity>
+            <View style={styles.sectionHeaderActions}>
+              <TouchableOpacity
+                style={[
+                  styles.filterButton,
+                  {
+                    backgroundColor: hasActiveFilters ? colors.primary : colors.surfaceElevated,
+                    borderColor: hasActiveFilters ? colors.primary : colors.border,
+                  },
+                ]}
+                onPress={() => setShowFilters(!showFilters)}
+              >
+                <FontAwesome
+                  name="filter"
+                  size={14}
+                  color={hasActiveFilters ? '#FFF' : colors.textSecondary}
+                />
+                {hasActiveFilters && (
+                  <View style={styles.filterBadge}>
+                    <Text style={styles.filterBadgeText}>
+                      {(filterCategory ? 1 : 0) + (filterFrequency ? 1 : 0)}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.addButton, { backgroundColor: colors.primary }]}
+                onPress={() => { resetModal(); setShowAddModal(true); }}
+              >
+                <FontAwesome name="plus" size={16} color="#FFF" />
+              </TouchableOpacity>
+            </View>
           </View>
+
+          {showFilters && (
+            <View style={[styles.filterPanel, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+              <View style={styles.filterSection}>
+                <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>Category</Text>
+                <View style={styles.filterChips}>
+                  {CATEGORIES.map((cat) => (
+                    <TouchableOpacity
+                      key={cat}
+                      style={[
+                        styles.filterChip,
+                        {
+                          backgroundColor:
+                            filterCategory === cat
+                              ? HABIT_CATEGORY_COLORS[cat]
+                              : colors.inputBackground,
+                          borderColor:
+                            filterCategory === cat
+                              ? HABIT_CATEGORY_COLORS[cat]
+                              : colors.border,
+                        },
+                      ]}
+                      onPress={() =>
+                        setFilterCategory(filterCategory === cat ? null : cat)
+                      }
+                    >
+                      <Text
+                        style={[
+                          styles.filterChipText,
+                          {
+                            color:
+                              filterCategory === cat ? '#FFF' : colors.textSecondary,
+                          },
+                        ]}
+                      >
+                        {cat}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+              <View style={styles.filterSection}>
+                <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>Timeframe</Text>
+                <View style={styles.filterChips}>
+                  {FREQUENCIES.map((freq) => (
+                    <TouchableOpacity
+                      key={freq.value}
+                      style={[
+                        styles.filterChip,
+                        {
+                          backgroundColor:
+                            filterFrequency === freq.value
+                              ? colors.primary
+                              : colors.inputBackground,
+                          borderColor:
+                            filterFrequency === freq.value
+                              ? colors.primary
+                              : colors.border,
+                        },
+                      ]}
+                      onPress={() =>
+                        setFilterFrequency(
+                          filterFrequency === freq.value ? null : freq.value
+                        )
+                      }
+                    >
+                      <Text
+                        style={[
+                          styles.filterChipText,
+                          {
+                            color:
+                              filterFrequency === freq.value
+                                ? '#FFF'
+                                : colors.textSecondary,
+                          },
+                        ]}
+                      >
+                        {freq.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+              {hasActiveFilters && (
+                <TouchableOpacity
+                  style={styles.clearFilters}
+                  onPress={() => {
+                    setFilterCategory(null);
+                    setFilterFrequency(null);
+                  }}
+                >
+                  <FontAwesome name="times" size={12} color={colors.textMuted} />
+                  <Text style={[styles.clearFiltersText, { color: colors.textMuted }]}>
+                    Clear filters
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
 
           {activeHabits.length === 0 ? (
             <View style={[styles.emptyState, { borderColor: colors.border }]}>
@@ -215,8 +349,18 @@ export default function HomeScreen() {
                 Tap the + button to create your first habit and start earning rewards!
               </Text>
             </View>
+          ) : filteredHabits.length === 0 ? (
+            <View style={[styles.emptyState, { borderColor: colors.border }]}>
+              <FontAwesome name="filter" size={40} color={colors.textMuted} />
+              <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+                No matching habits
+              </Text>
+              <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+                Try adjusting your filters to see more habits.
+              </Text>
+            </View>
           ) : (
-            activeHabits.map((habit) => (
+            filteredHabits.map((habit) => (
               <HabitCard
                 key={habit.id}
                 habit={habit}
@@ -515,6 +659,78 @@ const styles = StyleSheet.create({
   sectionSubtitle: {
     fontSize: fontSize.sm,
     marginTop: 2,
+  },
+  sectionHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  filterButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#EF4444',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterBadgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  filterPanel: {
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    gap: spacing.md,
+  },
+  filterSection: {
+    gap: spacing.sm,
+  },
+  filterLabel: {
+    fontSize: fontSize.xs,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  filterChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  filterChip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+  },
+  filterChipText: {
+    fontSize: fontSize.xs,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  clearFilters: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingTop: spacing.xs,
+  },
+  clearFiltersText: {
+    fontSize: fontSize.xs,
+    fontWeight: '600',
   },
   addButton: {
     width: 40,
