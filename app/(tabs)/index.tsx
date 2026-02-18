@@ -18,10 +18,8 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { HabitCategory, HabitFrequency } from '@/src/types';
-import { useCustomCategoryStore } from '@/src/stores/useCustomCategoryStore';
+import { useCategoryStore, DEFAULT_CATEGORY_IDS } from '@/src/stores/useCustomCategoryStore';
 import {
-  HABIT_CATEGORY_COLORS,
-  HABIT_CATEGORY_ICONS,
   getPSTDateString,
   isHabitCompletedForPeriod,
   getCompletedDateForCurrentPeriod,
@@ -35,9 +33,15 @@ const COLOR_PALETTE = [
 ];
 
 const ICON_OPTIONS: { value: string; label: string }[] = [
+  { value: 'heart', label: 'heart' },
+  { value: 'dumbbell', label: 'dumbbell' },
+  { value: 'leaf', label: 'leaf' },
+  { value: 'rocket', label: 'rocket' },
+  { value: 'book', label: 'book' },
+  { value: 'users', label: 'users' },
+  { value: 'dollar', label: 'dollar' },
   { value: 'tag', label: 'tag' },
   { value: 'star', label: 'star' },
-  { value: 'heart', label: 'heart' },
   { value: 'music', label: 'music' },
   { value: 'paint-brush', label: 'paint-brush' },
   { value: 'futbol-o', label: 'futbol-o' },
@@ -47,17 +51,6 @@ const ICON_OPTIONS: { value: string; label: string }[] = [
   { value: 'tree', label: 'tree' },
   { value: 'paw', label: 'paw' },
   { value: 'trophy', label: 'trophy' },
-];
-
-const CATEGORIES: HabitCategory[] = [
-  'health',
-  'fitness',
-  'mindfulness',
-  'productivity',
-  'learning',
-  'social',
-  'finance',
-  'custom',
 ];
 
 const FREQUENCIES: { value: HabitFrequency; label: string; description: string }[] = [
@@ -83,25 +76,26 @@ export default function HomeScreen() {
   const incrementHabitsCompleted = useUserStore((s) => s.incrementHabitsCompleted);
   const decrementHabitsCompleted = useUserStore((s) => s.decrementHabitsCompleted);
 
-  const customCategories = useCustomCategoryStore((s) => s.categories);
-  const addCustomCategory = useCustomCategoryStore((s) => s.addCategory);
-  const removeCustomCategory = useCustomCategoryStore((s) => s.removeCategory);
+  const categories = useCategoryStore((s) => s.categories);
+  const addCategory = useCategoryStore((s) => s.addCategory);
+  const removeCategory = useCategoryStore((s) => s.removeCategory);
+  const updateCategory = useCategoryStore((s) => s.updateCategory);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [filterCategory, setFilterCategory] = useState<HabitCategory | null>(null);
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [filterFrequency, setFilterFrequency] = useState<HabitFrequency | null>(null);
   const [newHabitName, setNewHabitName] = useState('');
   const [newHabitDescription, setNewHabitDescription] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<HabitCategory>('health');
+  const [selectedCategoryId, setSelectedCategoryId] = useState('health');
   const [selectedFrequency, setSelectedFrequency] = useState<HabitFrequency>('daily');
-  const [selectedCustomCategoryId, setSelectedCustomCategoryId] = useState<string | null>(null);
   const [customTokenReward, setCustomTokenReward] = useState('10');
   const [customXPReward, setCustomXPReward] = useState('15');
   const [showRewardInputs, setShowRewardInputs] = useState(false);
-  const [showCustomCategories, setShowCustomCategories] = useState(false);
-  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [showCategoryEditor, setShowCategoryEditor] = useState(false);
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryColor, setNewCategoryColor] = useState(COLOR_PALETTE[0]);
   const [newCategoryIcon, setNewCategoryIcon] = useState('tag');
@@ -117,7 +111,7 @@ export default function HomeScreen() {
       : 0;
 
   const filteredHabits = activeHabits.filter((h) => {
-    if (filterCategory && h.category !== filterCategory) return false;
+    if (filterCategory && (h.customCategoryId || h.category) !== filterCategory) return false;
     if (filterFrequency && h.frequency !== filterFrequency) return false;
     return true;
   });
@@ -169,9 +163,8 @@ export default function HomeScreen() {
   const resetModal = () => {
     setNewHabitName('');
     setNewHabitDescription('');
-    setSelectedCategory('health');
+    setSelectedCategoryId(categories[0]?.id || 'health');
     setSelectedFrequency('daily');
-    setSelectedCustomCategoryId(null);
     setCustomTokenReward('10');
     setCustomXPReward('15');
     setShowRewardInputs(false);
@@ -184,9 +177,8 @@ export default function HomeScreen() {
     setEditingHabitId(habitId);
     setNewHabitName(habit.name);
     setNewHabitDescription(habit.description);
-    setSelectedCategory(habit.category);
+    setSelectedCategoryId(habit.customCategoryId || habit.category);
     setSelectedFrequency(habit.frequency);
-    setSelectedCustomCategoryId(habit.customCategoryId || null);
     setCustomTokenReward(String(habit.tokenReward));
     setCustomXPReward(String(habit.xpReward));
     setShowRewardInputs(false);
@@ -194,25 +186,27 @@ export default function HomeScreen() {
   };
 
   const getSelectedCategoryStyle = () => {
-    if (selectedCategory === 'custom' && selectedCustomCategoryId) {
-      const cc = customCategories.find((c) => c.id === selectedCustomCategoryId);
-      if (cc) return { icon: cc.icon, color: cc.color };
-    }
-    return {
-      icon: HABIT_CATEGORY_ICONS[selectedCategory] || 'star',
-      color: HABIT_CATEGORY_COLORS[selectedCategory] || '#D4A44C',
-    };
+    const cat = categories.find((c) => c.id === selectedCategoryId);
+    if (cat) return { icon: cat.icon, color: cat.color };
+    return { icon: 'star', color: '#6366F1' };
+  };
+
+  const resolveHabitCategory = (): HabitCategory => {
+    return DEFAULT_CATEGORY_IDS.includes(selectedCategoryId)
+      ? (selectedCategoryId as HabitCategory)
+      : 'custom';
   };
 
   const handleSave = () => {
     if (!newHabitName.trim()) return;
     const { icon, color } = getSelectedCategoryStyle();
+    const habitCategory = resolveHabitCategory();
     if (isEditing) {
       updateHabit(editingHabitId, {
         name: newHabitName.trim(),
         description: newHabitDescription.trim(),
-        category: selectedCategory,
-        customCategoryId: selectedCategory === 'custom' ? (selectedCustomCategoryId ?? undefined) : undefined,
+        category: habitCategory,
+        customCategoryId: selectedCategoryId,
         frequency: selectedFrequency,
         tokenReward: parseInt(customTokenReward, 10) || 10,
         xpReward: parseInt(customXPReward, 10) || 15,
@@ -223,8 +217,8 @@ export default function HomeScreen() {
       addHabit({
         name: newHabitName.trim(),
         description: newHabitDescription.trim(),
-        category: selectedCategory,
-        customCategoryId: selectedCategory === 'custom' ? (selectedCustomCategoryId ?? undefined) : undefined,
+        category: habitCategory,
+        customCategoryId: selectedCategoryId,
         frequency: selectedFrequency,
         targetCount: 1,
         tokenReward: parseInt(customTokenReward, 10) || 10,
@@ -294,24 +288,24 @@ export default function HomeScreen() {
               <View style={styles.filterSection}>
                 <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>Category</Text>
                 <View style={styles.filterChips}>
-                  {CATEGORIES.map((cat) => (
+                  {categories.map((cat) => (
                     <TouchableOpacity
-                      key={cat}
+                      key={cat.id}
                       style={[
                         styles.filterChip,
                         {
                           backgroundColor:
-                            filterCategory === cat
-                              ? HABIT_CATEGORY_COLORS[cat]
+                            filterCategory === cat.id
+                              ? cat.color
                               : colors.inputBackground,
                           borderColor:
-                            filterCategory === cat
-                              ? HABIT_CATEGORY_COLORS[cat]
+                            filterCategory === cat.id
+                              ? cat.color
                               : colors.border,
                         },
                       ]}
                       onPress={() =>
-                        setFilterCategory(filterCategory === cat ? null : cat)
+                        setFilterCategory(filterCategory === cat.id ? null : cat.id)
                       }
                     >
                       <Text
@@ -319,11 +313,11 @@ export default function HomeScreen() {
                           styles.filterChipText,
                           {
                             color:
-                              filterCategory === cat ? '#FFF' : colors.textSecondary,
+                              filterCategory === cat.id ? '#FFF' : colors.textSecondary,
                           },
                         ]}
                       >
-                        {cat}
+                        {cat.name}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -409,15 +403,19 @@ export default function HomeScreen() {
               </Text>
             </View>
           ) : (
-            filteredHabits.map((habit) => (
-              <HabitCard
-                key={habit.id}
-                habit={habit}
-                date={today}
-                onToggle={() => handleToggle(habit.id)}
-                onLongPress={() => handleOpenEdit(habit.id)}
-              />
-            ))
+            filteredHabits.map((habit) => {
+              const cat = categories.find((c) => c.id === (habit.customCategoryId || habit.category));
+              return (
+                <HabitCard
+                  key={habit.id}
+                  habit={habit}
+                  categoryName={cat?.name}
+                  date={today}
+                  onToggle={() => handleToggle(habit.id)}
+                  onLongPress={() => handleOpenEdit(habit.id)}
+                />
+              );
+            })
           )}
         </View>
       </ScrollView>
@@ -503,39 +501,36 @@ export default function HomeScreen() {
               Category
             </Text>
             <View style={styles.categoryGrid}>
-              {CATEGORIES.filter((c) => c !== 'custom').map((cat) => (
+              {categories.map((cat) => (
                 <TouchableOpacity
-                  key={cat}
+                  key={cat.id}
                   style={[
                     styles.categoryChip,
                     {
                       backgroundColor:
-                        selectedCategory === cat
-                          ? HABIT_CATEGORY_COLORS[cat]
+                        selectedCategoryId === cat.id
+                          ? cat.color
                           : colors.inputBackground,
                       borderColor:
-                        selectedCategory === cat
-                          ? HABIT_CATEGORY_COLORS[cat]
+                        selectedCategoryId === cat.id
+                          ? cat.color
                           : colors.border,
                     },
                   ]}
-                  onPress={() => {
-                    setSelectedCategory(cat);
-                    setSelectedCustomCategoryId(null);
-                  }}
+                  onPress={() => setSelectedCategoryId(cat.id)}
                 >
                   <Text
                     style={[
                       styles.categoryChipText,
                       {
                         color:
-                          selectedCategory === cat
+                          selectedCategoryId === cat.id
                             ? '#FFF'
                             : colors.textSecondary,
                       },
                     ]}
                   >
-                    {cat}
+                    {cat.name}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -543,32 +538,20 @@ export default function HomeScreen() {
                 style={[
                   styles.categoryChip,
                   {
-                    backgroundColor:
-                      selectedCategory === 'custom'
-                        ? (customCategories.find((c) => c.id === selectedCustomCategoryId)?.color || HABIT_CATEGORY_COLORS['custom'])
-                        : colors.inputBackground,
-                    borderColor:
-                      selectedCategory === 'custom'
-                        ? (customCategories.find((c) => c.id === selectedCustomCategoryId)?.color || HABIT_CATEGORY_COLORS['custom'])
-                        : colors.border,
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.border,
                   },
                 ]}
-                onPress={() => setShowCustomCategories(true)}
+                onPress={() => setShowCategoryEditor(true)}
               >
+                <FontAwesome name="cog" size={12} color={colors.textSecondary} style={{ marginRight: 4 }} />
                 <Text
                   style={[
                     styles.categoryChipText,
-                    {
-                      color:
-                        selectedCategory === 'custom'
-                          ? '#FFF'
-                          : colors.textSecondary,
-                    },
+                    { color: colors.textSecondary },
                   ]}
                 >
-                  {selectedCategory === 'custom' && selectedCustomCategoryId
-                    ? customCategories.find((c) => c.id === selectedCustomCategoryId)?.name || 'custom'
-                    : 'custom'}
+                  Manage
                 </Text>
               </TouchableOpacity>
             </View>
@@ -713,12 +696,13 @@ export default function HomeScreen() {
       </Modal>
 
       <Modal
-        visible={showCustomCategories}
+        visible={showCategoryEditor}
         animationType="slide"
         presentationStyle="pageSheet"
         onRequestClose={() => {
-          setShowAddCategory(false);
-          setShowCustomCategories(false);
+          setShowCategoryForm(false);
+          setEditingCategoryId(null);
+          setShowCategoryEditor(false);
         }}
       >
         <SafeAreaView
@@ -726,15 +710,16 @@ export default function HomeScreen() {
         >
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => {
-              setShowAddCategory(false);
-              setShowCustomCategories(false);
+              setShowCategoryForm(false);
+              setEditingCategoryId(null);
+              setShowCategoryEditor(false);
             }}>
               <Text style={[styles.modalCancel, { color: colors.textSecondary }]}>
                 Back
               </Text>
             </TouchableOpacity>
             <Text style={[styles.modalTitle, { color: colors.text }]}>
-              Custom Categories
+              Categories
             </Text>
             <View style={{ width: 50 }} />
           </View>
@@ -743,21 +728,21 @@ export default function HomeScreen() {
             style={styles.modalBody}
             contentContainerStyle={styles.modalBodyContent}
           >
-            {customCategories.length === 0 && !showAddCategory && (
+            {categories.length === 0 && !showCategoryForm && (
               <View style={[styles.emptyState, { borderColor: colors.border, marginBottom: spacing.lg }]}>
                 <FontAwesome name="folder-open" size={40} color={colors.textMuted} />
                 <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
-                  No custom categories
+                  No categories
                 </Text>
                 <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                  Create your own categories with custom colors below.
+                  Add categories with custom names, colors, and icons.
                 </Text>
               </View>
             )}
 
             <View style={styles.customCategoryGrid}>
-              {customCategories.map((cc) => {
-                const isSelected = selectedCategory === 'custom' && selectedCustomCategoryId === cc.id;
+              {categories.map((cc) => {
+                const isSelected = selectedCategoryId === cc.id;
                 return (
                   <TouchableOpacity
                     key={cc.id}
@@ -770,12 +755,20 @@ export default function HomeScreen() {
                       },
                     ]}
                     onPress={() => {
-                      setSelectedCategory('custom');
-                      setSelectedCustomCategoryId(cc.id);
-                      setShowAddCategory(false);
-                      setShowCustomCategories(false);
+                      setSelectedCategoryId(cc.id);
+                      setShowCategoryForm(false);
+                      setEditingCategoryId(null);
+                      setShowCategoryEditor(false);
                     }}
-                    onLongPress={() => removeCustomCategory(cc.id)}
+                    onLongPress={() => {
+                      if (categories.length > 1) {
+                        if (selectedCategoryId === cc.id) {
+                          const next = categories.find((c) => c.id !== cc.id);
+                          if (next) setSelectedCategoryId(next.id);
+                        }
+                        removeCategory(cc.id);
+                      }
+                    }}
                   >
                     <View
                       style={[
@@ -794,6 +787,19 @@ export default function HomeScreen() {
                     <View
                       style={[styles.customCategoryCardColorDot, { backgroundColor: cc.color }]}
                     />
+                    <TouchableOpacity
+                      style={[styles.customCategoryEditBtn, { backgroundColor: colors.inputBackground }]}
+                      onPress={() => {
+                        setEditingCategoryId(cc.id);
+                        setNewCategoryName(cc.name);
+                        setNewCategoryColor(cc.color);
+                        setNewCategoryIcon(cc.icon);
+                        setShowCategoryForm(true);
+                      }}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <FontAwesome name="pencil" size={10} color={colors.textSecondary} />
+                    </TouchableOpacity>
                     {isSelected && (
                       <View style={[styles.customCategorySelectedBadge, { backgroundColor: cc.color }]}>
                         <FontAwesome name="check" size={10} color="#FFF" />
@@ -804,10 +810,10 @@ export default function HomeScreen() {
               })}
             </View>
 
-            {showAddCategory ? (
+            {showCategoryForm ? (
               <View style={[styles.addCategoryForm, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
                 <Text style={[styles.addCategoryFormTitle, { color: colors.text }]}>
-                  New Category
+                  {editingCategoryId ? 'Edit Category' : 'New Category'}
                 </Text>
 
                 <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
@@ -883,54 +889,98 @@ export default function HomeScreen() {
                 <View style={styles.addCategoryActions}>
                   <TouchableOpacity
                     style={[styles.addCategoryCancel, { borderColor: colors.border }]}
-                    onPress={() => setShowAddCategory(false)}
+                    onPress={() => {
+                      setShowCategoryForm(false);
+                      setEditingCategoryId(null);
+                      setNewCategoryName('');
+                      setNewCategoryColor(COLOR_PALETTE[0]);
+                      setNewCategoryIcon('tag');
+                    }}
                   >
                     <Text style={[styles.addCategoryCancelText, { color: colors.textSecondary }]}>
                       Cancel
                     </Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.addCategorySave,
-                      {
-                        backgroundColor: newCategoryName.trim()
-                          ? newCategoryColor
-                          : colors.inputBackground,
-                      },
-                    ]}
-                    onPress={() => {
-                      if (!newCategoryName.trim()) return;
-                      const created = addCustomCategory(
-                        newCategoryName.trim(),
-                        newCategoryColor,
-                        newCategoryIcon
-                      );
-                      setSelectedCategory('custom');
-                      setSelectedCustomCategoryId(created.id);
-                      setNewCategoryName('');
-                      setNewCategoryColor(COLOR_PALETTE[0]);
-                      setNewCategoryIcon('tag');
-                      setShowAddCategory(false);
-                      setShowCustomCategories(false);
-                    }}
-                  >
-                    <Text
+                  {editingCategoryId ? (
+                    <TouchableOpacity
                       style={[
-                        styles.addCategorySaveText,
+                        styles.addCategorySave,
                         {
-                          color: newCategoryName.trim() ? '#FFF' : colors.textMuted,
+                          backgroundColor: newCategoryName.trim()
+                            ? newCategoryColor
+                            : colors.inputBackground,
                         },
                       ]}
+                      onPress={() => {
+                        if (!newCategoryName.trim()) return;
+                        updateCategory(editingCategoryId, {
+                          name: newCategoryName.trim(),
+                          color: newCategoryColor,
+                          icon: newCategoryIcon,
+                        });
+                        setShowCategoryForm(false);
+                        setEditingCategoryId(null);
+                        setNewCategoryName('');
+                        setNewCategoryColor(COLOR_PALETTE[0]);
+                        setNewCategoryIcon('tag');
+                      }}
                     >
-                      Create & Select
-                    </Text>
-                  </TouchableOpacity>
+                      <Text
+                        style={[
+                          styles.addCategorySaveText,
+                          { color: newCategoryName.trim() ? '#FFF' : colors.textMuted },
+                        ]}
+                      >
+                        Save Changes
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={[
+                        styles.addCategorySave,
+                        {
+                          backgroundColor: newCategoryName.trim()
+                            ? newCategoryColor
+                            : colors.inputBackground,
+                        },
+                      ]}
+                      onPress={() => {
+                        if (!newCategoryName.trim()) return;
+                        const created = addCategory(
+                          newCategoryName.trim(),
+                          newCategoryColor,
+                          newCategoryIcon
+                        );
+                        setSelectedCategoryId(created.id);
+                        setNewCategoryName('');
+                        setNewCategoryColor(COLOR_PALETTE[0]);
+                        setNewCategoryIcon('tag');
+                        setShowCategoryForm(false);
+                        setShowCategoryEditor(false);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.addCategorySaveText,
+                          { color: newCategoryName.trim() ? '#FFF' : colors.textMuted },
+                        ]}
+                      >
+                        Create & Select
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
             ) : (
               <TouchableOpacity
                 style={[styles.addCategoryButton, { borderColor: colors.border }]}
-                onPress={() => setShowAddCategory(true)}
+                onPress={() => {
+                  setEditingCategoryId(null);
+                  setNewCategoryName('');
+                  setNewCategoryColor(COLOR_PALETTE[0]);
+                  setNewCategoryIcon('tag');
+                  setShowCategoryForm(true);
+                }}
               >
                 <FontAwesome name="plus" size={16} color={colors.primary} />
                 <Text style={[styles.addCategoryButtonText, { color: colors.primary }]}>
@@ -939,11 +989,9 @@ export default function HomeScreen() {
               </TouchableOpacity>
             )}
 
-            {customCategories.length > 0 && (
-              <Text style={[styles.customCategoryHint, { color: colors.textMuted }]}>
-                Long-press a category to delete it.
-              </Text>
-            )}
+            <Text style={[styles.customCategoryHint, { color: colors.textMuted }]}>
+              Tap to select. Tap the pencil to edit. Long-press to delete.
+            </Text>
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -1128,6 +1176,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
@@ -1246,6 +1296,16 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
+  },
+  customCategoryEditBtn: {
+    position: 'absolute',
+    top: spacing.sm,
+    left: spacing.sm,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   customCategorySelectedBadge: {
     position: 'absolute',

@@ -5,7 +5,7 @@ import { Card } from '../common/Card';
 import { TokenBadge } from '../common/TokenBadge';
 import { XPBadge } from '../common/XPBadge';
 import { Habit } from '@/src/types';
-import { HABIT_CATEGORY_COLORS, isHabitCompletedForPeriod } from '@/src/utils/levels';
+import { isHabitCompletedForPeriod } from '@/src/utils/levels';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
@@ -25,16 +25,17 @@ const FREQUENCY_COLORS: Record<string, string> = {
 
 interface HabitCardProps {
   habit: Habit;
+  categoryName?: string;
   onToggle: () => void;
   onLongPress?: () => void;
   date?: string;
 }
 
-export function HabitCard({ habit, onToggle, onLongPress }: HabitCardProps) {
+export function HabitCard({ habit, categoryName, onToggle, onLongPress }: HabitCardProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const isCompleted = isHabitCompletedForPeriod(habit.frequency, habit.completedDates);
-  const categoryColor = HABIT_CATEGORY_COLORS[habit.category] || colors.primary;
+  const categoryColor = habit.color || colors.primary;
   const frequencyColor = FREQUENCY_COLORS[habit.frequency] || colors.textSecondary;
 
   return (
@@ -79,7 +80,7 @@ export function HabitCard({ habit, onToggle, onLongPress }: HabitCardProps) {
               ]}
             >
               <Text style={[styles.categoryText, { color: categoryColor }]}>
-                {habit.category}
+                {categoryName || habit.category}
               </Text>
             </View>
             <View

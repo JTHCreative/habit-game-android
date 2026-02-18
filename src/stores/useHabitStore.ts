@@ -4,7 +4,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
 import { format } from 'date-fns';
 import { Habit, HabitCategory, HabitFrequency } from '../types';
-import { HABIT_CATEGORY_COLORS } from '../utils/levels';
 
 interface HabitState {
   habits: Habit[];

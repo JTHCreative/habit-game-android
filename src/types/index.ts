@@ -10,7 +10,7 @@ export type HabitCategory =
   | 'finance'
   | 'custom';
 
-export interface CustomCategory {
+export interface Category {
   id: string;
   name: string;
   color: string;
