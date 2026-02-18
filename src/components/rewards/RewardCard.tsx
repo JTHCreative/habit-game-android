@@ -78,16 +78,9 @@ export function RewardCard({
         </View>
 
         <View style={styles.content}>
-          <View style={styles.nameRow}>
-            <Text style={[styles.name, { color: hasStock ? colors.text : colors.textMuted }]}>
-              {reward.name}
-            </Text>
-            {!hasStock && (
-              <View style={styles.outOfStockStatus}>
-                <Text style={styles.outOfStockStatusText}>Out of Stock</Text>
-              </View>
-            )}
-          </View>
+          <Text style={[styles.name, { color: hasStock ? colors.text : colors.textMuted }]}>
+            {reward.name}
+          </Text>
           <Text style={[styles.description, { color: hasStock ? colors.textSecondary : colors.textMuted }]}>
             {reward.description}
           </Text>
@@ -127,11 +120,8 @@ export function RewardCard({
         )}
 
         {!hasStock && (
-          <View style={[styles.outOfStockBadge, { backgroundColor: colors.inputBackground }]}>
-            <FontAwesome name="clock-o" size={14} color={colors.textMuted} />
-            <Text style={[styles.outOfStockText, { color: colors.textMuted }]}>
-              Replenishes
-            </Text>
+          <View style={[styles.outOfStockBadge, { backgroundColor: '#EF444420' }]}>
+            <Text style={styles.outOfStockText}>Out of Stock</Text>
           </View>
         )}
       </View>
@@ -161,25 +151,8 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.xs,
   },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
   name: {
     fontSize: fontSize.lg,
-    fontWeight: '700',
-    flexShrink: 1,
-  },
-  outOfStockStatus: {
-    backgroundColor: '#EF444420',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: borderRadius.full,
-  },
-  outOfStockStatusText: {
-    color: '#EF4444',
-    fontSize: fontSize.xs,
     fontWeight: '700',
   },
   description: {
@@ -222,15 +195,13 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
   },
   outOfStockBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
   },
   outOfStockText: {
-    fontWeight: '600',
+    color: '#EF4444',
+    fontWeight: '700',
     fontSize: fontSize.sm,
   },
 });
