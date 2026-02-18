@@ -49,20 +49,13 @@ export function InventoryCard({ item, onRedeem }: InventoryCardProps) {
       </View>
 
       <View style={styles.footer}>
-        <View style={styles.footerLeft}>
-          {item.redeemedCount > 0 && (
-            <View style={styles.greenBadge}>
-              <FontAwesome name="check" size={10} color="#22C55E" />
-              <Text style={styles.greenBadgeText}>
-                {item.redeemedCount} redeemed
-              </Text>
-            </View>
-          )}
-          <View style={[styles.remainingBadge, { backgroundColor: displayColor + '20' }]}>
-            <Text style={[styles.remainingText, { color: displayColor }]}>
-              {remaining} left {periodLabel}
-            </Text>
-          </View>
+        <View style={[styles.remainingBadge, { backgroundColor: displayColor + '20' }]}>
+          <Text style={[styles.remainingCount, { color: displayColor }]}>
+            {remaining}/{item.quantity}
+          </Text>
+          <Text style={[styles.remainingLabel, { color: displayColor }]}>
+            remaining {periodLabel}
+          </Text>
         </View>
 
         {allRedeemed ? (
@@ -121,42 +114,20 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#3A3A55',
   },
-  footerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    flexShrink: 1,
-  },
-  greenBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#22C55E20',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: borderRadius.full,
-  },
-  greenBadgeText: {
-    color: '#22C55E',
-    fontSize: fontSize.xs,
-    fontWeight: '700',
-  },
   remainingBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: borderRadius.full,
-  },
-  remainingText: {
-    fontSize: fontSize.xs,
-    fontWeight: '700',
-  },
-  redeemedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
   },
-  redeemedText: {
+  remainingCount: {
     fontSize: fontSize.sm,
+    fontWeight: '800',
+  },
+  remainingLabel: {
+    fontSize: fontSize.xs,
     fontWeight: '600',
   },
   redeemButton: {
