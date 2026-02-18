@@ -52,8 +52,8 @@ export function HabitCard({ habit, categoryName, onToggle, onLongPress }: HabitC
           style={[
             styles.checkbox,
             {
-              borderColor: isCompleted ? categoryColor : colors.border,
-              backgroundColor: isCompleted ? categoryColor : 'transparent',
+              borderColor: isCompleted ? colors.primary : colors.border,
+              backgroundColor: isCompleted ? colors.primary : 'transparent',
             },
           ]}
         >
