@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
+  Alert,
 } from 'react-native';
 import { Text } from '@/components/Themed';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -756,19 +757,32 @@ export default function HomeScreen() {
                       },
                     ]}
                     onPress={() => {
-                      setSelectedCategoryId(cc.id);
-                      setShowCategoryForm(false);
-                      setEditingCategoryId(null);
-                      setShowCategoryEditor(false);
+                      setEditingCategoryId(cc.id);
+                      setNewCategoryName(cc.name);
+                      setNewCategoryColor(cc.color);
+                      setNewCategoryIcon(cc.icon);
+                      setShowCategoryForm(true);
                     }}
                     onLongPress={() => {
-                      if (categories.length > 1) {
-                        if (selectedCategoryId === cc.id) {
-                          const next = categories.find((c) => c.id !== cc.id);
-                          if (next) setSelectedCategoryId(next.id);
-                        }
-                        removeCategory(cc.id);
-                      }
+                      if (categories.length <= 1) return;
+                      Alert.alert(
+                        'Delete Category',
+                        `Are you sure you want to delete "${cc.name}"?`,
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          {
+                            text: 'Delete',
+                            style: 'destructive',
+                            onPress: () => {
+                              if (selectedCategoryId === cc.id) {
+                                const next = categories.find((c) => c.id !== cc.id);
+                                if (next) setSelectedCategoryId(next.id);
+                              }
+                              removeCategory(cc.id);
+                            },
+                          },
+                        ]
+                      );
                     }}
                   >
                     <View
@@ -788,24 +802,6 @@ export default function HomeScreen() {
                     <View
                       style={[styles.customCategoryCardColorDot, { backgroundColor: cc.color }]}
                     />
-                    <TouchableOpacity
-                      style={[styles.customCategoryEditBtn, { backgroundColor: colors.inputBackground }]}
-                      onPress={() => {
-                        setEditingCategoryId(cc.id);
-                        setNewCategoryName(cc.name);
-                        setNewCategoryColor(cc.color);
-                        setNewCategoryIcon(cc.icon);
-                        setShowCategoryForm(true);
-                      }}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <FontAwesome name="pencil" size={10} color={colors.textSecondary} />
-                    </TouchableOpacity>
-                    {isSelected && (
-                      <View style={[styles.customCategorySelectedBadge, { backgroundColor: cc.color }]}>
-                        <FontAwesome name="check" size={10} color="#FFF" />
-                      </View>
-                    )}
                   </TouchableOpacity>
                 );
               })}
@@ -991,7 +987,7 @@ export default function HomeScreen() {
             )}
 
             <Text style={[styles.customCategoryHint, { color: colors.textMuted }]}>
-              Tap to select. Tap the pencil to edit. Long-press to delete.
+              Tap to edit. Long-press to delete.
             </Text>
           </ScrollView>
         </SafeAreaView>
@@ -1297,26 +1293,6 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-  },
-  customCategoryEditBtn: {
-    position: 'absolute',
-    top: spacing.sm,
-    left: spacing.sm,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  customCategorySelectedBadge: {
-    position: 'absolute',
-    top: spacing.sm,
-    right: spacing.sm,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   addCategoryButton: {
     flexDirection: 'row',
