@@ -802,6 +802,11 @@ export default function HomeScreen() {
                     <View
                       style={[styles.customCategoryCardColorDot, { backgroundColor: cc.color }]}
                     />
+                    {isSelected && (
+                      <View style={[styles.customCategorySelectedBadge, { backgroundColor: cc.color }]}>
+                        <FontAwesome name="check" size={10} color="#FFF" />
+                      </View>
+                    )}
                   </TouchableOpacity>
                 );
               })}
@@ -1293,6 +1298,16 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
+  },
+  customCategorySelectedBadge: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   addCategoryButton: {
     flexDirection: 'row',
