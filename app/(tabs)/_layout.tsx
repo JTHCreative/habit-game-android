@@ -1,5 +1,6 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Tabs } from 'expo-router';
 
 import Colors from '@/constants/Colors';
@@ -10,6 +11,13 @@ function TabBarIcon(props: {
   color: string;
 }) {
   return <FontAwesome size={24} style={{ marginBottom: -3 }} {...props} />;
+}
+
+function TabBarMCIcon(props: {
+  name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+  color: string;
+}) {
+  return <MaterialCommunityIcons size={24} style={{ marginBottom: -3 }} {...props} />;
 }
 
 export default function TabLayout() {
@@ -47,7 +55,7 @@ export default function TabLayout() {
         options={{
           title: 'Rewards',
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name="diamond" color={color} />
+            <TabBarMCIcon name="coins" color={color} />
           ),
         }}
       />
@@ -56,7 +64,7 @@ export default function TabLayout() {
         options={{
           title: 'History',
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name="bar-chart" color={color} />
+            <TabBarIcon name="line-chart" color={color} />
           ),
         }}
       />
@@ -65,7 +73,7 @@ export default function TabLayout() {
         options={{
           title: 'Challenges',
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name="crosshairs" color={color} />
+            <TabBarIcon name="bullseye" color={color} />
           ),
         }}
       />
