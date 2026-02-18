@@ -757,6 +757,7 @@ export default function HomeScreen() {
                       },
                     ]}
                     onPress={() => {
+                      setSelectedCategoryId(cc.id);
                       setEditingCategoryId(cc.id);
                       setNewCategoryName(cc.name);
                       setNewCategoryColor(cc.color);
