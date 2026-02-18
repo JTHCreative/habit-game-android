@@ -67,7 +67,7 @@ export default function TabLayout() {
         options={{
           title: 'History',
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name="line-chart" color={color} />
+            <TabBarIcon name="history" color={color} />
           ),
         }}
       />
