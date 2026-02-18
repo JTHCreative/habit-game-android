@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { StyleSheet, ScrollView, View, TouchableOpacity, Image, Alert, TextInput } from 'react-native';
-import { Text } from '@/components/Themed';
+import { Text, useAppFont } from '@/components/Themed';
 import { Card } from '@/src/components/common/Card';
 import { ProgressBar } from '@/src/components/common/ProgressBar';
 import { useUserStore } from '@/src/stores/useUserStore';
@@ -23,6 +23,7 @@ export default function ProfileScreen() {
   const habits = useHabitStore((s) => s.habits);
 
   const router = useRouter();
+  const { regular: fontRegular, bold: fontBold } = useAppFont();
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(profile.displayName);
   const nameInputRef = useRef<TextInput>(null);
@@ -112,7 +113,7 @@ export default function ProfileScreen() {
             {isEditingName ? (
               <TextInput
                 ref={nameInputRef}
-                style={styles.nameInput}
+                style={[styles.nameInput, fontBold ? { fontFamily: fontBold } : undefined]}
                 value={editedName}
                 onChangeText={setEditedName}
                 onBlur={handleSaveName}

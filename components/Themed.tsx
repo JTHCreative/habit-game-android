@@ -33,6 +33,15 @@ export function useThemeColor(
 
 const BOLD_WEIGHTS = new Set(['700', '800', '900', 'bold']);
 
+/** Returns the current font family names based on user settings. */
+export function useAppFont() {
+  const fontKey = useSettingsStore((s) => s.fontKey);
+  if (fontKey === 'system') return { regular: undefined, bold: undefined };
+  const option = FONT_OPTIONS.find((f) => f.key === fontKey);
+  if (!option) return { regular: undefined, bold: undefined };
+  return { regular: option.regular, bold: option.bold };
+}
+
 export function Text(props: TextProps) {
   const { style, lightColor, darkColor, ...otherProps } = props;
   const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');

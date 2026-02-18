@@ -5,6 +5,7 @@ import { Tabs } from 'expo-router';
 
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
+import { useAppFont } from '@/components/Themed';
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
@@ -23,6 +24,7 @@ function TabBarMCIcon(props: {
 export default function TabLayout() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const { bold } = useAppFont();
 
   return (
     <Tabs
@@ -39,6 +41,7 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
+          ...(bold ? { fontFamily: bold } : {}),
         },
         headerShown: false,
       }}
