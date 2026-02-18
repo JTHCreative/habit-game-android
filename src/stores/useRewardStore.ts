@@ -2,15 +2,44 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
-import { Reward } from '../types';
+import { ReplenishPeriod, Reward } from '../types';
+
+function getPeriodStart(period: ReplenishPeriod, date: Date): string {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const day = date.getDate();
+  const dayOfWeek = date.getDay();
+
+  switch (period) {
+    case 'daily':
+      return new Date(year, month, day).toISOString();
+    case 'weekly': {
+      const weekStart = new Date(year, month, day - dayOfWeek);
+      return weekStart.toISOString();
+    }
+    case 'monthly':
+      return new Date(year, month, 1).toISOString();
+    case 'yearly':
+      return new Date(year, 0, 1).toISOString();
+  }
+}
+
+function shouldReplenish(reward: Reward): boolean {
+  const now = new Date();
+  const currentPeriodStart = getPeriodStart(reward.replenishPeriod, now);
+  const lastReplenished = new Date(reward.lastReplenishedAt);
+  const lastPeriodStart = getPeriodStart(reward.replenishPeriod, lastReplenished);
+  return currentPeriodStart !== lastPeriodStart;
+}
 
 interface RewardState {
   rewards: Reward[];
-  addReward: (reward: Omit<Reward, 'id' | 'isPurchased' | 'isRedeemed'>) => void;
-  updateReward: (id: string, updates: Partial<Pick<Reward, 'name' | 'description' | 'tokenCost' | 'category'>>) => void;
+  addReward: (reward: Omit<Reward, 'id' | 'isPurchased' | 'isRedeemed' | 'remainingQuantity' | 'lastReplenishedAt'>) => void;
+  updateReward: (id: string, updates: Partial<Pick<Reward, 'name' | 'description' | 'tokenCost' | 'category' | 'maxQuantity' | 'replenishPeriod'>>) => void;
   removeReward: (id: string) => void;
   purchaseReward: (id: string) => void;
   redeemReward: (id: string) => void;
+  replenishRewards: () => void;
   getPurchasedRewards: () => Reward[];
   getAvailableRewards: () => Reward[];
 }
@@ -23,6 +52,10 @@ const DEFAULT_REWARDS: Reward[] = [
     tokenCost: 100,
     icon: 'film',
     category: 'entertainment',
+    maxQuantity: 1,
+    remainingQuantity: 1,
+    replenishPeriod: 'weekly',
+    lastReplenishedAt: new Date().toISOString(),
     isPurchased: false,
     isRedeemed: false,
   },
@@ -33,6 +66,10 @@ const DEFAULT_REWARDS: Reward[] = [
     tokenCost: 50,
     icon: 'coffee',
     category: 'treat',
+    maxQuantity: 3,
+    remainingQuantity: 3,
+    replenishPeriod: 'daily',
+    lastReplenishedAt: new Date().toISOString(),
     isPurchased: false,
     isRedeemed: false,
   },
@@ -43,6 +80,10 @@ const DEFAULT_REWARDS: Reward[] = [
     tokenCost: 75,
     icon: 'moon',
     category: 'self_care',
+    maxQuantity: 2,
+    remainingQuantity: 2,
+    replenishPeriod: 'weekly',
+    lastReplenishedAt: new Date().toISOString(),
     isPurchased: false,
     isRedeemed: false,
   },
@@ -53,6 +94,10 @@ const DEFAULT_REWARDS: Reward[] = [
     tokenCost: 80,
     icon: 'play',
     category: 'entertainment',
+    maxQuantity: 2,
+    remainingQuantity: 2,
+    replenishPeriod: 'daily',
+    lastReplenishedAt: new Date().toISOString(),
     isPurchased: false,
     isRedeemed: false,
   },
@@ -63,6 +108,10 @@ const DEFAULT_REWARDS: Reward[] = [
     tokenCost: 200,
     icon: 'droplet',
     category: 'self_care',
+    maxQuantity: 1,
+    remainingQuantity: 1,
+    replenishPeriod: 'monthly',
+    lastReplenishedAt: new Date().toISOString(),
     isPurchased: false,
     isRedeemed: false,
   },
@@ -73,6 +122,10 @@ const DEFAULT_REWARDS: Reward[] = [
     tokenCost: 150,
     icon: 'book-open',
     category: 'experience',
+    maxQuantity: 1,
+    remainingQuantity: 1,
+    replenishPeriod: 'monthly',
+    lastReplenishedAt: new Date().toISOString(),
     isPurchased: false,
     isRedeemed: false,
   },
@@ -83,6 +136,10 @@ const DEFAULT_REWARDS: Reward[] = [
     tokenCost: 250,
     icon: 'map-pin',
     category: 'experience',
+    maxQuantity: 1,
+    remainingQuantity: 1,
+    replenishPeriod: 'weekly',
+    lastReplenishedAt: new Date().toISOString(),
     isPurchased: false,
     isRedeemed: false,
   },
@@ -93,6 +150,10 @@ const DEFAULT_REWARDS: Reward[] = [
     tokenCost: 500,
     icon: 'sun',
     category: 'self_care',
+    maxQuantity: 1,
+    remainingQuantity: 1,
+    replenishPeriod: 'monthly',
+    lastReplenishedAt: new Date().toISOString(),
     isPurchased: false,
     isRedeemed: false,
   },
@@ -110,6 +171,8 @@ export const useRewardStore = create<RewardState>()(
             {
               ...rewardData,
               id: Crypto.randomUUID(),
+              remainingQuantity: rewardData.maxQuantity,
+              lastReplenishedAt: new Date().toISOString(),
               isPurchased: false,
               isRedeemed: false,
             },
@@ -118,9 +181,14 @@ export const useRewardStore = create<RewardState>()(
 
       updateReward: (id, updates) =>
         set((state) => ({
-          rewards: state.rewards.map((r) =>
-            r.id === id ? { ...r, ...updates } : r
-          ),
+          rewards: state.rewards.map((r) => {
+            if (r.id !== id) return r;
+            const updated = { ...r, ...updates };
+            if (updates.maxQuantity !== undefined && updates.maxQuantity > r.maxQuantity) {
+              updated.remainingQuantity = r.remainingQuantity + (updates.maxQuantity - r.maxQuantity);
+            }
+            return updated;
+          }),
         })),
 
       removeReward: (id) =>
@@ -131,8 +199,12 @@ export const useRewardStore = create<RewardState>()(
       purchaseReward: (id) =>
         set((state) => ({
           rewards: state.rewards.map((r) =>
-            r.id === id
-              ? { ...r, isPurchased: true, purchasedAt: new Date().toISOString() }
+            r.id === id && r.remainingQuantity > 0
+              ? {
+                  ...r,
+                  remainingQuantity: r.remainingQuantity - 1,
+                  purchasedAt: new Date().toISOString(),
+                }
               : r
           ),
         })),
@@ -146,15 +218,43 @@ export const useRewardStore = create<RewardState>()(
           ),
         })),
 
+      replenishRewards: () =>
+        set((state) => ({
+          rewards: state.rewards.map((r) => {
+            if (shouldReplenish(r)) {
+              return {
+                ...r,
+                remainingQuantity: r.maxQuantity,
+                lastReplenishedAt: new Date().toISOString(),
+              };
+            }
+            return r;
+          }),
+        })),
+
       getPurchasedRewards: () =>
-        get().rewards.filter((r) => r.isPurchased && !r.isRedeemed),
+        get().rewards.filter((r) => r.remainingQuantity === 0),
 
       getAvailableRewards: () =>
-        get().rewards.filter((r) => !r.isPurchased),
+        get().rewards.filter((r) => r.remainingQuantity > 0),
     }),
     {
       name: 'reward-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      merge: (persisted, current) => {
+        const state = persisted as RewardState;
+        if (!state || !state.rewards) return current;
+        return {
+          ...current,
+          rewards: state.rewards.map((r) => ({
+            maxQuantity: 1,
+            remainingQuantity: 1,
+            replenishPeriod: 'daily' as ReplenishPeriod,
+            lastReplenishedAt: new Date().toISOString(),
+            ...r,
+          })),
+        };
+      },
     }
   )
 );

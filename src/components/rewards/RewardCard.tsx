@@ -29,11 +29,17 @@ const REWARD_ICONS: Record<string, React.ComponentProps<typeof FontAwesome>['nam
   sun: 'sun-o',
 };
 
+const PERIOD_LABELS: Record<string, string> = {
+  daily: '/day',
+  weekly: '/week',
+  monthly: '/month',
+  yearly: '/year',
+};
+
 interface RewardCardProps {
   reward: Reward;
   canAfford: boolean;
   onPurchase?: () => void;
-  onRedeem?: () => void;
   onLongPress?: () => void;
 }
 
@@ -41,13 +47,15 @@ export function RewardCard({
   reward,
   canAfford,
   onPurchase,
-  onRedeem,
   onLongPress,
 }: RewardCardProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const categoryColor = REWARD_CATEGORY_COLORS[reward.category] || colors.primary;
   const iconName = REWARD_ICONS[reward.icon] || 'star';
+  const hasStock = reward.remainingQuantity > 0;
+  const canBuy = canAfford && hasStock;
+  const periodLabel = PERIOD_LABELS[reward.replenishPeriod] || '';
 
   return (
     <TouchableOpacity
@@ -77,45 +85,42 @@ export function RewardCard({
       </View>
 
       <View style={styles.footer}>
-        <TokenBadge amount={reward.tokenCost} size="medium" />
+        <View style={styles.footerLeft}>
+          <TokenBadge amount={reward.tokenCost} size="medium" />
+          <View style={[styles.quantityBadge, { backgroundColor: hasStock ? categoryColor + '20' : '#EF444420' }]}>
+            <Text style={[styles.quantityText, { color: hasStock ? categoryColor : '#EF4444' }]}>
+              {reward.remainingQuantity}/{reward.maxQuantity}{periodLabel}
+            </Text>
+          </View>
+        </View>
 
-        {!reward.isPurchased && onPurchase && (
+        {hasStock && onPurchase && (
           <TouchableOpacity
             style={[
               styles.button,
               {
-                backgroundColor: canAfford ? colors.primary : colors.inputBackground,
+                backgroundColor: canBuy ? colors.primary : colors.inputBackground,
               },
             ]}
             onPress={onPurchase}
-            disabled={!canAfford}
+            disabled={!canBuy}
           >
             <Text
               style={[
                 styles.buttonText,
-                { color: canAfford ? '#FFF' : colors.textMuted },
+                { color: canBuy ? '#FFF' : colors.textMuted },
               ]}
             >
-              {canAfford ? 'Purchase' : 'Not enough'}
+              {canAfford ? 'Claim' : 'Not enough'}
             </Text>
           </TouchableOpacity>
         )}
 
-        {reward.isPurchased && !reward.isRedeemed && onRedeem && (
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: colors.success }]}
-            onPress={onRedeem}
-          >
-            <FontAwesome name="gift" size={14} color="#FFF" />
-            <Text style={styles.buttonText}>Redeem</Text>
-          </TouchableOpacity>
-        )}
-
-        {reward.isRedeemed && (
-          <View style={styles.redeemedBadge}>
-            <FontAwesome name="check-circle" size={14} color={colors.success} />
-            <Text style={[styles.redeemedText, { color: colors.success }]}>
-              Redeemed
+        {!hasStock && (
+          <View style={[styles.outOfStockBadge, { backgroundColor: colors.inputBackground }]}>
+            <FontAwesome name="clock-o" size={14} color={colors.textMuted} />
+            <Text style={[styles.outOfStockText, { color: colors.textMuted }]}>
+              Replenishes
             </Text>
           </View>
         )}
@@ -162,6 +167,20 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#3A3A55',
   },
+  footerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  quantityBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+  },
+  quantityText: {
+    fontSize: fontSize.xs,
+    fontWeight: '700',
+  },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -175,12 +194,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: fontSize.sm,
   },
-  redeemedBadge: {
+  outOfStockBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
   },
-  redeemedText: {
+  outOfStockText: {
     fontWeight: '600',
     fontSize: fontSize.sm,
   },

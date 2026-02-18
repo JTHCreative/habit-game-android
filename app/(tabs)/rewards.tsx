@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   ScrollView,
@@ -18,7 +18,7 @@ import Colors, { gradients } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Reward } from '@/src/types';
+import { ReplenishPeriod, Reward } from '@/src/types';
 
 type RewardCategory = Reward['category'];
 
@@ -30,6 +30,13 @@ const REWARD_CATEGORIES: RewardCategory[] = [
   'custom',
 ];
 
+const REPLENISH_PERIODS: { value: ReplenishPeriod; label: string }[] = [
+  { value: 'daily', label: 'Per Day' },
+  { value: 'weekly', label: 'Per Week' },
+  { value: 'monthly', label: 'Per Month' },
+  { value: 'yearly', label: 'Per Year' },
+];
+
 export default function RewardsScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
@@ -37,10 +44,10 @@ export default function RewardsScreen() {
   const spendTokens = useUserStore((s) => s.spendTokens);
   const rewards = useRewardStore((s) => s.rewards);
   const purchaseReward = useRewardStore((s) => s.purchaseReward);
-  const redeemReward = useRewardStore((s) => s.redeemReward);
   const addReward = useRewardStore((s) => s.addReward);
   const updateReward = useRewardStore((s) => s.updateReward);
   const removeReward = useRewardStore((s) => s.removeReward);
+  const replenishRewards = useRewardStore((s) => s.replenishRewards);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -48,32 +55,36 @@ export default function RewardsScreen() {
   const [newName, setNewName] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [newCost, setNewCost] = useState('100');
+  const [newQuantity, setNewQuantity] = useState('1');
   const [selectedCategory, setSelectedCategory] = useState<RewardCategory>('custom');
+  const [selectedPeriod, setSelectedPeriod] = useState<ReplenishPeriod>('daily');
 
-  const [filter, setFilter] = useState<'available' | 'purchased'>('available');
+  const [filter, setFilter] = useState<'available' | 'out_of_stock'>('available');
 
-  const available = rewards.filter((r) => !r.isPurchased);
-  const purchased = rewards.filter((r) => r.isPurchased && !r.isRedeemed);
-  const displayed = filter === 'available' ? available : purchased;
+  useEffect(() => {
+    replenishRewards();
+  }, [replenishRewards]);
+
+  const available = rewards.filter((r) => r.remainingQuantity > 0);
+  const outOfStock = rewards.filter((r) => r.remainingQuantity === 0);
+  const displayed = filter === 'available' ? available : outOfStock;
 
   const handlePurchase = (rewardId: string) => {
     const reward = rewards.find((r) => r.id === rewardId);
-    if (!reward) return;
+    if (!reward || reward.remainingQuantity <= 0) return;
     const success = spendTokens(reward.tokenCost);
     if (success) {
       purchaseReward(rewardId);
     }
   };
 
-  const handleRedeem = (rewardId: string) => {
-    redeemReward(rewardId);
-  };
-
   const resetModal = () => {
     setNewName('');
     setNewDescription('');
     setNewCost('100');
+    setNewQuantity('1');
     setSelectedCategory('custom');
+    setSelectedPeriod('daily');
     setIsEditing(false);
     setEditingRewardId(null);
   };
@@ -84,18 +95,23 @@ export default function RewardsScreen() {
     setNewName(reward.name);
     setNewDescription(reward.description);
     setNewCost(String(reward.tokenCost));
+    setNewQuantity(String(reward.maxQuantity));
     setSelectedCategory(reward.category);
+    setSelectedPeriod(reward.replenishPeriod);
     setShowAddModal(true);
   };
 
   const handleSaveReward = () => {
     if (!newName.trim()) return;
+    const quantity = parseInt(newQuantity, 10) || 1;
     if (isEditing && editingRewardId) {
       updateReward(editingRewardId, {
         name: newName.trim(),
         description: newDescription.trim(),
         tokenCost: parseInt(newCost, 10) || 100,
         category: selectedCategory,
+        maxQuantity: quantity,
+        replenishPeriod: selectedPeriod,
       });
     } else {
       addReward({
@@ -104,6 +120,8 @@ export default function RewardsScreen() {
         tokenCost: parseInt(newCost, 10) || 100,
         icon: 'star',
         category: selectedCategory,
+        maxQuantity: quantity,
+        replenishPeriod: selectedPeriod,
       });
     }
     resetModal();
@@ -160,21 +178,21 @@ export default function RewardsScreen() {
         <TouchableOpacity
           style={[
             styles.filterTab,
-            filter === 'purchased' && {
+            filter === 'out_of_stock' && {
               backgroundColor: colors.primary,
             },
           ]}
-          onPress={() => setFilter('purchased')}
+          onPress={() => setFilter('out_of_stock')}
         >
           <Text
             style={[
               styles.filterText,
               {
-                color: filter === 'purchased' ? '#FFF' : colors.textSecondary,
+                color: filter === 'out_of_stock' ? '#FFF' : colors.textSecondary,
               },
             ]}
           >
-            Purchased ({purchased.length})
+            Out of Stock ({outOfStock.length})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -196,19 +214,19 @@ export default function RewardsScreen() {
         {displayed.length === 0 ? (
           <View style={[styles.emptyState, { borderColor: colors.border }]}>
             <FontAwesome
-              name={filter === 'available' ? 'shopping-cart' : 'gift'}
+              name={filter === 'available' ? 'shopping-cart' : 'clock-o'}
               size={48}
               color={colors.textMuted}
             />
             <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
               {filter === 'available'
                 ? 'No rewards available'
-                : 'No purchased rewards'}
+                : 'No out of stock rewards'}
             </Text>
             <Text style={[styles.emptyText, { color: colors.textMuted }]}>
               {filter === 'available'
                 ? 'Add custom rewards or check back later!'
-                : 'Complete habits to earn tokens and purchase rewards!'}
+                : 'All rewards are in stock!'}
             </Text>
           </View>
         ) : (
@@ -218,7 +236,6 @@ export default function RewardsScreen() {
               reward={reward}
               canAfford={profile.tokens >= reward.tokenCost}
               onPurchase={() => handlePurchase(reward.id)}
-              onRedeem={() => handleRedeem(reward.id)}
               onLongPress={() => handleEditReward(reward)}
             />
           ))
@@ -247,7 +264,7 @@ export default function RewardsScreen() {
               </Text>
             </TouchableOpacity>
             <Text style={[styles.modalTitle, { color: colors.text }]}>
-              {isEditing ? 'Edit Reward' : 'New Reward'}
+              Edit Reward
             </Text>
             <TouchableOpacity onPress={handleSaveReward}>
               <Text
@@ -321,6 +338,64 @@ export default function RewardsScreen() {
               onChangeText={setNewCost}
               keyboardType="numeric"
             />
+
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              Quantity
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.inputBackground,
+                  color: colors.text,
+                  borderColor: colors.border,
+                },
+              ]}
+              placeholder="1"
+              placeholderTextColor={colors.textMuted}
+              value={newQuantity}
+              onChangeText={setNewQuantity}
+              keyboardType="numeric"
+            />
+
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              Replenishes
+            </Text>
+            <View style={styles.categoryGrid}>
+              {REPLENISH_PERIODS.map((period) => (
+                <TouchableOpacity
+                  key={period.value}
+                  style={[
+                    styles.categoryChip,
+                    {
+                      backgroundColor:
+                        selectedPeriod === period.value
+                          ? colors.primary
+                          : colors.inputBackground,
+                      borderColor:
+                        selectedPeriod === period.value
+                          ? colors.primary
+                          : colors.border,
+                    },
+                  ]}
+                  onPress={() => setSelectedPeriod(period.value)}
+                >
+                  <Text
+                    style={[
+                      styles.categoryChipText,
+                      {
+                        color:
+                          selectedPeriod === period.value
+                            ? '#FFF'
+                            : colors.textSecondary,
+                      },
+                    ]}
+                  >
+                    {period.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
               Category

@@ -53,6 +53,8 @@ export interface Mission {
   expiresAt?: string;
 }
 
+export type ReplenishPeriod = 'daily' | 'weekly' | 'monthly' | 'yearly';
+
 export interface Reward {
   id: string;
   name: string;
@@ -60,6 +62,10 @@ export interface Reward {
   tokenCost: number;
   icon: string;
   category: 'self_care' | 'entertainment' | 'treat' | 'experience' | 'custom';
+  maxQuantity: number;
+  remainingQuantity: number;
+  replenishPeriod: ReplenishPeriod;
+  lastReplenishedAt: string;
   isPurchased: boolean;
   isRedeemed: boolean;
   purchasedAt?: string;
