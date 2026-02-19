@@ -232,6 +232,8 @@ export function HabitCalendar() {
   );
 
   const isOnCurrentMonth = currentYear === todayYear && currentMonth === todayMonth0;
+  const isOnCurrentMonthRef = useRef(isOnCurrentMonth);
+  isOnCurrentMonthRef.current = isOnCurrentMonth;
 
   const changeMonth = useCallback((direction: -1 | 1) => {
     if (isAnimating.current) return;
@@ -241,11 +243,8 @@ export function HabitCalendar() {
     Animated.timing(translateX, {
       toValue: -direction * gridWidth,
       duration: 250,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start(() => {
-      // Update state — DON'T reset translateX here.
-      // useLayoutEffect will reset it after React re-renders with new months,
-      // so there's no frame where the old center month flashes.
       const { year: newY, month: newM } = offsetMonth(yearRef.current, monthRef.current, direction);
       setCurrentYear(newY);
       setCurrentMonth(newM);
@@ -272,17 +271,22 @@ export function HabitCalendar() {
       onMoveShouldSetPanResponder: (_, gs) =>
         Math.abs(gs.dx) > 10 && Math.abs(gs.dx) > Math.abs(gs.dy),
       onPanResponderMove: (_, gs) => {
-        translateX.setValue(gs.dx);
+        let dx = gs.dx;
+        // Prevent swiping forward (left) when already on latest month
+        if (isOnCurrentMonthRef.current && dx < 0) {
+          dx = 0;
+        }
+        translateX.setValue(dx);
       },
       onPanResponderRelease: (_, gs) => {
         if (gs.dx > SWIPE_THRESHOLD) {
           changeMonthRef.current(-1); // prev
-        } else if (gs.dx < -SWIPE_THRESHOLD) {
+        } else if (gs.dx < -SWIPE_THRESHOLD && !isOnCurrentMonthRef.current) {
           changeMonthRef.current(1); // next
         } else {
           Animated.spring(translateX, {
             toValue: 0,
-            useNativeDriver: true,
+            useNativeDriver: false,
             overshootClamping: true,
           }).start();
         }
