@@ -62,7 +62,6 @@ const FREQUENCIES: { value: HabitFrequency; label: string; description: string }
   { value: 'daily', label: 'Daily', description: 'Resets daily at 12am PST' },
   { value: 'weekly', label: 'Weekly', description: 'Resets Sundays at 12am PST' },
   { value: 'monthly', label: 'Monthly', description: 'Resets on the 1st of each month' },
-  { value: 'one_time', label: 'One-time', description: 'Disappears when completed' },
 ];
 
 const HABIT_TYPES: { value: HabitType; label: string; icon: string }[] = [
