@@ -685,9 +685,9 @@ export default function HomeScreen() {
               </View>
               <View style={styles.rewardPreviewRow}>
                 <View style={styles.rewardItem}>
-                  <FontAwesome name="diamond" size={16} color="#D4A44C" />
+                  <FontAwesome name="ticket" size={16} color="#D4A44C" />
                   <Text style={[styles.rewardValue, { color: colors.text }]}>
-                    {customTokenReward || '0'} Tokens
+                    {customTokenReward || '0'} Tickets
                   </Text>
                 </View>
                 <View style={styles.rewardItem}>
@@ -702,10 +702,10 @@ export default function HomeScreen() {
               <View style={[styles.rewardInputsContainer, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
                 <View style={styles.rewardInputRow}>
                   <View style={styles.rewardInputIcon}>
-                    <FontAwesome name="diamond" size={16} color="#D4A44C" />
+                    <FontAwesome name="ticket" size={16} color="#D4A44C" />
                   </View>
                   <Text style={[styles.rewardInputLabel, { color: colors.textSecondary }]}>
-                    Tokens
+                    Tickets
                   </Text>
                   <TextInput
                     style={[

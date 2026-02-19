@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RewardCard } from '@/src/components/rewards/RewardCard';
 import { InventoryCard } from '@/src/components/rewards/InventoryCard';
-import { TokenBadge } from '@/src/components/common/TokenBadge';
+import { TicketBadge } from '@/src/components/common/TicketBadge';
 import { DynamicIcon } from '@/src/components/common/DynamicIcon';
 import { useRewardStore } from '@/src/stores/useRewardStore';
 import { useUserStore } from '@/src/stores/useUserStore';
@@ -196,12 +196,12 @@ export default function RewardsScreen() {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <FontAwesome name="diamond" size={28} color="#FFF" />
+          <FontAwesome name="ticket" size={28} color="#FFF" />
           <Text style={styles.headerTitle}>Rewards</Text>
           <View style={styles.headerBottomRow}>
             <View style={styles.balanceRow}>
               <Text style={styles.balanceLabel}>Your Balance:</Text>
-              <TokenBadge amount={profile.tokens} size="large" variant="dark" />
+              <TicketBadge amount={profile.tokens} size="large" variant="dark" />
             </View>
             <TouchableOpacity
               style={styles.addHeaderButton}
@@ -400,7 +400,7 @@ export default function RewardsScreen() {
             />
 
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-              Token Cost
+              Ticket Cost
             </Text>
             <TextInput
               style={[

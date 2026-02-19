@@ -6,13 +6,13 @@ import { gradients } from '@/constants/Colors';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
-interface TokenBadgeProps {
+interface TicketBadgeProps {
   amount: number;
   size?: 'small' | 'medium' | 'large';
   variant?: 'gold' | 'dark';
 }
 
-export function TokenBadge({ amount, size = 'medium', variant = 'gold' }: TokenBadgeProps) {
+export function TicketBadge({ amount, size = 'medium', variant = 'gold' }: TicketBadgeProps) {
   const sizeConfig = {
     small: { iconSize: 10, textSize: fontSize.xs, px: spacing.xs, py: 2 },
     medium: { iconSize: 14, textSize: fontSize.sm, px: spacing.sm, py: spacing.xs },
@@ -28,7 +28,7 @@ export function TokenBadge({ amount, size = 'medium', variant = 'gold' }: TokenB
   if (variant === 'dark') {
     return (
       <View style={[styles.badge, styles.darkBadge, padStyle]}>
-        <FontAwesome name="diamond" size={config.iconSize} color="#F5C842" />
+        <FontAwesome name="ticket" size={config.iconSize} color="#F5C842" />
         <Text style={[styles.text, { fontSize: config.textSize, color: '#F5C842' }]}>
           {amount.toLocaleString()}
         </Text>
@@ -43,7 +43,7 @@ export function TokenBadge({ amount, size = 'medium', variant = 'gold' }: TokenB
       end={{ x: 1, y: 0 }}
       style={[styles.badge, padStyle]}
     >
-      <FontAwesome name="diamond" size={config.iconSize} color="#FFF" />
+      <FontAwesome name="ticket" size={config.iconSize} color="#FFF" />
       <Text style={[styles.text, { fontSize: config.textSize }]}>
         {amount.toLocaleString()}
       </Text>

@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Card } from '../common/Card';
-import { TokenBadge } from '../common/TokenBadge';
+import { TicketBadge } from '../common/TicketBadge';
 import { XPBadge } from '../common/XPBadge';
 import { Achievement } from '@/src/types';
 import Colors from '@/constants/Colors';
@@ -21,7 +21,7 @@ const ACHIEVEMENT_ICONS: Record<string, string> = {
   trophy: 'trophy',
   shield: 'shield',
   target: 'bullseye',
-  gem: 'diamond',
+  gem: 'ticket',
   award: 'certificate',
   crown: 'star',
 };
@@ -68,7 +68,7 @@ export function AchievementCard({ achievement, onClaim }: AchievementCardProps) 
 
       <View style={styles.footer}>
         <View style={styles.rewardRow}>
-          <TokenBadge amount={achievement.tokenReward} size="small" />
+          <TicketBadge amount={achievement.tokenReward} size="small" />
           <XPBadge amount={achievement.xpReward} size="small" />
         </View>
 

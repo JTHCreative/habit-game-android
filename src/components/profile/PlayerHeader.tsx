@@ -3,7 +3,7 @@ import { StyleSheet, View, Image, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/Themed';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ProgressBar } from '../common/ProgressBar';
-import { TokenBadge } from '../common/TokenBadge';
+import { TicketBadge } from '../common/TicketBadge';
 import { useUserStore } from '@/src/stores/useUserStore';
 import { gradients } from '@/constants/Colors';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
@@ -46,7 +46,7 @@ export function PlayerHeader() {
           <Text style={styles.title}>{profile.title}</Text>
         </View>
 
-        <TokenBadge amount={profile.tokens} size="medium" />
+        <TicketBadge amount={profile.tokens} size="medium" />
       </View>
 
       <View style={styles.xpSection}>

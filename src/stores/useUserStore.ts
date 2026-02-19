@@ -72,8 +72,8 @@ const DEFAULT_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'tokens_1000',
-    title: 'Token Hoarder',
-    description: 'Earn 1,000 total tokens',
+    title: 'Ticket Collector',
+    description: 'Earn 1,000 total tickets',
     icon: 'gem',
     isUnlocked: false,
     xpReward: 150,

@@ -175,12 +175,12 @@ export default function ProfileScreen() {
               </Text>
             </Card>
             <Card style={styles.statCard}>
-              <FontAwesome name="diamond" size={24} color="#D4A44C" />
+              <FontAwesome name="ticket" size={24} color="#D4A44C" />
               <Text style={[styles.statValue, { color: colors.text }]}>
                 {profile.totalTokensEarned}
               </Text>
               <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                Tokens Earned
+                Tickets Earned
               </Text>
             </Card>
             <Card style={styles.statCard}>

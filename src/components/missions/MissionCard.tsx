@@ -3,7 +3,7 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Card } from '../common/Card';
 import { ProgressBar } from '../common/ProgressBar';
-import { TokenBadge } from '../common/TokenBadge';
+import { TicketBadge } from '../common/TicketBadge';
 import { XPBadge } from '../common/XPBadge';
 import { Mission } from '@/src/types';
 import { MISSION_DIFFICULTY_COLORS } from '@/src/utils/levels';
@@ -86,7 +86,7 @@ export function MissionCard({ mission, onClaim }: MissionCardProps) {
 
       <View style={styles.footer}>
         <View style={styles.rewardRow}>
-          <TokenBadge amount={mission.tokenReward} size="small" />
+          <TicketBadge amount={mission.tokenReward} size="small" />
           <XPBadge amount={mission.xpReward} size="small" />
         </View>
 

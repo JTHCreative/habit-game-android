@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Card } from '../common/Card';
-import { TokenBadge } from '../common/TokenBadge';
+import { TicketBadge } from '../common/TicketBadge';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
@@ -89,7 +89,7 @@ export function RewardCard({
 
       <View style={styles.footer}>
         <View style={styles.footerLeft}>
-          <TokenBadge amount={reward.tokenCost} size="medium" />
+          <TicketBadge amount={reward.tokenCost} size="medium" />
           <View style={[styles.quantityBadge, { backgroundColor: hasStock ? categoryColor + '20' : MUTED_GREY + '20' }]}>
             <Text style={[styles.quantityText, { color: hasStock ? categoryColor : MUTED_GREY }]}>
               {reward.remainingQuantity} remaining {periodLabel}

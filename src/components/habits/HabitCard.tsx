@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Card } from '../common/Card';
-import { TokenBadge } from '../common/TokenBadge';
+import { TicketBadge } from '../common/TicketBadge';
 import { XPBadge } from '../common/XPBadge';
 import { Habit } from '@/src/types';
 import { isHabitCompletedForPeriod } from '@/src/utils/levels';
@@ -116,7 +116,7 @@ export function HabitCard({ habit, categoryName, onToggle, onLongPress }: HabitC
         </View>
 
         <View style={styles.rewards}>
-          <TokenBadge amount={habit.tokenReward} size="small" />
+          <TicketBadge amount={habit.tokenReward} size="small" />
           <XPBadge amount={habit.xpReward} size="small" />
         </View>
       </TouchableOpacity>
