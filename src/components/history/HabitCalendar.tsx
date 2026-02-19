@@ -50,6 +50,12 @@ export function HabitCalendar() {
 
   const translateX = useRef(new Animated.Value(0)).current;
 
+  // Store month/year in refs so the PanResponder always sees current values
+  const monthRef = useRef(currentMonth);
+  const yearRef = useRef(currentYear);
+  monthRef.current = currentMonth;
+  yearRef.current = currentYear;
+
   const goToPrevMonth = useCallback(() => {
     Animated.timing(translateX, {
       toValue: SCREEN_WIDTH,
@@ -68,8 +74,8 @@ export function HabitCalendar() {
   }, [translateX]);
 
   const goToNextMonth = useCallback(() => {
-    // Don't go past current month
-    if (currentYear === todayYear && currentMonth >= todayMonth - 1) return;
+    // Don't go past current month — read from refs for fresh values
+    if (yearRef.current === todayYear && monthRef.current >= todayMonth - 1) return;
     Animated.timing(translateX, {
       toValue: -SCREEN_WIDTH,
       duration: 200,
@@ -84,7 +90,13 @@ export function HabitCalendar() {
         return m + 1;
       });
     });
-  }, [translateX, currentYear, currentMonth, todayYear, todayMonth]);
+  }, [translateX, todayYear, todayMonth]);
+
+  // Use refs for callbacks so PanResponder always calls the latest version
+  const goToPrevRef = useRef(goToPrevMonth);
+  const goToNextRef = useRef(goToNextMonth);
+  goToPrevRef.current = goToPrevMonth;
+  goToNextRef.current = goToNextMonth;
 
   const panResponder = useRef(
     PanResponder.create({
@@ -96,9 +108,9 @@ export function HabitCalendar() {
       },
       onPanResponderRelease: (_, gs) => {
         if (gs.dx > SWIPE_THRESHOLD) {
-          goToPrevMonth();
+          goToPrevRef.current();
         } else if (gs.dx < -SWIPE_THRESHOLD) {
-          goToNextMonth();
+          goToNextRef.current();
         } else {
           Animated.spring(translateX, {
             toValue: 0,
