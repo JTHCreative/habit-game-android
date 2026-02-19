@@ -701,7 +701,9 @@ export default function HomeScreen() {
             {showRewardInputs && (
               <View style={[styles.rewardInputsContainer, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
                 <View style={styles.rewardInputRow}>
-                  <FontAwesome name="diamond" size={16} color="#D4A44C" />
+                  <View style={styles.rewardInputIcon}>
+                    <FontAwesome name="diamond" size={16} color="#D4A44C" />
+                  </View>
                   <Text style={[styles.rewardInputLabel, { color: colors.textSecondary }]}>
                     Tokens
                   </Text>
@@ -722,7 +724,9 @@ export default function HomeScreen() {
                   />
                 </View>
                 <View style={styles.rewardInputRow}>
-                  <FontAwesome name="bolt" size={16} color="#E87D2F" />
+                  <View style={styles.rewardInputIcon}>
+                    <FontAwesome name="bolt" size={16} color="#E87D2F" />
+                  </View>
                   <Text style={[styles.rewardInputLabel, { color: colors.textSecondary }]}>
                     XP
                   </Text>
@@ -1330,6 +1334,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+  },
+  rewardInputIcon: {
+    width: 20,
+    alignItems: 'center',
   },
   rewardInputLabel: {
     fontSize: fontSize.sm,
