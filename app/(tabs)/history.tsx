@@ -159,13 +159,18 @@ export default function HistoryScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <LinearGradient
-        colors={gradients.primary as [string, string]}
+        colors={gradients.gold}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <Text style={styles.headerTitle}>History</Text>
-        <Text style={styles.headerSubtitle}>
-          {totalCompletions} total completion{totalCompletions !== 1 ? 's' : ''}
-        </Text>
+        <View style={styles.headerContent}>
+          <FontAwesome name="history" size={28} color="#FFF" />
+          <Text style={styles.headerTitle}>History</Text>
+          <Text style={styles.headerSubtitle}>
+            {totalCompletions} total completion{totalCompletions !== 1 ? 's' : ''}
+          </Text>
+        </View>
       </LinearGradient>
 
       <ScrollView
@@ -236,11 +241,6 @@ export default function HistoryScreen() {
           </Card>
         </View>
 
-        {/* Calendar view */}
-        <View style={styles.calendarSection}>
-          <HabitCalendar />
-        </View>
-
         {/* Bar chart */}
         <Card style={styles.chartCard}>
           <Text style={[styles.chartTitle, { color: colors.text }]}>
@@ -292,6 +292,11 @@ export default function HistoryScreen() {
             </View>
           </View>
         </Card>
+
+        {/* Calendar view */}
+        <View style={styles.calendarSection}>
+          <HabitCalendar />
+        </View>
 
         {/* Completion list */}
         <View style={styles.listSection}>
@@ -395,18 +400,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: 60,
+    paddingTop: spacing.xxl + spacing.lg,
     paddingBottom: spacing.lg,
     paddingHorizontal: spacing.lg,
+    borderBottomLeftRadius: borderRadius.xl,
+    borderBottomRightRadius: borderRadius.xl,
+  },
+  headerContent: {
+    gap: spacing.xs,
   },
   headerTitle: {
-    fontSize: fontSize.xxl,
+    color: '#FFF',
+    fontSize: fontSize.xxxl,
     fontWeight: '800',
-    color: '#F0E6D3',
+    marginTop: spacing.sm,
   },
   headerSubtitle: {
     fontSize: fontSize.sm,
-    color: '#B8A990',
+    color: 'rgba(255,255,255,0.8)',
     marginTop: 2,
   },
   scrollView: {
