@@ -248,7 +248,7 @@ export default function HistoryScreen() {
           </Text>
           <View style={styles.chartContainer}>
             <View style={styles.chartBars}>
-              {dateRange.map((date, i) => {
+              {dateRange.map((date) => {
                 const count = completionsPerDate[date] || 0;
                 const height = (count / maxCompletions) * 120;
                 const isToday = date === getPSTDateString();
@@ -275,6 +275,15 @@ export default function HistoryScreen() {
                         ]}
                       />
                     </View>
+                  </View>
+                );
+              })}
+            </View>
+            <View style={styles.chartLabels}>
+              {dateRange.map((date, i) => {
+                const isToday = date === getPSTDateString();
+                return (
+                  <View key={date} style={styles.barLabelSlot}>
                     {showLabel(i) && (
                       <Text
                         style={[
@@ -483,10 +492,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 2,
   },
+  chartLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: spacing.sm,
+    gap: 2,
+  },
   barColumn: {
     flex: 1,
     alignItems: 'center',
     gap: 4,
+  },
+  barLabelSlot: {
+    flex: 1,
+    alignItems: 'center',
   },
   barValue: {
     fontSize: 10,
@@ -507,7 +526,6 @@ const styles = StyleSheet.create({
   barLabel: {
     fontSize: 10,
     fontWeight: '500',
-    marginTop: 2,
   },
   barLabelToday: {
     fontWeight: '700',
