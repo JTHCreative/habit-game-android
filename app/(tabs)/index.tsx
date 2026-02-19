@@ -22,6 +22,7 @@ import { DynamicIcon } from '@/src/components/common/DynamicIcon';
 import { HabitCategory, HabitFrequency } from '@/src/types';
 import { useCategoryStore, DEFAULT_CATEGORY_IDS } from '@/src/stores/useCustomCategoryStore';
 import { useMissionStore } from '@/src/stores/useMissionStore';
+import { useAchievementChecker } from '@/src/hooks/useAchievementChecker';
 import {
   getPSTDateString,
   isHabitCompletedForPeriod,
@@ -81,6 +82,7 @@ export default function HomeScreen() {
 
   const onHabitCompleted = useMissionStore((s) => s.onHabitCompleted);
   const onStreakUpdated = useMissionStore((s) => s.onStreakUpdated);
+  const checkAchievements = useAchievementChecker();
 
   const categories = useCategoryStore((s) => s.categories);
   const addCategory = useCategoryStore((s) => s.addCategory);
@@ -146,6 +148,7 @@ export default function HomeScreen() {
           incrementHabitsCompleted();
           onHabitCompleted(habit.category);
           onStreakUpdated(updated.currentStreak);
+          checkAchievements();
         }
       }
     } else {
@@ -161,6 +164,7 @@ export default function HomeScreen() {
           if (habit.frequency === 'one_time') {
             updateHabit(habitId, { isActive: false });
           }
+          checkAchievements();
         } else {
           removeXP(updated.xpReward);
           removeTokens(updated.tokenReward);

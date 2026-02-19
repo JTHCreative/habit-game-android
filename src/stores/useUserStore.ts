@@ -239,13 +239,43 @@ export const useUserStore = create<UserState>()(
         })),
 
       unlockAchievement: (achievementId: string) =>
-        set((state) => ({
-          achievements: state.achievements.map((a) =>
-            a.id === achievementId
-              ? { ...a, isUnlocked: true, unlockedAt: new Date().toISOString() }
-              : a
-          ),
-        })),
+        set((state) => {
+          const achievement = state.achievements.find((a) => a.id === achievementId);
+          if (!achievement || achievement.isUnlocked) return state;
+
+          const xpAmount = achievement.xpReward;
+          const tokenAmount = achievement.tokenReward;
+
+          let { level, currentXP, xpToNextLevel } = state.profile;
+          const totalXPEarned = state.profile.totalXPEarned + xpAmount;
+          currentXP += xpAmount;
+
+          while (currentXP >= xpToNextLevel) {
+            currentXP -= xpToNextLevel;
+            level++;
+            xpToNextLevel = getXPForLevel(level);
+          }
+
+          const title = getTitleForLevel(level);
+
+          return {
+            profile: {
+              ...state.profile,
+              level,
+              currentXP,
+              xpToNextLevel,
+              totalXPEarned,
+              title,
+              tokens: state.profile.tokens + tokenAmount,
+              totalTokensEarned: state.profile.totalTokensEarned + tokenAmount,
+            },
+            achievements: state.achievements.map((a) =>
+              a.id === achievementId
+                ? { ...a, isUnlocked: true, unlockedAt: new Date().toISOString() }
+                : a
+            ),
+          };
+        }),
 
       setDisplayName: (name: string) =>
         set((state) => ({
