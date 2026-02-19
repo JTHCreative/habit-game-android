@@ -201,7 +201,7 @@ export default function RewardsScreen() {
           <View style={styles.headerBottomRow}>
             <View style={styles.balanceRow}>
               <Text style={styles.balanceLabel}>Your Balance:</Text>
-              <TokenBadge amount={profile.tokens} size="large" />
+              <TokenBadge amount={profile.tokens} size="large" variant="dark" />
             </View>
             <TouchableOpacity
               style={styles.addHeaderButton}

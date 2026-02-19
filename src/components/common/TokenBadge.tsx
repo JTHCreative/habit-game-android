@@ -9,9 +9,10 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 interface TokenBadgeProps {
   amount: number;
   size?: 'small' | 'medium' | 'large';
+  variant?: 'gold' | 'dark';
 }
 
-export function TokenBadge({ amount, size = 'medium' }: TokenBadgeProps) {
+export function TokenBadge({ amount, size = 'medium', variant = 'gold' }: TokenBadgeProps) {
   const sizeConfig = {
     small: { iconSize: 10, textSize: fontSize.xs, px: spacing.xs, py: 2 },
     medium: { iconSize: 14, textSize: fontSize.sm, px: spacing.sm, py: spacing.xs },
@@ -19,19 +20,28 @@ export function TokenBadge({ amount, size = 'medium' }: TokenBadgeProps) {
   };
 
   const config = sizeConfig[size];
+  const padStyle = {
+    paddingHorizontal: config.px,
+    paddingVertical: config.py,
+  };
+
+  if (variant === 'dark') {
+    return (
+      <View style={[styles.badge, styles.darkBadge, padStyle]}>
+        <FontAwesome name="diamond" size={config.iconSize} color="#F5C842" />
+        <Text style={[styles.text, { fontSize: config.textSize, color: '#F5C842' }]}>
+          {amount.toLocaleString()}
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <LinearGradient
       colors={gradients.gold}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
-      style={[
-        styles.badge,
-        {
-          paddingHorizontal: config.px,
-          paddingVertical: config.py,
-        },
-      ]}
+      style={[styles.badge, padStyle]}
     >
       <FontAwesome name="diamond" size={config.iconSize} color="#FFF" />
       <Text style={[styles.text, { fontSize: config.textSize }]}>
@@ -47,6 +57,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     borderRadius: borderRadius.full,
+  },
+  darkBadge: {
+    backgroundColor: '#2A2A3E',
+    borderWidth: 1.5,
+    borderColor: '#D4A843',
   },
   text: {
     color: '#FFF',
