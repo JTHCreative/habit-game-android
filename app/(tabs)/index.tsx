@@ -19,7 +19,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DynamicIcon } from '@/src/components/common/DynamicIcon';
-import { HabitCategory, HabitFrequency } from '@/src/types';
+import { HabitCategory, HabitFrequency, HabitType } from '@/src/types';
 import { useCategoryStore, DEFAULT_CATEGORY_IDS } from '@/src/stores/useCustomCategoryStore';
 import { useMissionStore } from '@/src/stores/useMissionStore';
 import { useAchievementChecker } from '@/src/hooks/useAchievementChecker';
@@ -63,6 +63,11 @@ const FREQUENCIES: { value: HabitFrequency; label: string; description: string }
   { value: 'one_time', label: 'One-time', description: 'Disappears when completed' },
 ];
 
+const HABIT_TYPES: { value: HabitType; label: string; icon: string }[] = [
+  { value: 'positive', label: 'Positive', icon: 'plus' },
+  { value: 'negative', label: 'Negative', icon: 'minus' },
+];
+
 export default function HomeScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
@@ -98,6 +103,7 @@ export default function HomeScreen() {
   const [newHabitDescription, setNewHabitDescription] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState('health');
   const [selectedFrequency, setSelectedFrequency] = useState<HabitFrequency>('daily');
+  const [selectedHabitType, setSelectedHabitType] = useState<HabitType>('positive');
   const [customTokenReward, setCustomTokenReward] = useState('10');
   const [customXPReward, setCustomXPReward] = useState('15');
   const [showRewardInputs, setShowRewardInputs] = useState(false);
@@ -179,6 +185,7 @@ export default function HomeScreen() {
     setNewHabitDescription('');
     setSelectedCategoryId(categories[0]?.id || 'health');
     setSelectedFrequency('daily');
+    setSelectedHabitType('positive');
     setCustomTokenReward('10');
     setCustomXPReward('15');
     setShowRewardInputs(false);
@@ -193,6 +200,7 @@ export default function HomeScreen() {
     setNewHabitDescription(habit.description);
     setSelectedCategoryId(habit.customCategoryId || habit.category);
     setSelectedFrequency(habit.frequency);
+    setSelectedHabitType(habit.habitType || 'positive');
     setCustomTokenReward(String(habit.tokenReward));
     setCustomXPReward(String(habit.xpReward));
     setShowRewardInputs(false);
@@ -222,6 +230,7 @@ export default function HomeScreen() {
         category: habitCategory,
         customCategoryId: selectedCategoryId,
         frequency: selectedFrequency,
+        habitType: selectedHabitType,
         tokenReward: parseInt(customTokenReward, 10) || 10,
         xpReward: parseInt(customXPReward, 10) || 15,
         icon,
@@ -234,6 +243,7 @@ export default function HomeScreen() {
         category: habitCategory,
         customCategoryId: selectedCategoryId,
         frequency: selectedFrequency,
+        habitType: selectedHabitType,
         targetCount: 1,
         tokenReward: parseInt(customTokenReward, 10) || 10,
         xpReward: parseInt(customXPReward, 10) || 15,
@@ -510,6 +520,48 @@ export default function HomeScreen() {
               multiline
               numberOfLines={3}
             />
+
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              Habit Type
+            </Text>
+            <View style={styles.habitTypeRow}>
+              {HABIT_TYPES.map((ht) => {
+                const isSelected = selectedHabitType === ht.value;
+                const typeColor = ht.value === 'positive' ? '#4CAF50' : '#EF4444';
+                return (
+                  <TouchableOpacity
+                    key={ht.value}
+                    style={[
+                      styles.habitTypeButton,
+                      {
+                        backgroundColor: isSelected ? typeColor : colors.inputBackground,
+                        borderColor: isSelected ? typeColor : colors.border,
+                      },
+                    ]}
+                    onPress={() => setSelectedHabitType(ht.value)}
+                  >
+                    <FontAwesome
+                      name={ht.icon as any}
+                      size={14}
+                      color={isSelected ? '#FFF' : colors.textSecondary}
+                    />
+                    <Text
+                      style={[
+                        styles.habitTypeButtonText,
+                        { color: isSelected ? '#FFF' : colors.textSecondary },
+                      ]}
+                    >
+                      {ht.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {selectedHabitType === 'negative' && (
+              <Text style={[styles.habitTypeHelpText, { color: colors.textMuted }]}>
+                "{newHabitName.trim() || 'This habit'}" is something you want to stop doing. You'll be rewarded for not doing it each {selectedFrequency === 'daily' ? 'day' : selectedFrequency === 'weekly' ? 'week' : 'time'}.
+              </Text>
+            )}
 
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
               Category
@@ -1202,6 +1254,30 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     fontWeight: '600',
     textTransform: 'capitalize',
+  },
+  habitTypeRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  habitTypeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+  },
+  habitTypeButtonText: {
+    fontSize: fontSize.md,
+    fontWeight: '600',
+  },
+  habitTypeHelpText: {
+    fontSize: fontSize.xs,
+    marginTop: spacing.sm,
+    lineHeight: 18,
+    fontStyle: 'italic',
   },
   frequencyDescription: {
     fontSize: fontSize.xs,

@@ -63,15 +63,26 @@ export function HabitCard({ habit, categoryName, onToggle, onLongPress }: HabitC
         </TouchableOpacity>
 
         <View style={styles.content}>
-          <Text
-            style={[
-              styles.name,
-              { color: colors.text },
-              isCompleted && styles.completedText,
-            ]}
-          >
-            {habit.name}
-          </Text>
+          <View style={styles.nameRow}>
+            {habit.habitType === 'negative' ? (
+              <View style={[styles.habitTypeBadge, { backgroundColor: '#EF444420' }]}>
+                <FontAwesome name="minus" size={9} color="#EF4444" />
+              </View>
+            ) : (
+              <View style={[styles.habitTypeBadge, { backgroundColor: '#4CAF5020' }]}>
+                <FontAwesome name="plus" size={9} color="#4CAF50" />
+              </View>
+            )}
+            <Text
+              style={[
+                styles.name,
+                { color: colors.text },
+                isCompleted && styles.completedText,
+              ]}
+            >
+              {habit.name}
+            </Text>
+          </View>
           <View style={styles.metaRow}>
             <View
               style={[
@@ -134,9 +145,22 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.xs,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  habitTypeBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   name: {
     fontSize: fontSize.md,
     fontWeight: '600',
+    flex: 1,
   },
   completedText: {
     textDecorationLine: 'line-through',

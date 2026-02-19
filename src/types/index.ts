@@ -1,5 +1,7 @@
 export type HabitFrequency = 'one_time' | 'daily' | 'weekly';
 
+export type HabitType = 'positive' | 'negative';
+
 export type HabitCategory =
   | 'health'
   | 'fitness'
@@ -34,6 +36,7 @@ export interface Habit {
   icon: string;
   color: string;
   isActive: boolean;
+  habitType: HabitType;
 }
 
 export type MissionDifficulty = 'easy' | 'medium' | 'hard' | 'legendary';
