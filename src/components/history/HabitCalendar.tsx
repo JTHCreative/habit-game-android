@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Animated,
-  Dimensions,
   PanResponder,
   StyleSheet,
   View,
@@ -11,17 +10,19 @@ import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import { useHabitStore } from '@/src/stores/useHabitStore';
+import { Habit } from '@/src/types';
 import { getPSTDateString } from '@/src/utils/levels';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { TouchableOpacity } from 'react-native';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = 50;
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
+
+type DayStatus = 'green' | 'yellow' | 'grey' | 'none' | 'future';
 
 function getMonthDays(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -35,155 +36,70 @@ function formatDateStr(year: number, month: number, day: number) {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-type DayStatus = 'green' | 'yellow' | 'grey' | 'none' | 'future';
+function offsetMonth(year: number, month: number, offset: number) {
+  let m = month + offset;
+  let y = year;
+  while (m < 0) { m += 12; y--; }
+  while (m > 11) { m -= 12; y++; }
+  return { year: y, month: m };
+}
 
-export function HabitCalendar() {
-  const colorScheme = useColorScheme() ?? 'light';
-  const colors = Colors[colorScheme];
-  const habits = useHabitStore((s) => s.habits);
-
-  const today = getPSTDateString();
-  const [todayYear, todayMonth] = today.split('-').map(Number);
-
-  const [currentYear, setCurrentYear] = useState(todayYear);
-  const [currentMonth, setCurrentMonth] = useState(todayMonth - 1); // 0-indexed
-
-  const translateX = useRef(new Animated.Value(0)).current;
-
-  // Store month/year in refs so the PanResponder always sees current values
-  const monthRef = useRef(currentMonth);
-  const yearRef = useRef(currentYear);
-  monthRef.current = currentMonth;
-  yearRef.current = currentYear;
-
-  const goToPrevMonth = useCallback(() => {
-    Animated.timing(translateX, {
-      toValue: SCREEN_WIDTH,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
-      translateX.setValue(0);
-      setCurrentMonth((m) => {
-        if (m === 0) {
-          setCurrentYear((y) => y - 1);
-          return 11;
-        }
-        return m - 1;
-      });
-    });
-  }, [translateX]);
-
-  const goToNextMonth = useCallback(() => {
-    // Don't go past current month — read from refs for fresh values
-    if (yearRef.current === todayYear && monthRef.current >= todayMonth - 1) return;
-    Animated.timing(translateX, {
-      toValue: -SCREEN_WIDTH,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
-      translateX.setValue(0);
-      setCurrentMonth((m) => {
-        if (m === 11) {
-          setCurrentYear((y) => y + 1);
-          return 0;
-        }
-        return m + 1;
-      });
-    });
-  }, [translateX, todayYear, todayMonth]);
-
-  // Use refs for callbacks so PanResponder always calls the latest version
-  const goToPrevRef = useRef(goToPrevMonth);
-  const goToNextRef = useRef(goToNextMonth);
-  goToPrevRef.current = goToPrevMonth;
-  goToNextRef.current = goToNextMonth;
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gs) =>
-        Math.abs(gs.dx) > 10 && Math.abs(gs.dx) > Math.abs(gs.dy),
-      onPanResponderMove: (_, gs) => {
-        translateX.setValue(gs.dx);
-      },
-      onPanResponderRelease: (_, gs) => {
-        if (gs.dx > SWIPE_THRESHOLD) {
-          goToPrevRef.current();
-        } else if (gs.dx < -SWIPE_THRESHOLD) {
-          goToNextRef.current();
-        } else {
-          Animated.spring(translateX, {
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    })
-  ).current;
-
-  // Compute day statuses for the current month
-  const dayStatuses = useMemo(() => {
-    const dailyHabits = habits.filter(
-      (h) => h.isActive && h.frequency === 'daily'
-    );
-    const totalDaily = dailyHabits.length;
-    const daysInMonth = getMonthDays(currentYear, currentMonth);
-    const statuses: Record<number, DayStatus> = {};
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = formatDateStr(currentYear, currentMonth, day);
-
-      // Future dates
-      if (dateStr > today) {
-        statuses[day] = 'future';
-        continue;
-      }
-
-      if (totalDaily === 0) {
-        statuses[day] = 'none';
-        continue;
-      }
-
-      const completedCount = dailyHabits.filter((h) =>
-        h.completedDates.includes(dateStr)
-      ).length;
-
-      if (completedCount >= totalDaily) {
-        statuses[day] = 'green';
-      } else if (completedCount >= totalDaily - 1 && totalDaily > 1) {
-        statuses[day] = 'yellow';
-      } else if (completedCount >= totalDaily - 1 && totalDaily === 1) {
-        // If only 1 daily habit and it's not completed, that's grey
-        statuses[day] = 'grey';
-      } else {
-        statuses[day] = 'grey';
-      }
-    }
-    return statuses;
-  }, [habits, currentYear, currentMonth, today]);
-
-  const daysInMonth = getMonthDays(currentYear, currentMonth);
-  const firstDay = getFirstDayOfWeek(currentYear, currentMonth);
-  const isCurrentMonth = currentYear === todayYear && currentMonth === todayMonth - 1;
-  const todayDay = parseInt(today.split('-')[2], 10);
-
-  // Build calendar grid rows
+function buildMonthRows(year: number, month: number) {
+  const daysInMonth = getMonthDays(year, month);
+  const firstDay = getFirstDayOfWeek(year, month);
   const rows: (number | null)[][] = [];
   let row: (number | null)[] = [];
-  for (let i = 0; i < firstDay; i++) {
-    row.push(null);
-  }
+  for (let i = 0; i < firstDay; i++) row.push(null);
   for (let day = 1; day <= daysInMonth; day++) {
     row.push(day);
-    if (row.length === 7) {
-      rows.push(row);
-      row = [];
-    }
+    if (row.length === 7) { rows.push(row); row = []; }
   }
   if (row.length > 0) {
     while (row.length < 7) row.push(null);
     rows.push(row);
   }
+  return rows;
+}
+
+function computeDayStatuses(
+  year: number,
+  month: number,
+  dailyHabits: Habit[],
+  today: string,
+): Record<number, DayStatus> {
+  const totalDaily = dailyHabits.length;
+  const daysInMonth = getMonthDays(year, month);
+  const statuses: Record<number, DayStatus> = {};
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = formatDateStr(year, month, day);
+    if (dateStr > today) { statuses[day] = 'future'; continue; }
+    if (totalDaily === 0) { statuses[day] = 'none'; continue; }
+    const completedCount = dailyHabits.filter((h) =>
+      h.completedDates.includes(dateStr)
+    ).length;
+    if (completedCount >= totalDaily) {
+      statuses[day] = 'green';
+    } else if (completedCount >= totalDaily - 1 && totalDaily > 1) {
+      statuses[day] = 'yellow';
+    } else {
+      statuses[day] = 'grey';
+    }
+  }
+  return statuses;
+}
+
+// ── Month grid (pure rendering, no animation) ──────────────────────────
+function MonthGrid({
+  year, month, dayStatuses, todayYear, todayMonth0, todayDay, colors, width,
+}: {
+  year: number; month: number;
+  dayStatuses: Record<number, DayStatus>;
+  todayYear: number; todayMonth0: number; todayDay: number;
+  colors: (typeof Colors)['light'];
+  width: number;
+}) {
+  const rows = useMemo(() => buildMonthRows(year, month), [year, month]);
+  const isCurrentMonth = year === todayYear && month === todayMonth0;
 
   const statusColor = (status: DayStatus) => {
     switch (status) {
@@ -204,24 +120,166 @@ export function HabitCalendar() {
   };
 
   return (
+    <View style={{ width }}>
+      {rows.map((week, rowIndex) => (
+        <View key={rowIndex} style={styles.weekRow}>
+          {week.map((day, colIndex) => {
+            if (day === null) {
+              return <View key={`e-${colIndex}`} style={styles.dayCell} />;
+            }
+            const status = dayStatuses[day] || 'none';
+            const isToday = isCurrentMonth && day === todayDay;
+            return (
+              <View key={day} style={styles.dayCell}>
+                <View
+                  style={[
+                    styles.daySquare,
+                    { backgroundColor: statusColor(status) },
+                    isToday && styles.todaySquare,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.dayText,
+                      { color: textColorForStatus(status, day) },
+                      isToday && styles.todayText,
+                    ]}
+                  >
+                    {day}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// ── Main calendar component ─────────────────────────────────────────────
+export function HabitCalendar() {
+  const colorScheme = useColorScheme() ?? 'light';
+  const colors = Colors[colorScheme];
+  const habits = useHabitStore((s) => s.habits);
+
+  const today = getPSTDateString();
+  const [todayYear, todayMonth] = today.split('-').map(Number);
+  const todayMonth0 = todayMonth - 1; // 0-indexed
+  const todayDay = parseInt(today.split('-')[2], 10);
+
+  const [currentYear, setCurrentYear] = useState(todayYear);
+  const [currentMonth, setCurrentMonth] = useState(todayMonth0);
+
+  // Grid width from layout
+  const [gridWidth, setGridWidth] = useState(0);
+
+  // translateX: 0 = showing center panel (current month). The strip is
+  // laid out as [prev | current | next] and offset by -gridWidth so that
+  // the center panel is visible at translateX=0.
+  const translateX = useRef(new Animated.Value(0)).current;
+  const isAnimating = useRef(false);
+
+  // Refs for current state (PanResponder reads these)
+  const monthRef = useRef(currentMonth);
+  const yearRef = useRef(currentYear);
+  monthRef.current = currentMonth;
+  yearRef.current = currentYear;
+
+  const dailyHabits = useMemo(
+    () => habits.filter((h) => h.isActive && h.frequency === 'daily'),
+    [habits],
+  );
+
+  const prev = offsetMonth(currentYear, currentMonth, -1);
+  const next = offsetMonth(currentYear, currentMonth, 1);
+
+  const prevStatuses = useMemo(
+    () => computeDayStatuses(prev.year, prev.month, dailyHabits, today),
+    [prev.year, prev.month, dailyHabits, today],
+  );
+  const currStatuses = useMemo(
+    () => computeDayStatuses(currentYear, currentMonth, dailyHabits, today),
+    [currentYear, currentMonth, dailyHabits, today],
+  );
+  const nextStatuses = useMemo(
+    () => computeDayStatuses(next.year, next.month, dailyHabits, today),
+    [next.year, next.month, dailyHabits, today],
+  );
+
+  const isOnCurrentMonth = currentYear === todayYear && currentMonth === todayMonth0;
+
+  const changeMonth = useCallback((direction: -1 | 1) => {
+    if (isAnimating.current) return;
+    if (direction === 1 && yearRef.current === todayYear && monthRef.current >= todayMonth0) return;
+    isAnimating.current = true;
+
+    Animated.timing(translateX, {
+      toValue: -direction * gridWidth,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      // Update state then snap back to center instantly
+      const { year: newY, month: newM } = offsetMonth(yearRef.current, monthRef.current, direction);
+      setCurrentYear(newY);
+      setCurrentMonth(newM);
+      translateX.setValue(0);
+      isAnimating.current = false;
+    });
+  }, [translateX, gridWidth, todayYear, todayMonth0]);
+
+  const changeMonthRef = useRef(changeMonth);
+  changeMonthRef.current = changeMonth;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gs) =>
+        Math.abs(gs.dx) > 10 && Math.abs(gs.dx) > Math.abs(gs.dy),
+      onPanResponderMove: (_, gs) => {
+        translateX.setValue(gs.dx);
+      },
+      onPanResponderRelease: (_, gs) => {
+        if (gs.dx > SWIPE_THRESHOLD) {
+          changeMonthRef.current(-1); // prev
+        } else if (gs.dx < -SWIPE_THRESHOLD) {
+          changeMonthRef.current(1); // next
+        } else {
+          Animated.spring(translateX, {
+            toValue: 0,
+            useNativeDriver: true,
+            overshootClamping: true,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  const onGridLayout = useCallback((e: { nativeEvent: { layout: { width: number } } }) => {
+    setGridWidth(e.nativeEvent.layout.width);
+  }, []);
+
+  const gridProps = { todayYear, todayMonth0, todayDay, colors };
+
+  return (
     <View style={[styles.container, { backgroundColor: colors.cardBackground, borderColor: colors.borderLight }]}>
       {/* Month header with arrows */}
       <View style={styles.monthHeader}>
-        <TouchableOpacity onPress={goToPrevMonth} style={styles.arrowButton}>
+        <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.arrowButton}>
           <FontAwesome name="chevron-left" size={14} color={colors.textSecondary} />
         </TouchableOpacity>
         <Text style={[styles.monthTitle, { color: colors.text }]}>
           {MONTH_NAMES[currentMonth]} {currentYear}
         </Text>
         <TouchableOpacity
-          onPress={goToNextMonth}
+          onPress={() => changeMonth(1)}
           style={styles.arrowButton}
-          disabled={isCurrentMonth}
+          disabled={isOnCurrentMonth}
         >
           <FontAwesome
             name="chevron-right"
             size={14}
-            color={isCurrentMonth ? colors.textMuted : colors.textSecondary}
+            color={isOnCurrentMonth ? colors.textMuted : colors.textSecondary}
           />
         </TouchableOpacity>
       </View>
@@ -230,53 +288,32 @@ export function HabitCalendar() {
       <View style={styles.dayNamesRow}>
         {DAY_NAMES.map((name) => (
           <View key={name} style={styles.dayNameCell}>
-            <Text style={[styles.dayNameText, { color: colors.textMuted }]}>
-              {name}
-            </Text>
+            <Text style={[styles.dayNameText, { color: colors.textMuted }]}>{name}</Text>
           </View>
         ))}
       </View>
 
-      {/* Calendar grid */}
-      <Animated.View
-        {...panResponder.panHandlers}
-        style={{ transform: [{ translateX }] }}
-      >
-        {rows.map((week, rowIndex) => (
-          <View key={rowIndex} style={styles.weekRow}>
-            {week.map((day, colIndex) => {
-              if (day === null) {
-                return <View key={`empty-${colIndex}`} style={styles.dayCell} />;
-              }
-              const status = dayStatuses[day] || 'none';
-              const isToday = isCurrentMonth && day === todayDay;
-              return (
-                <View key={day} style={styles.dayCell}>
-                  <View
-                    style={[
-                      styles.daySquare,
-                      {
-                        backgroundColor: statusColor(status),
-                      },
-                      isToday && styles.todaySquare,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.dayText,
-                        { color: textColorForStatus(status, day) },
-                        isToday && styles.todayText,
-                      ]}
-                    >
-                      {day}
-                    </Text>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        ))}
-      </Animated.View>
+      {/* Swipeable 3-month strip */}
+      <View style={styles.gridClip} onLayout={onGridLayout}>
+        {gridWidth > 0 && (
+          <Animated.View
+            {...panResponder.panHandlers}
+            style={[
+              styles.strip,
+              {
+                width: gridWidth * 3,
+                transform: [{
+                  translateX: Animated.add(translateX, new Animated.Value(-gridWidth)),
+                }],
+              },
+            ]}
+          >
+            <MonthGrid year={prev.year} month={prev.month} dayStatuses={prevStatuses} width={gridWidth} {...gridProps} />
+            <MonthGrid year={currentYear} month={currentMonth} dayStatuses={currStatuses} width={gridWidth} {...gridProps} />
+            <MonthGrid year={next.year} month={next.month} dayStatuses={nextStatuses} width={gridWidth} {...gridProps} />
+          </Animated.View>
+        )}
+      </View>
 
       {/* Legend */}
       <View style={styles.legend}>
@@ -334,6 +371,12 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     fontWeight: '600',
     textTransform: 'uppercase',
+  },
+  gridClip: {
+    overflow: 'hidden',
+  },
+  strip: {
+    flexDirection: 'row',
   },
   weekRow: {
     flexDirection: 'row',
