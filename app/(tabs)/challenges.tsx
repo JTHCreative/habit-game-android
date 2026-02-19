@@ -71,40 +71,6 @@ export default function ChallengesScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.achievementSection}>
-          <View style={styles.achievementHeader}>
-            <FontAwesome name="trophy" size={18} color="#D4A44C" />
-            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 0, marginBottom: 0 }]}>
-              Achievements ({unlockedAchievements.length}/{achievements.length})
-            </Text>
-          </View>
-          <ProgressBar
-            progress={achievementProgress}
-            height={6}
-            gradientColors={['#D4A44C', '#E87D2F']}
-            backgroundColor={colors.inputBackground}
-          />
-          {lockedAchievements.map((achievement) => (
-            <AchievementCard
-              key={achievement.id}
-              achievement={achievement}
-            />
-          ))}
-          {unlockedAchievements.length > 0 && (
-            <>
-              <Text style={[styles.achievementSubLabel, { color: colors.textSecondary }]}>
-                Earned
-              </Text>
-              {unlockedAchievements.map((achievement) => (
-                <AchievementCard
-                  key={achievement.id}
-                  achievement={achievement}
-                />
-              ))}
-            </>
-          )}
-        </View>
-
         {available.length > 0 && (
           <>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -159,6 +125,40 @@ export default function ChallengesScreen() {
             ))}
           </>
         )}
+
+        <View style={styles.achievementSection}>
+          <View style={styles.achievementHeader}>
+            <FontAwesome name="trophy" size={18} color="#D4A44C" />
+            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 0, marginBottom: 0 }]}>
+              Achievements ({unlockedAchievements.length}/{achievements.length})
+            </Text>
+          </View>
+          <ProgressBar
+            progress={achievementProgress}
+            height={6}
+            gradientColors={['#D4A44C', '#E87D2F']}
+            backgroundColor={colors.inputBackground}
+          />
+          {lockedAchievements.map((achievement) => (
+            <AchievementCard
+              key={achievement.id}
+              achievement={achievement}
+            />
+          ))}
+          {unlockedAchievements.length > 0 && (
+            <>
+              <Text style={[styles.achievementSubLabel, { color: colors.textSecondary }]}>
+                Earned
+              </Text>
+              {unlockedAchievements.map((achievement) => (
+                <AchievementCard
+                  key={achievement.id}
+                  achievement={achievement}
+                />
+              ))}
+            </>
+          )}
+        </View>
       </ScrollView>
     </View>
   );
