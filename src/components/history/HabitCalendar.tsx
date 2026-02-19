@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   PanResponder,
@@ -174,10 +174,17 @@ export function HabitCalendar() {
   // Grid width from layout
   const [gridWidth, setGridWidth] = useState(0);
 
-  // translateX: 0 = showing center panel (current month). The strip is
-  // laid out as [prev | current | next] and offset by -gridWidth so that
-  // the center panel is visible at translateX=0.
+  // translateX: gesture/animation offset (0 = center panel visible).
   const translateX = useRef(new Animated.Value(0)).current;
+  // Stable base offset that shifts the strip so center panel is at x=0.
+  const baseOffset = useRef(new Animated.Value(0)).current;
+  // Combined transform — created once, stays stable across renders.
+  const stripTranslateX = useRef(Animated.add(translateX, baseOffset)).current;
+
+  useEffect(() => {
+    baseOffset.setValue(-gridWidth);
+  }, [gridWidth, baseOffset]);
+
   const isAnimating = useRef(false);
 
   // Refs for current state (PanResponder reads these)
@@ -219,14 +226,24 @@ export function HabitCalendar() {
       duration: 250,
       useNativeDriver: true,
     }).start(() => {
-      // Update state then snap back to center instantly
+      // Update state — DON'T reset translateX here.
+      // useLayoutEffect will reset it after React re-renders with new months,
+      // so there's no frame where the old center month flashes.
       const { year: newY, month: newM } = offsetMonth(yearRef.current, monthRef.current, direction);
       setCurrentYear(newY);
       setCurrentMonth(newM);
-      translateX.setValue(0);
-      isAnimating.current = false;
     });
   }, [translateX, gridWidth, todayYear, todayMonth0]);
+
+  // After React re-renders with new month panels, snap the strip back to
+  // center. useLayoutEffect fires synchronously after commit but before
+  // paint, so the user never sees the stale position.
+  useLayoutEffect(() => {
+    if (isAnimating.current) {
+      translateX.setValue(0);
+      isAnimating.current = false;
+    }
+  }, [currentMonth, currentYear, translateX]);
 
   const changeMonthRef = useRef(changeMonth);
   changeMonthRef.current = changeMonth;
@@ -302,9 +319,7 @@ export function HabitCalendar() {
               styles.strip,
               {
                 width: gridWidth * 3,
-                transform: [{
-                  translateX: Animated.add(translateX, new Animated.Value(-gridWidth)),
-                }],
+                transform: [{ translateX: stripTranslateX }],
               },
             ]}
           >
