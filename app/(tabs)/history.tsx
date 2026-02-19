@@ -213,7 +213,7 @@ export default function HistoryScreen() {
               {totalInRange}
             </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Completions
+              Total Complete
             </Text>
           </Card>
           <Card style={styles.statCard}>
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: fontSize.xs,
     fontWeight: '600',
-    textTransform: 'uppercase',
+    textAlign: 'center',
     letterSpacing: 0.5,
   },
   calendarSection: {
