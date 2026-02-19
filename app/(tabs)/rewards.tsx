@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
+  Alert,
 } from 'react-native';
 import { Text } from '@/components/Themed';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,22 +14,42 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { RewardCard } from '@/src/components/rewards/RewardCard';
 import { InventoryCard } from '@/src/components/rewards/InventoryCard';
 import { TokenBadge } from '@/src/components/common/TokenBadge';
+import { DynamicIcon } from '@/src/components/common/DynamicIcon';
 import { useRewardStore } from '@/src/stores/useRewardStore';
 import { useUserStore } from '@/src/stores/useUserStore';
+import { useRewardCategoryStore, DEFAULT_REWARD_CATEGORY_IDS } from '@/src/stores/useRewardCategoryStore';
 import Colors, { gradients } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { ReplenishPeriod, Reward } from '@/src/types';
+import { ReplenishPeriod, Reward, RewardCategory } from '@/src/types';
 
-type RewardCategory = Reward['category'];
+const COLOR_PALETTE = [
+  '#FF6B6B', '#4ECDC4', '#A78BFA', '#F59E0B', '#3B82F6',
+  '#EC4899', '#10B981', '#6366F1', '#EF4444', '#14B8A6',
+  '#F97316', '#8B5CF6', '#06B6D4', '#D946EF', '#84CC16',
+  '#E11D48',
+];
 
-const REWARD_CATEGORIES: RewardCategory[] = [
-  'self_care',
-  'entertainment',
-  'treat',
-  'experience',
-  'custom',
+const ICON_OPTIONS: { value: string; label: string }[] = [
+  { value: 'heart', label: 'heart' },
+  { value: 'star', label: 'star' },
+  { value: 'mci:food-apple', label: 'food' },
+  { value: 'mci:map-marker', label: 'map' },
+  { value: 'mci:dumbbell', label: 'dumbbell' },
+  { value: 'leaf', label: 'leaf' },
+  { value: 'rocket', label: 'rocket' },
+  { value: 'book', label: 'book' },
+  { value: 'users', label: 'users' },
+  { value: 'dollar', label: 'dollar' },
+  { value: 'tag', label: 'tag' },
+  { value: 'music', label: 'music' },
+  { value: 'paint-brush', label: 'paint-brush' },
+  { value: 'trophy', label: 'trophy' },
+  { value: 'home', label: 'home' },
+  { value: 'tree', label: 'tree' },
+  { value: 'paw', label: 'paw' },
+  { value: 'cutlery', label: 'cutlery' },
 ];
 
 const REPLENISH_PERIODS: { value: ReplenishPeriod; label: string }[] = [
@@ -53,6 +74,11 @@ export default function RewardsScreen() {
   const getActiveInventory = useRewardStore((s) => s.getActiveInventory);
   const redeemInventoryItem = useRewardStore((s) => s.redeemInventoryItem);
 
+  const rewardCategories = useRewardCategoryStore((s) => s.categories);
+  const addCategory = useRewardCategoryStore((s) => s.addCategory);
+  const removeCategory = useRewardCategoryStore((s) => s.removeCategory);
+  const updateCategory = useRewardCategoryStore((s) => s.updateCategory);
+
   const [activeTab, setActiveTab] = useState<'shop' | 'inventory'>('shop');
   const [showAddModal, setShowAddModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -61,8 +87,16 @@ export default function RewardsScreen() {
   const [newDescription, setNewDescription] = useState('');
   const [newCost, setNewCost] = useState('100');
   const [newQuantity, setNewQuantity] = useState('1');
-  const [selectedCategory, setSelectedCategory] = useState<RewardCategory>('custom');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(rewardCategories[0]?.id || 'self_care');
   const [selectedPeriod, setSelectedPeriod] = useState<ReplenishPeriod>('daily');
+
+  // Category editor state
+  const [showCategoryEditor, setShowCategoryEditor] = useState(false);
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryColor, setNewCategoryColor] = useState(COLOR_PALETTE[0]);
+  const [newCategoryIcon, setNewCategoryIcon] = useState('tag');
 
   useEffect(() => {
     replenishRewards();
@@ -86,12 +120,18 @@ export default function RewardsScreen() {
     }
   };
 
+  const resolveRewardCategory = (): RewardCategory => {
+    return DEFAULT_REWARD_CATEGORY_IDS.includes(selectedCategoryId)
+      ? (selectedCategoryId as RewardCategory)
+      : 'custom';
+  };
+
   const resetModal = () => {
     setNewName('');
     setNewDescription('');
     setNewCost('100');
     setNewQuantity('1');
-    setSelectedCategory('custom');
+    setSelectedCategoryId(rewardCategories[0]?.id || 'self_care');
     setSelectedPeriod('daily');
     setIsEditing(false);
     setEditingRewardId(null);
@@ -104,7 +144,7 @@ export default function RewardsScreen() {
     setNewDescription(reward.description);
     setNewCost(String(reward.tokenCost));
     setNewQuantity(String(reward.maxQuantity));
-    setSelectedCategory(reward.category);
+    setSelectedCategoryId(reward.customCategoryId || reward.category);
     setSelectedPeriod(reward.replenishPeriod);
     setShowAddModal(true);
   };
@@ -112,12 +152,14 @@ export default function RewardsScreen() {
   const handleSaveReward = () => {
     if (!newName.trim()) return;
     const quantity = parseInt(newQuantity, 10) || 1;
+    const rewardCategory = resolveRewardCategory();
     if (isEditing && editingRewardId) {
       updateReward(editingRewardId, {
         name: newName.trim(),
         description: newDescription.trim(),
         tokenCost: parseInt(newCost, 10) || 100,
-        category: selectedCategory,
+        category: rewardCategory,
+        customCategoryId: selectedCategoryId,
         maxQuantity: quantity,
         replenishPeriod: selectedPeriod,
       });
@@ -127,7 +169,8 @@ export default function RewardsScreen() {
         description: newDescription.trim(),
         tokenCost: parseInt(newCost, 10) || 100,
         icon: 'star',
-        category: selectedCategory,
+        category: rewardCategory,
+        customCategoryId: selectedCategoryId,
         maxQuantity: quantity,
         replenishPeriod: selectedPeriod,
       });
@@ -277,6 +320,7 @@ export default function RewardsScreen() {
         )}
       </ScrollView>
 
+      {/* Add/Edit Reward Modal */}
       <Modal
         visible={showAddModal}
         animationType="slide"
@@ -299,7 +343,7 @@ export default function RewardsScreen() {
               </Text>
             </TouchableOpacity>
             <Text style={[styles.modalTitle, { color: colors.text }]}>
-              Edit Reward
+              {isEditing ? 'Edit Reward' : 'New Reward'}
             </Text>
             <TouchableOpacity onPress={handleSaveReward}>
               <Text
@@ -436,39 +480,59 @@ export default function RewardsScreen() {
               Category
             </Text>
             <View style={styles.categoryGrid}>
-              {REWARD_CATEGORIES.map((cat) => (
+              {rewardCategories.map((cat) => (
                 <TouchableOpacity
-                  key={cat}
+                  key={cat.id}
                   style={[
                     styles.categoryChip,
                     {
                       backgroundColor:
-                        selectedCategory === cat
-                          ? colors.primary
+                        selectedCategoryId === cat.id
+                          ? cat.color
                           : colors.inputBackground,
                       borderColor:
-                        selectedCategory === cat
-                          ? colors.primary
+                        selectedCategoryId === cat.id
+                          ? cat.color
                           : colors.border,
                     },
                   ]}
-                  onPress={() => setSelectedCategory(cat)}
+                  onPress={() => setSelectedCategoryId(cat.id)}
                 >
                   <Text
                     style={[
                       styles.categoryChipText,
                       {
                         color:
-                          selectedCategory === cat
+                          selectedCategoryId === cat.id
                             ? '#FFF'
                             : colors.textSecondary,
                       },
                     ]}
                   >
-                    {cat.replace('_', ' ')}
+                    {cat.name}
                   </Text>
                 </TouchableOpacity>
               ))}
+              <TouchableOpacity
+                style={[
+                  styles.categoryChip,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.border,
+                  },
+                ]}
+                onPress={() => setShowCategoryEditor(true)}
+              >
+                <FontAwesome name="cog" size={12} color={colors.textSecondary} style={{ marginRight: 4 }} />
+                <Text
+                  style={[
+                    styles.categoryChipText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Manage
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {isEditing && (
@@ -480,6 +544,309 @@ export default function RewardsScreen() {
                 <Text style={styles.deleteButtonText}>Delete Reward</Text>
               </TouchableOpacity>
             )}
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Category Editor Modal */}
+      <Modal
+        visible={showCategoryEditor}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => {
+          setShowCategoryForm(false);
+          setEditingCategoryId(null);
+          setShowCategoryEditor(false);
+        }}
+      >
+        <SafeAreaView
+          style={[styles.modalContainer, { backgroundColor: colors.background }]}
+        >
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => {
+              setShowCategoryForm(false);
+              setEditingCategoryId(null);
+              setShowCategoryEditor(false);
+            }}>
+              <Text style={[styles.modalCancel, { color: colors.textSecondary }]}>
+                Back
+              </Text>
+            </TouchableOpacity>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Categories
+            </Text>
+            <View style={{ width: 50 }} />
+          </View>
+
+          <ScrollView
+            style={styles.modalBody}
+            contentContainerStyle={styles.modalBodyContent}
+          >
+            {rewardCategories.length === 0 && !showCategoryForm && (
+              <View style={[styles.emptyState, { borderColor: colors.border, marginBottom: spacing.lg }]}>
+                <FontAwesome name="folder-open" size={40} color={colors.textMuted} />
+                <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+                  No categories
+                </Text>
+                <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+                  Add categories with custom names, colors, and icons.
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.customCategoryGrid}>
+              {rewardCategories.map((cc) => {
+                const isSelected = selectedCategoryId === cc.id;
+                return (
+                  <TouchableOpacity
+                    key={cc.id}
+                    style={[
+                      styles.customCategoryCard,
+                      {
+                        backgroundColor: colors.surfaceElevated,
+                        borderColor: isSelected ? cc.color : colors.border,
+                        borderWidth: isSelected ? 2 : 1,
+                      },
+                    ]}
+                    onPress={() => {
+                      setSelectedCategoryId(cc.id);
+                      setEditingCategoryId(cc.id);
+                      setNewCategoryName(cc.name);
+                      setNewCategoryColor(cc.color);
+                      setNewCategoryIcon(cc.icon);
+                      setShowCategoryForm(true);
+                    }}
+                    onLongPress={() => {
+                      if (rewardCategories.length <= 1) return;
+                      Alert.alert(
+                        'Delete Category',
+                        `Are you sure you want to delete "${cc.name}"?`,
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          {
+                            text: 'Delete',
+                            style: 'destructive',
+                            onPress: () => {
+                              if (selectedCategoryId === cc.id) {
+                                const next = rewardCategories.find((c) => c.id !== cc.id);
+                                if (next) setSelectedCategoryId(next.id);
+                              }
+                              removeCategory(cc.id);
+                            },
+                          },
+                        ]
+                      );
+                    }}
+                  >
+                    <View
+                      style={[
+                        styles.customCategoryCardIcon,
+                        { backgroundColor: cc.color + '20' },
+                      ]}
+                    >
+                      <DynamicIcon name={cc.icon} size={20} color={cc.color} />
+                    </View>
+                    <Text
+                      style={[styles.customCategoryCardName, { color: colors.text }]}
+                      numberOfLines={1}
+                    >
+                      {cc.name}
+                    </Text>
+                    <View
+                      style={[styles.customCategoryCardColorDot, { backgroundColor: cc.color }]}
+                    />
+                    {isSelected && (
+                      <View style={[styles.customCategorySelectedBadge, { backgroundColor: cc.color }]}>
+                        <FontAwesome name="check" size={10} color="#FFF" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {showCategoryForm ? (
+              <View style={[styles.addCategoryForm, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+                <Text style={[styles.addCategoryFormTitle, { color: colors.text }]}>
+                  {editingCategoryId ? 'Edit Category' : 'New Category'}
+                </Text>
+
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+                  Name
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      color: colors.text,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                  placeholder="e.g., Gaming"
+                  placeholderTextColor={colors.textMuted}
+                  value={newCategoryName}
+                  onChangeText={setNewCategoryName}
+                />
+
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+                  Color
+                </Text>
+                <View style={styles.colorPalette}>
+                  {COLOR_PALETTE.map((c) => (
+                    <TouchableOpacity
+                      key={c}
+                      style={[
+                        styles.colorSwatch,
+                        { backgroundColor: c },
+                        newCategoryColor === c && styles.colorSwatchSelected,
+                      ]}
+                      onPress={() => setNewCategoryColor(c)}
+                    >
+                      {newCategoryColor === c && (
+                        <FontAwesome name="check" size={12} color="#FFF" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+                  Icon
+                </Text>
+                <View style={styles.iconPalette}>
+                  {ICON_OPTIONS.map((ic) => (
+                    <TouchableOpacity
+                      key={ic.value}
+                      style={[
+                        styles.iconChoice,
+                        {
+                          backgroundColor:
+                            newCategoryIcon === ic.value
+                              ? newCategoryColor + '20'
+                              : colors.inputBackground,
+                          borderColor:
+                            newCategoryIcon === ic.value
+                              ? newCategoryColor
+                              : colors.border,
+                        },
+                      ]}
+                      onPress={() => setNewCategoryIcon(ic.value)}
+                    >
+                      <DynamicIcon
+                        name={ic.value}
+                        size={18}
+                        color={newCategoryIcon === ic.value ? newCategoryColor : colors.textSecondary}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <View style={styles.addCategoryActions}>
+                  <TouchableOpacity
+                    style={[styles.addCategoryCancel, { borderColor: colors.border }]}
+                    onPress={() => {
+                      setShowCategoryForm(false);
+                      setEditingCategoryId(null);
+                      setNewCategoryName('');
+                      setNewCategoryColor(COLOR_PALETTE[0]);
+                      setNewCategoryIcon('tag');
+                    }}
+                  >
+                    <Text style={[styles.addCategoryCancelText, { color: colors.textSecondary }]}>
+                      Cancel
+                    </Text>
+                  </TouchableOpacity>
+                  {editingCategoryId ? (
+                    <TouchableOpacity
+                      style={[
+                        styles.addCategorySave,
+                        {
+                          backgroundColor: newCategoryName.trim()
+                            ? newCategoryColor
+                            : colors.inputBackground,
+                        },
+                      ]}
+                      onPress={() => {
+                        if (!newCategoryName.trim()) return;
+                        updateCategory(editingCategoryId, {
+                          name: newCategoryName.trim(),
+                          color: newCategoryColor,
+                          icon: newCategoryIcon,
+                        });
+                        setShowCategoryForm(false);
+                        setEditingCategoryId(null);
+                        setNewCategoryName('');
+                        setNewCategoryColor(COLOR_PALETTE[0]);
+                        setNewCategoryIcon('tag');
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.addCategorySaveText,
+                          { color: newCategoryName.trim() ? '#FFF' : colors.textMuted },
+                        ]}
+                      >
+                        Save Changes
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={[
+                        styles.addCategorySave,
+                        {
+                          backgroundColor: newCategoryName.trim()
+                            ? newCategoryColor
+                            : colors.inputBackground,
+                        },
+                      ]}
+                      onPress={() => {
+                        if (!newCategoryName.trim()) return;
+                        const created = addCategory(
+                          newCategoryName.trim(),
+                          newCategoryColor,
+                          newCategoryIcon
+                        );
+                        setSelectedCategoryId(created.id);
+                        setNewCategoryName('');
+                        setNewCategoryColor(COLOR_PALETTE[0]);
+                        setNewCategoryIcon('tag');
+                        setShowCategoryForm(false);
+                        setShowCategoryEditor(false);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.addCategorySaveText,
+                          { color: newCategoryName.trim() ? '#FFF' : colors.textMuted },
+                        ]}
+                      >
+                        Create & Select
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={[styles.addCategoryButton, { borderColor: colors.border }]}
+                onPress={() => {
+                  setEditingCategoryId(null);
+                  setNewCategoryName('');
+                  setNewCategoryColor(COLOR_PALETTE[0]);
+                  setNewCategoryIcon('tag');
+                  setShowCategoryForm(true);
+                }}
+              >
+                <FontAwesome name="plus" size={16} color={colors.primary} />
+                <Text style={[styles.addCategoryButtonText, { color: colors.primary }]}>
+                  Add Category
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            <Text style={[styles.customCategoryHint, { color: colors.textMuted }]}>
+              Tap to edit. Long-press to delete.
+            </Text>
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -632,6 +999,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
@@ -654,5 +1023,130 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     fontSize: fontSize.md,
     fontWeight: '600',
+  },
+  customCategoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  customCategoryCard: {
+    width: '47%' as any,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    alignItems: 'center',
+    gap: spacing.sm,
+    position: 'relative',
+  },
+  customCategoryCardIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  customCategoryCardName: {
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+    textTransform: 'capitalize',
+  },
+  customCategoryCardColorDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  customCategorySelectedBadge: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addCategoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+  },
+  addCategoryButtonText: {
+    fontSize: fontSize.md,
+    fontWeight: '700',
+  },
+  addCategoryForm: {
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    padding: spacing.md,
+  },
+  addCategoryFormTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  colorPalette: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  colorSwatch: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  colorSwatchSelected: {
+    borderWidth: 3,
+    borderColor: '#FFF',
+  },
+  iconPalette: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  iconChoice: {
+    width: 42,
+    height: 42,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  addCategoryActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+  },
+  addCategoryCancel: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  addCategoryCancelText: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+  },
+  addCategorySave: {
+    flex: 2,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+  },
+  addCategorySaveText: {
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+  },
+  customCategoryHint: {
+    fontSize: fontSize.xs,
+    textAlign: 'center',
+    marginTop: spacing.md,
   },
 });

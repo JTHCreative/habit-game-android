@@ -36,7 +36,7 @@ interface RewardState {
   rewards: Reward[];
   inventory: InventoryItem[];
   addReward: (reward: Omit<Reward, 'id' | 'isPurchased' | 'isRedeemed' | 'remainingQuantity' | 'lastReplenishedAt'>) => void;
-  updateReward: (id: string, updates: Partial<Pick<Reward, 'name' | 'description' | 'tokenCost' | 'category' | 'maxQuantity' | 'replenishPeriod'>>) => void;
+  updateReward: (id: string, updates: Partial<Pick<Reward, 'name' | 'description' | 'tokenCost' | 'category' | 'customCategoryId' | 'maxQuantity' | 'replenishPeriod'>>) => void;
   removeReward: (id: string) => void;
   purchaseReward: (id: string) => void;
   redeemReward: (id: string) => void;

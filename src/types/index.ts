@@ -67,13 +67,16 @@ export interface Mission {
 
 export type ReplenishPeriod = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
+export type RewardCategory = 'self_care' | 'entertainment' | 'treat' | 'experience' | 'custom';
+
 export interface Reward {
   id: string;
   name: string;
   description: string;
   tokenCost: number;
   icon: string;
-  category: 'self_care' | 'entertainment' | 'treat' | 'experience' | 'custom';
+  category: RewardCategory;
+  customCategoryId?: string;
   maxQuantity: number;
   remainingQuantity: number;
   replenishPeriod: ReplenishPeriod;
