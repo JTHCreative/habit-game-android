@@ -398,6 +398,24 @@ export const useUserStore = create<UserState>()(
     {
       name: 'user-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      merge: (persisted, current) => {
+        const state = persisted as any;
+        if (!state || !state.profile) return current as UserState;
+        const p = state.profile;
+        return {
+          ...(current as UserState),
+          profile: {
+            ...p,
+            tickets: p.tickets ?? p.tokens ?? 0,
+            totalTicketsEarned: p.totalTicketsEarned ?? p.totalTokensEarned ?? 0,
+            totalTicketsSpent: p.totalTicketsSpent ?? p.totalTokensSpent ?? 0,
+          },
+          achievements: (state.achievements || (current as UserState).achievements).map((a: any) => ({
+            ...a,
+            ticketReward: a.ticketReward ?? a.tokenReward ?? 0,
+          })),
+        };
+      },
     }
   )
 );

@@ -268,6 +268,17 @@ export const useMissionStore = create<MissionState>()(
     {
       name: 'mission-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      merge: (persisted, current) => {
+        const state = persisted as any;
+        if (!state || !state.missions) return current as MissionState;
+        return {
+          ...(current as MissionState),
+          missions: state.missions.map((m: any) => ({
+            ...m,
+            ticketReward: m.ticketReward ?? m.tokenReward ?? 0,
+          })),
+        };
+      },
     }
   )
 );

@@ -316,14 +316,18 @@ export const useRewardStore = create<RewardState>()(
         if (!state || !state.rewards) return current;
         return {
           ...current,
-          rewards: state.rewards.map((r) => ({
+          rewards: state.rewards.map((r: any) => ({
             ...r,
+            ticketCost: r.ticketCost ?? r.tokenCost ?? 100,
             maxQuantity: r.maxQuantity ?? 1,
             remainingQuantity: r.remainingQuantity ?? 1,
             replenishPeriod: r.replenishPeriod ?? ('daily' as ReplenishPeriod),
             lastReplenishedAt: r.lastReplenishedAt ?? new Date().toISOString(),
           })),
-          inventory: state.inventory || [],
+          inventory: (state.inventory || []).map((i: any) => ({
+            ...i,
+            ticketCost: i.ticketCost ?? i.tokenCost ?? 0,
+          })),
         };
       },
     }

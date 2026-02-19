@@ -105,6 +105,17 @@ export const useHabitStore = create<HabitState>()(
     {
       name: 'habit-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      merge: (persisted, current) => {
+        const state = persisted as any;
+        if (!state || !state.habits) return current as HabitState;
+        return {
+          ...(current as HabitState),
+          habits: state.habits.map((h: any) => ({
+            ...h,
+            ticketReward: h.ticketReward ?? h.tokenReward ?? 10,
+          })),
+        };
+      },
     }
   )
 );
