@@ -159,13 +159,13 @@ export default function HistoryScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <LinearGradient
-        colors={gradients.gold}
+        colors={gradients.dark}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <FontAwesome name="history" size={28} color="#FFF" />
+          <FontAwesome name="history" size={28} color="#D4A44C" />
           <Text style={styles.headerTitle}>History</Text>
           <Text style={styles.headerSubtitle}>
             {totalCompletions} total completion{totalCompletions !== 1 ? 's' : ''}
@@ -416,9 +416,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   headerSubtitle: {
-    fontSize: fontSize.sm,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 2,
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: fontSize.md,
   },
   scrollView: {
     flex: 1,
