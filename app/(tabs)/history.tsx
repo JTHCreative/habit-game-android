@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { StyleSheet, ScrollView, View, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Card } from '@/src/components/common/Card';
+import { HabitCalendar } from '@/src/components/history/HabitCalendar';
 import { useHabitStore } from '@/src/stores/useHabitStore';
 import { useCategoryStore } from '@/src/stores/useCustomCategoryStore';
 import Colors from '@/constants/Colors';
@@ -235,6 +236,11 @@ export default function HistoryScreen() {
           </Card>
         </View>
 
+        {/* Calendar view */}
+        <View style={styles.calendarSection}>
+          <HabitCalendar />
+        </View>
+
         {/* Bar chart */}
         <Card style={styles.chartCard}>
           <Text style={[styles.chartTitle, { color: colors.text }]}>
@@ -445,6 +451,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  calendarSection: {
+    marginBottom: spacing.md,
   },
   chartCard: {
     marginBottom: spacing.md,
