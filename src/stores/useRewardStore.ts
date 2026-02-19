@@ -188,8 +188,9 @@ export const useRewardStore = create<RewardState>()(
           rewards: state.rewards.map((r) => {
             if (r.id !== id) return r;
             const updated = { ...r, ...updates };
-            if (updates.maxQuantity !== undefined && updates.maxQuantity > r.maxQuantity) {
-              updated.remainingQuantity = r.remainingQuantity + (updates.maxQuantity - r.maxQuantity);
+            if (updates.maxQuantity !== undefined && updates.maxQuantity !== r.maxQuantity) {
+              const diff = updates.maxQuantity - r.maxQuantity;
+              updated.remainingQuantity = Math.max(0, Math.min(r.remainingQuantity + diff, updates.maxQuantity));
             }
             return updated;
           }),
