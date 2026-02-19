@@ -36,6 +36,13 @@ function formatDateStr(year: number, month: number, day: number) {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
+function formatDetailDate(dateStr: string) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  return `${dayNames[date.getDay()]}, ${MONTH_NAMES[month - 1]} ${day}`;
+}
+
 function offsetMonth(year: number, month: number, offset: number) {
   let m = month + offset;
   let y = year;
@@ -91,12 +98,15 @@ function computeDayStatuses(
 // ── Month grid (pure rendering, no animation) ──────────────────────────
 function MonthGrid({
   year, month, dayStatuses, todayYear, todayMonth0, todayDay, colors, width,
+  selectedDate, onDayPress,
 }: {
   year: number; month: number;
   dayStatuses: Record<number, DayStatus>;
   todayYear: number; todayMonth0: number; todayDay: number;
   colors: (typeof Colors)['light'];
   width: number;
+  selectedDate: string | null;
+  onDayPress: (dateStr: string) => void;
 }) {
   const rows = useMemo(() => buildMonthRows(year, month), [year, month]);
   const isCurrentMonth = year === todayYear && month === todayMonth0;
@@ -129,13 +139,19 @@ function MonthGrid({
             }
             const status = dayStatuses[day] || 'none';
             const isToday = isCurrentMonth && day === todayDay;
+            const dateStr = formatDateStr(year, month, day);
+            const isSelected = dateStr === selectedDate;
+            const isTappable = status !== 'future';
             return (
               <View key={day} style={styles.dayCell}>
-                <View
+                <TouchableOpacity
+                  activeOpacity={isTappable ? 0.6 : 1}
+                  onPress={isTappable ? () => onDayPress(dateStr) : undefined}
                   style={[
                     styles.daySquare,
                     { backgroundColor: statusColor(status) },
                     isToday && styles.todaySquare,
+                    isSelected && styles.selectedSquare,
                   ]}
                 >
                   <Text
@@ -147,7 +163,7 @@ function MonthGrid({
                   >
                     {day}
                   </Text>
-                </View>
+                </TouchableOpacity>
               </View>
             );
           })}
@@ -170,6 +186,7 @@ export function HabitCalendar() {
 
   const [currentYear, setCurrentYear] = useState(todayYear);
   const [currentMonth, setCurrentMonth] = useState(todayMonth0);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   // Grid width from layout
   const [gridWidth, setGridWidth] = useState(0);
@@ -242,6 +259,7 @@ export function HabitCalendar() {
     if (isAnimating.current) {
       translateX.setValue(0);
       isAnimating.current = false;
+      setSelectedDate(null);
     }
   }, [currentMonth, currentYear, translateX]);
 
@@ -276,7 +294,19 @@ export function HabitCalendar() {
     setGridWidth(e.nativeEvent.layout.width);
   }, []);
 
-  const gridProps = { todayYear, todayMonth0, todayDay, colors };
+  const onDayPress = useCallback((dateStr: string) => {
+    setSelectedDate((prev) => (prev === dateStr ? null : dateStr));
+  }, []);
+
+  // Build the habit detail list for the selected date
+  const selectedDayDetail = useMemo(() => {
+    if (!selectedDate) return null;
+    const completed = dailyHabits.filter((h) => h.completedDates.includes(selectedDate));
+    const incomplete = dailyHabits.filter((h) => !h.completedDates.includes(selectedDate));
+    return { completed, incomplete };
+  }, [selectedDate, dailyHabits]);
+
+  const gridProps = { todayYear, todayMonth0, todayDay, colors, selectedDate, onDayPress };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.cardBackground, borderColor: colors.borderLight }]}>
@@ -329,6 +359,46 @@ export function HabitCalendar() {
           </Animated.View>
         )}
       </View>
+
+      {/* Selected day detail */}
+      {selectedDate && selectedDayDetail && (
+        <View style={[styles.detailPanel, { borderColor: colors.border }]}>
+          <Text style={[styles.detailTitle, { color: colors.text }]}>
+            {formatDetailDate(selectedDate)}
+          </Text>
+          {dailyHabits.length === 0 ? (
+            <Text style={[styles.detailEmpty, { color: colors.textMuted }]}>
+              No daily habits tracked
+            </Text>
+          ) : (
+            <>
+              {selectedDayDetail.completed.map((h) => (
+                <View key={h.id} style={styles.detailRow}>
+                  <FontAwesome name="check-circle" size={16} color="#4CAF50" />
+                  <Text style={[styles.detailHabitName, { color: colors.text }]} numberOfLines={1}>
+                    {h.name}
+                  </Text>
+                </View>
+              ))}
+              {selectedDayDetail.incomplete.map((h) => (
+                <View key={h.id} style={styles.detailRow}>
+                  <FontAwesome name="times-circle" size={16} color={colors.textMuted} />
+                  <Text
+                    style={[
+                      styles.detailHabitName,
+                      styles.detailStrikethrough,
+                      { color: colors.textMuted },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {h.name}
+                  </Text>
+                </View>
+              ))}
+            </>
+          )}
+        </View>
+      )}
 
       {/* Legend */}
       <View style={styles.legend}>
@@ -413,12 +483,43 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#FFF',
   },
+  selectedSquare: {
+    borderWidth: 2,
+    borderColor: '#D4A44C',
+  },
   dayText: {
     fontSize: fontSize.sm,
     fontWeight: '600',
   },
   todayText: {
     fontWeight: '800',
+  },
+  detailPanel: {
+    marginTop: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
+    borderTopWidth: 1,
+    gap: spacing.sm,
+  },
+  detailTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+  },
+  detailEmpty: {
+    fontSize: fontSize.sm,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  detailHabitName: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    flex: 1,
+  },
+  detailStrikethrough: {
+    textDecorationLine: 'line-through',
   },
   legend: {
     flexDirection: 'row',
