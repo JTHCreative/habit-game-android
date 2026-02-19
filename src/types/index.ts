@@ -119,6 +119,7 @@ export interface UserProfile {
   title: string;
   avatarId: string;
   profileImageUri?: string;
+  lastDecayDate?: string;
 }
 
 export interface Achievement {

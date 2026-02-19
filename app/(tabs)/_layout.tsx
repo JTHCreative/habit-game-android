@@ -7,6 +7,7 @@ import { Tabs } from 'expo-router';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAppFont } from '@/components/Themed';
+import { useDecayCheck } from '@/src/hooks/useDecayCheck';
 
 const ICON_BOX = { width: 28, height: 28, alignItems: 'center' as const, justifyContent: 'center' as const };
 
@@ -36,6 +37,7 @@ export default function TabLayout() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const { bold } = useAppFont();
+  useDecayCheck();
 
   return (
     <Tabs

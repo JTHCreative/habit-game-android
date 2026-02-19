@@ -2,8 +2,8 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
-import { UserProfile, Achievement } from '../types';
-import { getXPForLevel, getTitleForLevel, calculateLevelFromTotalXP } from '../utils/levels';
+import { UserProfile, Achievement, Habit } from '../types';
+import { getXPForLevel, getTitleForLevel, calculateLevelFromTotalXP, getPSTDateString } from '../utils/levels';
 
 interface UserState {
   profile: UserProfile;
@@ -18,6 +18,7 @@ interface UserState {
   incrementMissionsCompleted: () => void;
   updateStreak: (streak: number) => void;
   unlockAchievement: (achievementId: string) => void;
+  applyDecay: (habits: Habit[]) => number;
   setDisplayName: (name: string) => void;
   setProfileImage: (uri: string) => void;
   resetProfile: () => void;
@@ -276,6 +277,101 @@ export const useUserStore = create<UserState>()(
             ),
           };
         }),
+
+      applyDecay: (habits: Habit[]) => {
+        const state = useUserStore.getState();
+        const today = getPSTDateString();
+        const lastDecay = state.profile.lastDecayDate;
+
+        // Don't run more than once per day
+        if (lastDecay === today) return 0;
+
+        // Find the most recent completion date across all habits
+        let lastCompletionDate: string | null = null;
+        for (const habit of habits) {
+          for (const d of habit.completedDates) {
+            if (!lastCompletionDate || d > lastCompletionDate) {
+              lastCompletionDate = d;
+            }
+          }
+        }
+
+        // If no completions ever, use join date
+        if (!lastCompletionDate) {
+          const joinDate = state.profile.joinedAt.split('T')[0];
+          lastCompletionDate = joinDate;
+        }
+
+        // Calculate days since last completion (not counting today)
+        const [ty, tm, td] = today.split('-').map(Number);
+        const todayDate = new Date(ty, tm - 1, td);
+        const [ly, lm, ld] = lastCompletionDate.split('-').map(Number);
+        const lastDate = new Date(ly, lm - 1, ld);
+        const daysSinceCompletion = Math.round(
+          (todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        // No decay if active within the last 3 days
+        if (daysSinceCompletion < 3) {
+          set((s) => ({
+            profile: { ...s.profile, lastDecayDate: today },
+          }));
+          return 0;
+        }
+
+        // Figure out which days to apply decay for
+        // Decay starts on day 3 after last completion
+        const decayStartDate = new Date(ly, lm - 1, ld);
+        decayStartDate.setDate(decayStartDate.getDate() + 3);
+
+        // Already processed up to lastDecay, so start from day after
+        let processFrom = decayStartDate;
+        if (lastDecay) {
+          const [dy, dm, dd] = lastDecay.split('-').map(Number);
+          const lastDecayDate = new Date(dy, dm - 1, dd);
+          lastDecayDate.setDate(lastDecayDate.getDate() + 1);
+          if (lastDecayDate > processFrom) {
+            processFrom = lastDecayDate;
+          }
+        }
+
+        // Process through yesterday (today hasn't ended yet)
+        const yesterday = new Date(ty, tm - 1, td);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        let decayDays = 0;
+        if (processFrom <= yesterday) {
+          decayDays = Math.round(
+            (yesterday.getTime() - processFrom.getTime()) / (1000 * 60 * 60 * 24)
+          ) + 1;
+        }
+
+        if (decayDays <= 0) {
+          set((s) => ({
+            profile: { ...s.profile, lastDecayDate: today },
+          }));
+          return 0;
+        }
+
+        const totalDecay = decayDays * 10;
+        const totalXPEarned = Math.max(0, state.profile.totalXPEarned - totalDecay);
+        const { level, currentXP, xpToNextLevel } = calculateLevelFromTotalXP(totalXPEarned);
+        const title = getTitleForLevel(level);
+
+        set(() => ({
+          profile: {
+            ...state.profile,
+            level,
+            currentXP,
+            xpToNextLevel,
+            totalXPEarned,
+            title,
+            lastDecayDate: today,
+          },
+        }));
+
+        return totalDecay;
+      },
 
       setDisplayName: (name: string) =>
         set((state) => ({
