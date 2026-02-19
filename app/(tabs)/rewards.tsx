@@ -63,7 +63,7 @@ export default function RewardsScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const profile = useUserStore((s) => s.profile);
-  const spendTokens = useUserStore((s) => s.spendTokens);
+  const spendTickets = useUserStore((s) => s.spendTickets);
   const rewards = useRewardStore((s) => s.rewards);
   const purchaseReward = useRewardStore((s) => s.purchaseReward);
   const addReward = useRewardStore((s) => s.addReward);
@@ -114,7 +114,7 @@ export default function RewardsScreen() {
   const handlePurchase = (rewardId: string) => {
     const reward = rewards.find((r) => r.id === rewardId);
     if (!reward || reward.remainingQuantity <= 0) return;
-    const success = spendTokens(reward.tokenCost);
+    const success = spendTickets(reward.ticketCost);
     if (success) {
       purchaseReward(rewardId);
     }
@@ -142,7 +142,7 @@ export default function RewardsScreen() {
     setEditingRewardId(reward.id);
     setNewName(reward.name);
     setNewDescription(reward.description);
-    setNewCost(String(reward.tokenCost));
+    setNewCost(String(reward.ticketCost));
     setNewQuantity(String(reward.maxQuantity));
     setSelectedCategoryId(reward.customCategoryId || reward.category);
     setSelectedPeriod(reward.replenishPeriod);
@@ -157,7 +157,7 @@ export default function RewardsScreen() {
       updateReward(editingRewardId, {
         name: newName.trim(),
         description: newDescription.trim(),
-        tokenCost: parseInt(newCost, 10) || 100,
+        ticketCost: parseInt(newCost, 10) || 100,
         category: rewardCategory,
         customCategoryId: selectedCategoryId,
         maxQuantity: quantity,
@@ -167,7 +167,7 @@ export default function RewardsScreen() {
       addReward({
         name: newName.trim(),
         description: newDescription.trim(),
-        tokenCost: parseInt(newCost, 10) || 100,
+        ticketCost: parseInt(newCost, 10) || 100,
         icon: 'star',
         category: rewardCategory,
         customCategoryId: selectedCategoryId,
@@ -201,7 +201,7 @@ export default function RewardsScreen() {
           <View style={styles.headerBottomRow}>
             <View style={styles.balanceRow}>
               <Text style={styles.balanceLabel}>Your Balance:</Text>
-              <TicketBadge amount={profile.tokens} size="large" variant="dark" />
+              <TicketBadge amount={profile.tickets} size="large" variant="dark" />
             </View>
             <TouchableOpacity
               style={styles.addHeaderButton}
@@ -287,7 +287,7 @@ export default function RewardsScreen() {
               <RewardCard
                 key={reward.id}
                 reward={reward}
-                canAfford={profile.tokens >= reward.tokenCost}
+                canAfford={profile.tickets >= reward.ticketCost}
                 onPurchase={() => handlePurchase(reward.id)}
                 onLongPress={() => handleEditReward(reward)}
               />

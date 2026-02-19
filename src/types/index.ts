@@ -29,7 +29,7 @@ export interface Habit {
   targetCount: number;
   currentStreak: number;
   longestStreak: number;
-  tokenReward: number;
+  ticketReward: number;
   xpReward: number;
   completedDates: string[]; // ISO date strings
   createdAt: string;
@@ -58,7 +58,7 @@ export interface Mission {
   difficulty: MissionDifficulty;
   status: MissionStatus;
   objectives: MissionObjective[];
-  tokenReward: number;
+  ticketReward: number;
   xpReward: number;
   requiredLevel: number;
   icon: string;
@@ -73,7 +73,7 @@ export interface Reward {
   id: string;
   name: string;
   description: string;
-  tokenCost: number;
+  ticketCost: number;
   icon: string;
   category: RewardCategory;
   customCategoryId?: string;
@@ -94,7 +94,7 @@ export interface InventoryItem {
   rewardDescription: string;
   rewardIcon: string;
   rewardCategory: Reward['category'];
-  tokenCost: number;
+  ticketCost: number;
   replenishPeriod: ReplenishPeriod;
   quantity: number;
   redeemedCount: number;
@@ -108,9 +108,9 @@ export interface UserProfile {
   currentXP: number;
   xpToNextLevel: number;
   totalXPEarned: number;
-  tokens: number;
-  totalTokensEarned: number;
-  totalTokensSpent: number;
+  tickets: number;
+  totalTicketsEarned: number;
+  totalTicketsSpent: number;
   totalHabitsCompleted: number;
   totalMissionsCompleted: number;
   currentStreak: number;
@@ -130,13 +130,13 @@ export interface Achievement {
   unlockedAt?: string;
   isUnlocked: boolean;
   xpReward: number;
-  tokenReward: number;
+  ticketReward: number;
 }
 
 export interface DailyCheckIn {
   date: string;
   habitsCompleted: number;
   totalHabits: number;
-  tokensEarned: number;
+  ticketsEarned: number;
   xpEarned: number;
 }

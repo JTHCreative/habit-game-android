@@ -9,7 +9,7 @@ interface MissionState {
   updateMissionProgress: (missionId: string, objectiveId: string, increment: number) => void;
   onHabitCompleted: (category: HabitCategory) => void;
   onStreakUpdated: (streak: number) => void;
-  claimMissionReward: (missionId: string) => { tokens: number; xp: number } | null;
+  claimMissionReward: (missionId: string) => { tickets: number; xp: number } | null;
   getAvailableMissions: (level: number) => Mission[];
 }
 
@@ -28,7 +28,7 @@ const DEFAULT_MISSIONS: Mission[] = [
         currentCount: 0,
       },
     ],
-    tokenReward: 50,
+    ticketReward: 50,
     xpReward: 75,
     requiredLevel: 1,
     icon: 'flag',
@@ -48,7 +48,7 @@ const DEFAULT_MISSIONS: Mission[] = [
         trackStreak: true,
       },
     ],
-    tokenReward: 75,
+    ticketReward: 75,
     xpReward: 100,
     requiredLevel: 1,
     icon: 'zap',
@@ -68,7 +68,7 @@ const DEFAULT_MISSIONS: Mission[] = [
         habitCategory: 'health',
       },
     ],
-    tokenReward: 150,
+    ticketReward: 150,
     xpReward: 200,
     requiredLevel: 3,
     icon: 'heart',
@@ -95,7 +95,7 @@ const DEFAULT_MISSIONS: Mission[] = [
         habitCategory: 'mindfulness',
       },
     ],
-    tokenReward: 200,
+    ticketReward: 200,
     xpReward: 250,
     requiredLevel: 5,
     icon: 'compass',
@@ -115,7 +115,7 @@ const DEFAULT_MISSIONS: Mission[] = [
         trackStreak: true,
       },
     ],
-    tokenReward: 300,
+    ticketReward: 300,
     xpReward: 400,
     requiredLevel: 8,
     icon: 'award',
@@ -141,7 +141,7 @@ const DEFAULT_MISSIONS: Mission[] = [
         trackStreak: true,
       },
     ],
-    tokenReward: 500,
+    ticketReward: 500,
     xpReward: 750,
     requiredLevel: 15,
     icon: 'crown',
@@ -253,7 +253,7 @@ export const useMissionStore = create<MissionState>()(
           ),
         }));
 
-        return { tokens: mission.tokenReward, xp: mission.xpReward };
+        return { tickets: mission.ticketReward, xp: mission.xpReward };
       },
 
       getAvailableMissions: (level) => {

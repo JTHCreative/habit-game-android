@@ -18,7 +18,7 @@ export default function ChallengesScreen() {
   const colors = Colors[colorScheme];
   const profile = useUserStore((s) => s.profile);
   const addXP = useUserStore((s) => s.addXP);
-  const addTokens = useUserStore((s) => s.addTokens);
+  const addTickets = useUserStore((s) => s.addTickets);
   const incrementMissionsCompleted = useUserStore((s) => s.incrementMissionsCompleted);
   const achievements = useUserStore((s) => s.achievements);
   const checkAchievements = useAchievementChecker();
@@ -43,7 +43,7 @@ export default function ChallengesScreen() {
     const reward = claimMissionReward(missionId);
     if (reward) {
       addXP(reward.xp);
-      addTokens(reward.tokens);
+      addTickets(reward.tickets);
       incrementMissionsCompleted();
       checkAchievements();
     }

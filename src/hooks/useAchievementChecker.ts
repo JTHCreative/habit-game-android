@@ -33,8 +33,8 @@ export function useAchievementChecker() {
         case 'missions_5':
           shouldUnlock = profile.totalMissionsCompleted >= 5;
           break;
-        case 'tokens_1000':
-          shouldUnlock = profile.totalTokensEarned >= 1000;
+        case 'tickets_1000':
+          shouldUnlock = profile.totalTicketsEarned >= 1000;
           break;
         case 'habits_100':
           shouldUnlock = profile.totalHabitsCompleted >= 100;

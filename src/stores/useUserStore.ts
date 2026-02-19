@@ -10,9 +10,9 @@ interface UserState {
   achievements: Achievement[];
   addXP: (amount: number) => void;
   removeXP: (amount: number) => void;
-  addTokens: (amount: number) => void;
-  removeTokens: (amount: number) => void;
-  spendTokens: (amount: number) => boolean;
+  addTickets: (amount: number) => void;
+  removeTickets: (amount: number) => void;
+  spendTickets: (amount: number) => boolean;
   incrementHabitsCompleted: () => void;
   decrementHabitsCompleted: () => void;
   incrementMissionsCompleted: () => void;
@@ -32,7 +32,7 @@ const DEFAULT_ACHIEVEMENTS: Achievement[] = [
     icon: 'star',
     isUnlocked: false,
     xpReward: 50,
-    tokenReward: 25,
+    ticketReward: 25,
   },
   {
     id: 'streak_7',
@@ -41,7 +41,7 @@ const DEFAULT_ACHIEVEMENTS: Achievement[] = [
     icon: 'fire',
     isUnlocked: false,
     xpReward: 200,
-    tokenReward: 100,
+    ticketReward: 100,
   },
   {
     id: 'streak_30',
@@ -50,7 +50,7 @@ const DEFAULT_ACHIEVEMENTS: Achievement[] = [
     icon: 'trophy',
     isUnlocked: false,
     xpReward: 500,
-    tokenReward: 250,
+    ticketReward: 250,
   },
   {
     id: 'level_10',
@@ -59,7 +59,7 @@ const DEFAULT_ACHIEVEMENTS: Achievement[] = [
     icon: 'shield',
     isUnlocked: false,
     xpReward: 300,
-    tokenReward: 150,
+    ticketReward: 150,
   },
   {
     id: 'missions_5',
@@ -68,16 +68,16 @@ const DEFAULT_ACHIEVEMENTS: Achievement[] = [
     icon: 'target',
     isUnlocked: false,
     xpReward: 250,
-    tokenReward: 125,
+    ticketReward: 125,
   },
   {
-    id: 'tokens_1000',
+    id: 'tickets_1000',
     title: 'Ticket Collector',
     description: 'Earn 1,000 total tickets',
     icon: 'gem',
     isUnlocked: false,
     xpReward: 150,
-    tokenReward: 50,
+    ticketReward: 50,
   },
   {
     id: 'habits_100',
@@ -86,7 +86,7 @@ const DEFAULT_ACHIEVEMENTS: Achievement[] = [
     icon: 'award',
     isUnlocked: false,
     xpReward: 400,
-    tokenReward: 200,
+    ticketReward: 200,
   },
   {
     id: 'level_25',
@@ -95,7 +95,7 @@ const DEFAULT_ACHIEVEMENTS: Achievement[] = [
     icon: 'crown',
     isUnlocked: false,
     xpReward: 1000,
-    tokenReward: 500,
+    ticketReward: 500,
   },
 ];
 
@@ -107,9 +107,9 @@ function createDefaultProfile(): UserProfile {
     currentXP: 0,
     xpToNextLevel: 100,
     totalXPEarned: 0,
-    tokens: 0,
-    totalTokensEarned: 0,
-    totalTokensSpent: 0,
+    tickets: 0,
+    totalTicketsEarned: 0,
+    totalTicketsSpent: 0,
     totalHabitsCompleted: 0,
     totalMissionsCompleted: 0,
     currentStreak: 0,
@@ -170,34 +170,34 @@ export const useUserStore = create<UserState>()(
           };
         }),
 
-      addTokens: (amount: number) =>
+      addTickets: (amount: number) =>
         set((state) => ({
           profile: {
             ...state.profile,
-            tokens: state.profile.tokens + amount,
-            totalTokensEarned: state.profile.totalTokensEarned + amount,
+            tickets: state.profile.tickets + amount,
+            totalTicketsEarned: state.profile.totalTicketsEarned + amount,
           },
         })),
 
-      removeTokens: (amount: number) =>
+      removeTickets: (amount: number) =>
         set((state) => ({
           profile: {
             ...state.profile,
-            tokens: Math.max(0, state.profile.tokens - amount),
-            totalTokensEarned: Math.max(0, state.profile.totalTokensEarned - amount),
+            tickets: Math.max(0, state.profile.tickets - amount),
+            totalTicketsEarned: Math.max(0, state.profile.totalTicketsEarned - amount),
           },
         })),
 
-      spendTokens: (amount: number) => {
+      spendTickets: (amount: number) => {
         let success = false;
         set((state) => {
-          if (state.profile.tokens >= amount) {
+          if (state.profile.tickets >= amount) {
             success = true;
             return {
               profile: {
                 ...state.profile,
-                tokens: state.profile.tokens - amount,
-                totalTokensSpent: state.profile.totalTokensSpent + amount,
+                tickets: state.profile.tickets - amount,
+                totalTicketsSpent: state.profile.totalTicketsSpent + amount,
               },
             };
           }
@@ -245,7 +245,7 @@ export const useUserStore = create<UserState>()(
           if (!achievement || achievement.isUnlocked) return state;
 
           const xpAmount = achievement.xpReward;
-          const tokenAmount = achievement.tokenReward;
+          const ticketAmount = achievement.ticketReward;
 
           let { level, currentXP, xpToNextLevel } = state.profile;
           const totalXPEarned = state.profile.totalXPEarned + xpAmount;
@@ -267,8 +267,8 @@ export const useUserStore = create<UserState>()(
               xpToNextLevel,
               totalXPEarned,
               title,
-              tokens: state.profile.tokens + tokenAmount,
-              totalTokensEarned: state.profile.totalTokensEarned + tokenAmount,
+              tickets: state.profile.tickets + ticketAmount,
+              totalTicketsEarned: state.profile.totalTicketsEarned + ticketAmount,
             },
             achievements: state.achievements.map((a) =>
               a.id === achievementId

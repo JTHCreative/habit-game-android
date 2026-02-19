@@ -116,7 +116,7 @@ export function HabitCard({ habit, categoryName, onToggle, onLongPress }: HabitC
         </View>
 
         <View style={styles.rewards}>
-          <TicketBadge amount={habit.tokenReward} size="small" />
+          <TicketBadge amount={habit.ticketReward} size="small" />
           <XPBadge amount={habit.xpReward} size="small" />
         </View>
       </TouchableOpacity>

@@ -68,7 +68,7 @@ export function AchievementCard({ achievement, onClaim }: AchievementCardProps) 
 
       <View style={styles.footer}>
         <View style={styles.rewardRow}>
-          <TicketBadge amount={achievement.tokenReward} size="small" />
+          <TicketBadge amount={achievement.ticketReward} size="small" />
           <XPBadge amount={achievement.xpReward} size="small" />
         </View>
 

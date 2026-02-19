@@ -46,7 +46,7 @@ export function PlayerHeader() {
           <Text style={styles.title}>{profile.title}</Text>
         </View>
 
-        <TicketBadge amount={profile.tokens} size="medium" />
+        <TicketBadge amount={profile.tickets} size="medium" />
       </View>
 
       <View style={styles.xpSection}>

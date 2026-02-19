@@ -86,7 +86,7 @@ export function MissionCard({ mission, onClaim }: MissionCardProps) {
 
       <View style={styles.footer}>
         <View style={styles.rewardRow}>
-          <TicketBadge amount={mission.tokenReward} size="small" />
+          <TicketBadge amount={mission.ticketReward} size="small" />
           <XPBadge amount={mission.xpReward} size="small" />
         </View>
 

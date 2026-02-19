@@ -80,8 +80,8 @@ export default function HomeScreen() {
   const removeHabit = useHabitStore((s) => s.removeHabit);
   const addXP = useUserStore((s) => s.addXP);
   const removeXP = useUserStore((s) => s.removeXP);
-  const addTokens = useUserStore((s) => s.addTokens);
-  const removeTokens = useUserStore((s) => s.removeTokens);
+  const addTickets = useUserStore((s) => s.addTickets);
+  const removeTickets = useUserStore((s) => s.removeTickets);
   const incrementHabitsCompleted = useUserStore((s) => s.incrementHabitsCompleted);
   const decrementHabitsCompleted = useUserStore((s) => s.decrementHabitsCompleted);
 
@@ -104,7 +104,7 @@ export default function HomeScreen() {
   const [selectedCategoryId, setSelectedCategoryId] = useState('health');
   const [selectedFrequency, setSelectedFrequency] = useState<HabitFrequency>('daily');
   const [selectedHabitType, setSelectedHabitType] = useState<HabitType>('positive');
-  const [customTokenReward, setCustomTokenReward] = useState('10');
+  const [customTicketReward, setCustomTicketReward] = useState('10');
   const [customXPReward, setCustomXPReward] = useState('15');
   const [showRewardInputs, setShowRewardInputs] = useState(false);
   const [showCategoryEditor, setShowCategoryEditor] = useState(false);
@@ -142,7 +142,7 @@ export default function HomeScreen() {
         const { completed, habit: updated } = toggleHabitCompletion(habitId, existingDate);
         if (updated && !completed) {
           removeXP(updated.xpReward);
-          removeTokens(updated.tokenReward);
+          removeTickets(updated.ticketReward);
           decrementHabitsCompleted();
         }
       } else {
@@ -150,7 +150,7 @@ export default function HomeScreen() {
         const { completed, habit: updated } = toggleHabitCompletion(habitId, today);
         if (updated && completed) {
           addXP(updated.xpReward);
-          addTokens(updated.tokenReward);
+          addTickets(updated.ticketReward);
           incrementHabitsCompleted();
           onHabitCompleted(habit.category);
           onStreakUpdated(updated.currentStreak);
@@ -163,7 +163,7 @@ export default function HomeScreen() {
       if (updated) {
         if (completed) {
           addXP(updated.xpReward);
-          addTokens(updated.tokenReward);
+          addTickets(updated.ticketReward);
           incrementHabitsCompleted();
           onHabitCompleted(habit.category);
           onStreakUpdated(updated.currentStreak);
@@ -173,7 +173,7 @@ export default function HomeScreen() {
           checkAchievements();
         } else {
           removeXP(updated.xpReward);
-          removeTokens(updated.tokenReward);
+          removeTickets(updated.ticketReward);
           decrementHabitsCompleted();
         }
       }
@@ -186,7 +186,7 @@ export default function HomeScreen() {
     setSelectedCategoryId(categories[0]?.id || 'health');
     setSelectedFrequency('daily');
     setSelectedHabitType('positive');
-    setCustomTokenReward('10');
+    setCustomTicketReward('10');
     setCustomXPReward('15');
     setShowRewardInputs(false);
     setEditingHabitId(null);
@@ -201,7 +201,7 @@ export default function HomeScreen() {
     setSelectedCategoryId(habit.customCategoryId || habit.category);
     setSelectedFrequency(habit.frequency);
     setSelectedHabitType(habit.habitType || 'positive');
-    setCustomTokenReward(String(habit.tokenReward));
+    setCustomTicketReward(String(habit.ticketReward));
     setCustomXPReward(String(habit.xpReward));
     setShowRewardInputs(false);
     setShowAddModal(true);
@@ -231,7 +231,7 @@ export default function HomeScreen() {
         customCategoryId: selectedCategoryId,
         frequency: selectedFrequency,
         habitType: selectedHabitType,
-        tokenReward: parseInt(customTokenReward, 10) || 10,
+        ticketReward: parseInt(customTicketReward, 10) || 10,
         xpReward: parseInt(customXPReward, 10) || 15,
         icon,
         color,
@@ -245,7 +245,7 @@ export default function HomeScreen() {
         frequency: selectedFrequency,
         habitType: selectedHabitType,
         targetCount: 1,
-        tokenReward: parseInt(customTokenReward, 10) || 10,
+        ticketReward: parseInt(customTicketReward, 10) || 10,
         xpReward: parseInt(customXPReward, 10) || 15,
         icon,
         color,
@@ -687,7 +687,7 @@ export default function HomeScreen() {
                 <View style={styles.rewardItem}>
                   <FontAwesome name="ticket" size={16} color="#D4A44C" />
                   <Text style={[styles.rewardValue, { color: colors.text }]}>
-                    {customTokenReward || '0'} Tickets
+                    {customTicketReward || '0'} Tickets
                   </Text>
                 </View>
                 <View style={styles.rewardItem}>
@@ -716,8 +716,8 @@ export default function HomeScreen() {
                         borderColor: colors.border,
                       },
                     ]}
-                    value={customTokenReward}
-                    onChangeText={(text) => setCustomTokenReward(text.replace(/[^0-9]/g, ''))}
+                    value={customTicketReward}
+                    onChangeText={(text) => setCustomTicketReward(text.replace(/[^0-9]/g, ''))}
                     keyboardType="number-pad"
                     placeholder="10"
                     placeholderTextColor={colors.textMuted}

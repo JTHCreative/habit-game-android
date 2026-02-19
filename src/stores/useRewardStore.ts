@@ -36,7 +36,7 @@ interface RewardState {
   rewards: Reward[];
   inventory: InventoryItem[];
   addReward: (reward: Omit<Reward, 'id' | 'isPurchased' | 'isRedeemed' | 'remainingQuantity' | 'lastReplenishedAt'>) => void;
-  updateReward: (id: string, updates: Partial<Pick<Reward, 'name' | 'description' | 'tokenCost' | 'category' | 'customCategoryId' | 'maxQuantity' | 'replenishPeriod'>>) => void;
+  updateReward: (id: string, updates: Partial<Pick<Reward, 'name' | 'description' | 'ticketCost' | 'category' | 'customCategoryId' | 'maxQuantity' | 'replenishPeriod'>>) => void;
   removeReward: (id: string) => void;
   purchaseReward: (id: string) => void;
   redeemReward: (id: string) => void;
@@ -52,7 +52,7 @@ const DEFAULT_REWARDS: Reward[] = [
     id: 'reward_1',
     name: 'Movie Night',
     description: 'Treat yourself to a movie of your choice',
-    tokenCost: 100,
+    ticketCost: 100,
     icon: 'film',
     category: 'entertainment',
     maxQuantity: 1,
@@ -66,7 +66,7 @@ const DEFAULT_REWARDS: Reward[] = [
     id: 'reward_2',
     name: 'Favorite Snack',
     description: 'Get your favorite snack or treat',
-    tokenCost: 50,
+    ticketCost: 50,
     icon: 'coffee',
     category: 'treat',
     maxQuantity: 3,
@@ -80,7 +80,7 @@ const DEFAULT_REWARDS: Reward[] = [
     id: 'reward_3',
     name: 'Sleep In',
     description: 'Sleep in an extra hour tomorrow',
-    tokenCost: 75,
+    ticketCost: 75,
     icon: 'moon',
     category: 'self_care',
     maxQuantity: 2,
@@ -94,7 +94,7 @@ const DEFAULT_REWARDS: Reward[] = [
     id: 'reward_4',
     name: 'Gaming Session',
     description: 'Enjoy a guilt-free gaming session',
-    tokenCost: 80,
+    ticketCost: 80,
     icon: 'play',
     category: 'entertainment',
     maxQuantity: 2,
@@ -108,7 +108,7 @@ const DEFAULT_REWARDS: Reward[] = [
     id: 'reward_5',
     name: 'Spa Day',
     description: 'Pamper yourself with a spa day or at-home spa',
-    tokenCost: 200,
+    ticketCost: 200,
     icon: 'droplet',
     category: 'self_care',
     maxQuantity: 1,
@@ -122,7 +122,7 @@ const DEFAULT_REWARDS: Reward[] = [
     id: 'reward_6',
     name: 'New Book',
     description: 'Buy a new book you have been wanting',
-    tokenCost: 150,
+    ticketCost: 150,
     icon: 'book-open',
     category: 'experience',
     maxQuantity: 1,
@@ -136,7 +136,7 @@ const DEFAULT_REWARDS: Reward[] = [
     id: 'reward_7',
     name: 'Dining Out',
     description: 'Enjoy a meal at your favorite restaurant',
-    tokenCost: 250,
+    ticketCost: 250,
     icon: 'map-pin',
     category: 'experience',
     maxQuantity: 1,
@@ -150,7 +150,7 @@ const DEFAULT_REWARDS: Reward[] = [
     id: 'reward_8',
     name: 'Day Off',
     description: 'Take a full day off from responsibilities',
-    tokenCost: 500,
+    ticketCost: 500,
     icon: 'sun',
     category: 'self_care',
     maxQuantity: 1,
@@ -231,7 +231,7 @@ export const useRewardStore = create<RewardState>()(
                 rewardDescription: reward.description,
                 rewardIcon: reward.icon,
                 rewardCategory: reward.category,
-                tokenCost: reward.tokenCost,
+                ticketCost: reward.ticketCost,
                 replenishPeriod: reward.replenishPeriod,
                 quantity: 1,
                 redeemedCount: 0,

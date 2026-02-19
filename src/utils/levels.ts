@@ -154,7 +154,7 @@ export const MISSION_DIFFICULTY_COLORS: Record<string, string> = {
   legendary: '#C25B28',
 };
 
-export const MISSION_DIFFICULTY_TOKENS: Record<string, number> = {
+export const MISSION_DIFFICULTY_TICKETS: Record<string, number> = {
   easy: 50,
   medium: 150,
   hard: 300,

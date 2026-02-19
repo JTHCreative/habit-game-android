@@ -89,7 +89,7 @@ export function RewardCard({
 
       <View style={styles.footer}>
         <View style={styles.footerLeft}>
-          <TicketBadge amount={reward.tokenCost} size="medium" />
+          <TicketBadge amount={reward.ticketCost} size="medium" />
           <View style={[styles.quantityBadge, { backgroundColor: hasStock ? categoryColor + '20' : MUTED_GREY + '20' }]}>
             <Text style={[styles.quantityText, { color: hasStock ? categoryColor : MUTED_GREY }]}>
               {reward.remainingQuantity} remaining {periodLabel}

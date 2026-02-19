@@ -23,7 +23,7 @@ export const gradients = {
   card: ['#2D2D47', '#232340'] as const,
   cardDark: ['#1C1C2E', '#0F0F1A'] as const,
   xpBar: ['#D4A44C', '#E8C97A'] as const,
-  tokenBar: ['#E87D2F', '#D4A44C'] as const,
+  ticketBar: ['#E87D2F', '#D4A44C'] as const,
 };
 
 const Colors = {
