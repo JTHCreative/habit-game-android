@@ -27,6 +27,7 @@ import {
   getPSTDateString,
   isHabitCompletedForPeriod,
   getCompletedDateForCurrentPeriod,
+  FREQUENCY_REWARDS,
 } from '@/src/utils/levels';
 
 const COLOR_PALETTE = [
@@ -60,6 +61,7 @@ const ICON_OPTIONS: { value: string; label: string }[] = [
 const FREQUENCIES: { value: HabitFrequency; label: string; description: string }[] = [
   { value: 'daily', label: 'Daily', description: 'Resets daily at 12am PST' },
   { value: 'weekly', label: 'Weekly', description: 'Resets Sundays at 12am PST' },
+  { value: 'monthly', label: 'Monthly', description: 'Resets on the 1st of each month' },
   { value: 'one_time', label: 'One-time', description: 'Disappears when completed' },
 ];
 
@@ -104,8 +106,6 @@ export default function HomeScreen() {
   const [selectedCategoryId, setSelectedCategoryId] = useState('health');
   const [selectedFrequency, setSelectedFrequency] = useState<HabitFrequency>('daily');
   const [selectedHabitType, setSelectedHabitType] = useState<HabitType>('positive');
-  const [customTicketReward, setCustomTicketReward] = useState('10');
-  const [customXPReward, setCustomXPReward] = useState('15');
   const [showRewardInputs, setShowRewardInputs] = useState(false);
   const [showCategoryEditor, setShowCategoryEditor] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
@@ -135,10 +135,10 @@ export default function HomeScreen() {
     const habit = habits.find((h) => h.id === habitId);
     if (!habit) return;
 
-    if (habit.frequency === 'weekly') {
+    if (habit.frequency === 'weekly' || habit.frequency === 'monthly') {
       const existingDate = getCompletedDateForCurrentPeriod(habit.frequency, habit.completedDates);
       if (existingDate) {
-        // Un-mark: remove the date that was completed this week
+        // Un-mark: remove the date that was completed this period
         const { completed, habit: updated } = toggleHabitCompletion(habitId, existingDate);
         if (updated && !completed) {
           removeXP(updated.xpReward);
@@ -186,8 +186,6 @@ export default function HomeScreen() {
     setSelectedCategoryId(categories[0]?.id || 'health');
     setSelectedFrequency('daily');
     setSelectedHabitType('positive');
-    setCustomTicketReward('10');
-    setCustomXPReward('15');
     setShowRewardInputs(false);
     setEditingHabitId(null);
   };
@@ -201,8 +199,6 @@ export default function HomeScreen() {
     setSelectedCategoryId(habit.customCategoryId || habit.category);
     setSelectedFrequency(habit.frequency);
     setSelectedHabitType(habit.habitType || 'positive');
-    setCustomTicketReward(String(habit.ticketReward));
-    setCustomXPReward(String(habit.xpReward));
     setShowRewardInputs(false);
     setShowAddModal(true);
   };
@@ -223,6 +219,7 @@ export default function HomeScreen() {
     if (!newHabitName.trim()) return;
     const { icon, color } = getSelectedCategoryStyle();
     const habitCategory = resolveHabitCategory();
+    const rewards = FREQUENCY_REWARDS[selectedFrequency];
     if (isEditing) {
       updateHabit(editingHabitId, {
         name: newHabitName.trim(),
@@ -231,8 +228,8 @@ export default function HomeScreen() {
         customCategoryId: selectedCategoryId,
         frequency: selectedFrequency,
         habitType: selectedHabitType,
-        ticketReward: parseInt(customTicketReward, 10) || 10,
-        xpReward: parseInt(customXPReward, 10) || 15,
+        ticketReward: rewards.tickets,
+        xpReward: rewards.xp,
         icon,
         color,
       });
@@ -245,8 +242,8 @@ export default function HomeScreen() {
         frequency: selectedFrequency,
         habitType: selectedHabitType,
         targetCount: 1,
-        ticketReward: parseInt(customTicketReward, 10) || 10,
-        xpReward: parseInt(customXPReward, 10) || 15,
+        ticketReward: rewards.tickets,
+        xpReward: rewards.xp,
         icon,
         color,
       });
@@ -559,7 +556,7 @@ export default function HomeScreen() {
             </View>
             {selectedHabitType === 'negative' && (
               <Text style={[styles.habitTypeHelpText, { color: colors.textMuted }]}>
-                "{newHabitName.trim() || 'This habit'}" is something you want to stop doing. You'll be rewarded for not doing it each {selectedFrequency === 'daily' ? 'day' : selectedFrequency === 'weekly' ? 'week' : 'time'}.
+                "{newHabitName.trim() || 'This habit'}" is something you want to stop doing. You'll be rewarded for not doing it each {selectedFrequency === 'daily' ? 'day' : selectedFrequency === 'weekly' ? 'week' : selectedFrequency === 'monthly' ? 'month' : 'time'}.
               </Text>
             )}
 
@@ -687,65 +684,46 @@ export default function HomeScreen() {
                 <View style={styles.rewardItem}>
                   <FontAwesome name="ticket" size={16} color="#D4A44C" />
                   <Text style={[styles.rewardValue, { color: colors.text }]}>
-                    {customTicketReward || '0'} Tickets
+                    {FREQUENCY_REWARDS[selectedFrequency].tickets} Tickets
                   </Text>
                 </View>
                 <View style={styles.rewardItem}>
                   <FontAwesome name="bolt" size={16} color="#E87D2F" />
                   <Text style={[styles.rewardValue, { color: colors.text }]}>
-                    {customXPReward || '0'} XP
+                    {FREQUENCY_REWARDS[selectedFrequency].xp} XP
                   </Text>
                 </View>
               </View>
             </TouchableOpacity>
             {showRewardInputs && (
               <View style={[styles.rewardInputsContainer, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-                <View style={styles.rewardInputRow}>
-                  <View style={styles.rewardInputIcon}>
-                    <FontAwesome name="ticket" size={16} color="#D4A44C" />
-                  </View>
-                  <Text style={[styles.rewardInputLabel, { color: colors.textSecondary }]}>
-                    Tickets
-                  </Text>
-                  <TextInput
-                    style={[
-                      styles.rewardInput,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        color: colors.text,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                    value={customTicketReward}
-                    onChangeText={(text) => setCustomTicketReward(text.replace(/[^0-9]/g, ''))}
-                    keyboardType="number-pad"
-                    placeholder="10"
-                    placeholderTextColor={colors.textMuted}
-                  />
-                </View>
-                <View style={styles.rewardInputRow}>
-                  <View style={styles.rewardInputIcon}>
-                    <FontAwesome name="bolt" size={16} color="#E87D2F" />
-                  </View>
-                  <Text style={[styles.rewardInputLabel, { color: colors.textSecondary }]}>
-                    XP
-                  </Text>
-                  <TextInput
-                    style={[
-                      styles.rewardInput,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        color: colors.text,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                    value={customXPReward}
-                    onChangeText={(text) => setCustomXPReward(text.replace(/[^0-9]/g, ''))}
-                    keyboardType="number-pad"
-                    placeholder="15"
-                    placeholderTextColor={colors.textMuted}
-                  />
-                </View>
+                {FREQUENCIES.map((freq) => {
+                  const r = FREQUENCY_REWARDS[freq.value];
+                  const isActive = selectedFrequency === freq.value;
+                  return (
+                    <View
+                      key={freq.value}
+                      style={[
+                        styles.rewardKeyRow,
+                        isActive && { backgroundColor: colors.primary + '15', borderRadius: borderRadius.md, padding: spacing.sm, margin: -spacing.sm / 2 },
+                      ]}
+                    >
+                      <Text style={[styles.rewardKeyFreq, { color: isActive ? colors.primary : colors.textSecondary }]}>
+                        {freq.label}
+                      </Text>
+                      <View style={styles.rewardKeyValues}>
+                        <FontAwesome name="ticket" size={12} color="#D4A44C" />
+                        <Text style={[styles.rewardKeyText, { color: colors.text }]}>
+                          {r.tickets}
+                        </Text>
+                        <FontAwesome name="bolt" size={12} color="#E87D2F" style={{ marginLeft: spacing.sm }} />
+                        <Text style={[styles.rewardKeyText, { color: colors.text }]}>
+                          {r.xp} XP
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
               </View>
             )}
             {isEditing && (
@@ -1328,29 +1306,27 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
-    gap: spacing.md,
-  },
-  rewardInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: spacing.sm,
   },
-  rewardInputIcon: {
-    width: 20,
+  rewardKeyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: spacing.xs,
   },
-  rewardInputLabel: {
+  rewardKeyFreq: {
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+    width: 80,
+  },
+  rewardKeyValues: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  rewardKeyText: {
     fontSize: fontSize.sm,
     fontWeight: '600',
-    width: 55,
-  },
-  rewardInput: {
-    flex: 1,
-    borderRadius: borderRadius.md,
-    padding: spacing.sm,
-    fontSize: fontSize.md,
-    borderWidth: 1,
-    textAlign: 'center',
   },
   deleteButton: {
     flexDirection: 'row',

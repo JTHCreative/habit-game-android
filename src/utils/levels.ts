@@ -1,3 +1,12 @@
+import { HabitFrequency } from '../types';
+
+export const FREQUENCY_REWARDS: Record<HabitFrequency, { tickets: number; xp: number }> = {
+  daily: { tickets: 1, xp: 5 },
+  weekly: { tickets: 10, xp: 20 },
+  monthly: { tickets: 40, xp: 50 },
+  one_time: { tickets: 1, xp: 5 },
+};
+
 const TITLES: Record<number, string> = {
   1: 'Newcomer',
   2: 'Day Starter',
@@ -98,12 +107,22 @@ export function getPSTWeekStartString(): string {
   return `${y}-${m}-${d}`;
 }
 
+export function getPSTMonthStartString(): string {
+  const todayPST = getPSTDateString();
+  const [year, month] = todayPST.split('-').map(Number);
+  return `${year}-${String(month).padStart(2, '0')}-01`;
+}
+
 export function isHabitCompletedForPeriod(
-  frequency: 'one_time' | 'daily' | 'weekly',
+  frequency: HabitFrequency,
   completedDates: string[]
 ): boolean {
   if (frequency === 'one_time') {
     return completedDates.length > 0;
+  }
+  if (frequency === 'monthly') {
+    const monthStart = getPSTMonthStartString();
+    return completedDates.some((d) => d >= monthStart);
   }
   if (frequency === 'weekly') {
     const weekStart = getPSTWeekStartString();
@@ -114,9 +133,13 @@ export function isHabitCompletedForPeriod(
 }
 
 export function getCompletedDateForCurrentPeriod(
-  frequency: 'one_time' | 'daily' | 'weekly',
+  frequency: HabitFrequency,
   completedDates: string[]
 ): string | undefined {
+  if (frequency === 'monthly') {
+    const monthStart = getPSTMonthStartString();
+    return completedDates.find((d) => d >= monthStart);
+  }
   if (frequency === 'weekly') {
     const weekStart = getPSTWeekStartString();
     return completedDates.find((d) => d >= weekStart);
