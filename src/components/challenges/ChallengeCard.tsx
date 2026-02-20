@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Card } from '../common/Card';
 import { ProgressBar } from '../common/ProgressBar';
 import { TicketBadge } from '../common/TicketBadge';
 import { XPBadge } from '../common/XPBadge';
+import { ClaimSparkles } from './ClaimSparkles';
 import { Challenge } from '@/src/stores/useChallengeStore';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -28,66 +29,80 @@ export function ChallengeCard({ challenge, onClaim }: ChallengeCardProps) {
   const progress = challenge.targetCount > 0 ? challenge.currentCount / challenge.targetCount : 0;
   const isClaimable = challenge.status === 'completed';
   const isClaimed = challenge.status === 'claimed';
+  const [showSparkles, setShowSparkles] = useState(false);
+
+  const handleClaim = useCallback(() => {
+    setShowSparkles(true);
+    onClaim?.();
+  }, [onClaim]);
 
   return (
-    <Card style={[styles.container, isClaimed && styles.claimed]}>
-      <View style={styles.row}>
-        <View style={[styles.iconWrap, { backgroundColor: typeColor + '20' }]}>
-          <FontAwesome name={challenge.icon as any} size={18} color={typeColor} />
-        </View>
-        <View style={styles.info}>
-          <View style={styles.titleRow}>
-            <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-              {challenge.title}
-            </Text>
-            {challenge.pinned && (
-              <FontAwesome name="thumb-tack" size={10} color={colors.textMuted} style={{ marginLeft: 4 }} />
-            )}
+    <View style={styles.wrapper}>
+      {showSparkles && (
+        <ClaimSparkles color={typeColor} onFinish={() => setShowSparkles(false)} />
+      )}
+      <Card style={[styles.container, isClaimed && !showSparkles && styles.claimed]}>
+        <View style={styles.row}>
+          <View style={[styles.iconWrap, { backgroundColor: typeColor + '20' }]}>
+            <FontAwesome name={challenge.icon as any} size={18} color={typeColor} />
           </View>
-          <Text style={[styles.description, { color: colors.textSecondary }]} numberOfLines={1}>
-            {challenge.description}
+          <View style={styles.info}>
+            <View style={styles.titleRow}>
+              <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+                {challenge.title}
+              </Text>
+              {challenge.pinned && (
+                <FontAwesome name="thumb-tack" size={10} color={colors.textMuted} style={{ marginLeft: 4 }} />
+              )}
+            </View>
+            <Text style={[styles.description, { color: colors.textSecondary }]} numberOfLines={1}>
+              {challenge.description}
+            </Text>
+          </View>
+          <Text style={[styles.count, { color: colors.textMuted }]}>
+            {challenge.currentCount}/{challenge.targetCount}
           </Text>
         </View>
-        <Text style={[styles.count, { color: colors.textMuted }]}>
-          {challenge.currentCount}/{challenge.targetCount}
-        </Text>
-      </View>
 
-      <ProgressBar
-        progress={progress}
-        height={5}
-        gradientColors={[typeColor, typeColor + 'CC']}
-        backgroundColor={colors.inputBackground}
-      />
+        <ProgressBar
+          progress={progress}
+          height={5}
+          gradientColors={[typeColor, typeColor + 'CC']}
+          backgroundColor={colors.inputBackground}
+        />
 
-      <View style={styles.footer}>
-        <View style={styles.rewardRow}>
-          <TicketBadge amount={challenge.ticketReward} size="small" />
-          <XPBadge amount={challenge.xpReward} size="small" />
-        </View>
-
-        {isClaimable && onClaim && (
-          <TouchableOpacity
-            style={[styles.claimButton, { backgroundColor: colors.success }]}
-            onPress={onClaim}
-          >
-            <FontAwesome name="gift" size={12} color="#FFF" />
-            <Text style={styles.claimText}>Claim</Text>
-          </TouchableOpacity>
-        )}
-
-        {isClaimed && (
-          <View style={styles.claimedBadge}>
-            <FontAwesome name="check-circle" size={13} color={colors.success} />
-            <Text style={[styles.claimedText, { color: colors.success }]}>Done</Text>
+        <View style={styles.footer}>
+          <View style={styles.rewardRow}>
+            <TicketBadge amount={challenge.ticketReward} size="small" />
+            <XPBadge amount={challenge.xpReward} size="small" />
           </View>
-        )}
-      </View>
-    </Card>
+
+          {isClaimable && onClaim && (
+            <TouchableOpacity
+              style={[styles.claimButton, { backgroundColor: colors.success }]}
+              onPress={handleClaim}
+            >
+              <FontAwesome name="gift" size={12} color="#FFF" />
+              <Text style={styles.claimText}>Claim</Text>
+            </TouchableOpacity>
+          )}
+
+          {isClaimed && (
+            <View style={styles.claimedBadge}>
+              <FontAwesome name="check-circle" size={13} color={colors.success} />
+              <Text style={[styles.claimedText, { color: colors.success }]}>Done</Text>
+            </View>
+          )}
+        </View>
+      </Card>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    position: 'relative',
+  },
   container: {
     marginBottom: spacing.sm,
     gap: spacing.sm,
