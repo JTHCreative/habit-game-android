@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Image, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import { StyleSheet, View, Image, TouchableOpacity, Modal, ScrollView, Platform, StatusBar } from 'react-native';
 import { Text } from '@/components/Themed';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ProgressBar } from '../common/ProgressBar';
 import { TicketBadge } from '../common/TicketBadge';
 import { DynamicIcon } from '../common/DynamicIcon';
@@ -97,13 +98,16 @@ export function PlayerHeader() {
           />
         </View>
 
-        {/* Pin Board */}
-        <View style={styles.pinBoardSection}>
-          <View style={styles.pinBoardHeader}>
-            <MaterialCommunityIcons name="pin" size={14} color="rgba(255,255,255,0.6)" />
-            <Text style={styles.pinBoardTitle}>Pin Board</Text>
+        {/* Pin Display */}
+        <View style={styles.pinDisplayBoard}>
+          <View style={styles.pinDisplayHeader}>
+            <View style={styles.pinDisplayHeaderLine} />
+            <MaterialCommunityIcons name="pin" size={12} color="rgba(212,164,76,0.6)" />
+            <Text style={styles.pinDisplayTitle}>Pin Display</Text>
+            <MaterialCommunityIcons name="pin" size={12} color="rgba(212,164,76,0.6)" />
+            <View style={styles.pinDisplayHeaderLine} />
           </View>
-          <View style={styles.pinBoardSlots}>
+          <View style={styles.pinDisplaySlots}>
             {Array.from({ length: PIN_BOARD_SLOTS }).map((_, i) => {
               const pin = getBoardPin(i);
               return (
@@ -111,23 +115,29 @@ export function PlayerHeader() {
                   key={i}
                   style={[
                     styles.pinSlot,
-                    pin && { borderColor: pin.color + '60' },
+                    pin && { borderColor: pin.color + '40', borderStyle: 'solid', backgroundColor: pin.color + '10' },
                   ]}
                   activeOpacity={0.7}
                   onPress={() => setEditingSlot(i)}
                 >
                   {pin ? (
-                    <View style={[styles.pinSlotFilled, { backgroundColor: pin.color + '20' }]}>
-                      <DynamicIcon name={pin.icon} size={22} color={pin.color} />
+                    <View style={styles.pinSlotFilled}>
+                      <View style={[styles.pinSlotGlow, { backgroundColor: pin.color + '25' }]} />
+                      <DynamicIcon name={pin.icon} size={24} color={pin.color} />
                     </View>
                   ) : (
                     <View style={styles.pinSlotEmpty}>
-                      <FontAwesome name="plus" size={12} color="rgba(255,255,255,0.25)" />
+                      <View style={styles.pinSlotDot} />
                     </View>
                   )}
                 </TouchableOpacity>
               );
             })}
+          </View>
+          <View style={styles.pinDisplayFooter}>
+            <View style={styles.pinDisplayFooterLine} />
+            <FontAwesome name="diamond" size={6} color="rgba(212,164,76,0.3)" />
+            <View style={styles.pinDisplayFooterLine} />
           </View>
         </View>
       </LinearGradient>
@@ -139,7 +149,7 @@ export function PlayerHeader() {
         presentationStyle="pageSheet"
         onRequestClose={() => setEditingSlot(null)}
       >
-        <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
           <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
             <TouchableOpacity onPress={() => setEditingSlot(null)}>
               <Text style={[styles.modalCancel, { color: colors.textSecondary }]}>
@@ -226,7 +236,7 @@ export function PlayerHeader() {
               </View>
             )}
           </ScrollView>
-        </View>
+        </SafeAreaView>
       </Modal>
     </>
   );
@@ -312,59 +322,93 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ── Pin Board ─────────────────────────────────────────
-  pinBoardSection: {
+  // ── Pin Display ──────────────────────────────────────
+  pinDisplayBoard: {
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(212,164,76,0.15)',
+    padding: spacing.md,
     gap: spacing.sm,
   },
-  pinBoardHeader: {
+  pinDisplayHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-  },
-  pinBoardTitle: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: fontSize.xs,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  pinBoardSlots: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     gap: spacing.sm,
   },
-  pinSlot: {
+  pinDisplayHeaderLine: {
     flex: 1,
-    aspectRatio: 1,
-    borderRadius: borderRadius.lg,
+    height: 1,
+    backgroundColor: 'rgba(212,164,76,0.15)',
+  },
+  pinDisplayTitle: {
+    color: 'rgba(212,164,76,0.7)',
+    fontSize: fontSize.xs,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  pinDisplaySlots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  pinSlot: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255,255,255,0.08)',
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
   pinSlotFilled: {
-    width: '100%',
-    height: '100%',
-    borderRadius: borderRadius.lg - 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  pinSlotGlow: {
+    position: 'absolute',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
   },
   pinSlotEmpty: {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  pinSlotDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  pinDisplayFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  pinDisplayFooterLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(212,164,76,0.1)',
+  },
 
   // ── Pin picker modal ──────────────────────────────────
   modalContainer: {
     flex: 1,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
   },
   modalCancel: {
