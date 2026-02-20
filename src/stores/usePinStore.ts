@@ -53,10 +53,10 @@ export const ALL_PINS: Pin[] = [
     ticketCost: 300,
   },
   {
-    id: 'pin_octopus',
+    id: 'pin_jellyfish',
     name: 'Deep Diver',
-    description: 'A mysterious octopus from the abyss',
-    icon: 'mci:octopus',
+    description: 'A luminous jellyfish drifting through the abyss',
+    icon: 'mci:jellyfish',
     color: '#7B2D8E',
     rarity: 'rare',
     ticketCost: 300,
