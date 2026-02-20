@@ -15,6 +15,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { PinCollection } from '@/src/components/profile/PinCollection';
 import { SkillTree } from '@/src/components/profile/SkillTree';
+import { usePinStore } from '@/src/stores/usePinStore';
+import { useSkillTreeStore } from '@/src/stores/useSkillTreeStore';
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme() ?? 'light';
@@ -24,6 +26,9 @@ export default function ProfileScreen() {
   const setDisplayName = useUserStore((s) => s.setDisplayName);
   const achievements = useUserStore((s) => s.achievements);
   const habits = useHabitStore((s) => s.habits);
+  const collectedPins = usePinStore((s) => s.collected);
+  const skillTreeUnlocked = useSkillTreeStore((s) => s.unlocked);
+  const totalPinsCollected = collectedPins.length + Object.keys(skillTreeUnlocked).length;
 
   const router = useRouter();
   const { regular: fontRegular, bold: fontBold } = useAppFont();
@@ -187,12 +192,12 @@ export default function ProfileScreen() {
               </Text>
             </Card>
             <Card style={styles.statCard}>
-              <FontAwesome name="bullseye" size={24} color="#E87D2F" />
+              <MaterialCommunityIcons name="pin" size={24} color="#D4A44C" />
               <Text style={[styles.statValue, { color: colors.text }]}>
-                {profile.totalMissionsCompleted}
+                {totalPinsCollected}
               </Text>
               <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                Challenges
+                Pins Collected
               </Text>
             </Card>
           </View>
