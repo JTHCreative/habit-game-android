@@ -5,10 +5,37 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ProgressBar } from '../common/ProgressBar';
 import { TicketBadge } from '../common/TicketBadge';
 import { useUserStore } from '@/src/stores/useUserStore';
+import { useChallengeStore, Challenge } from '@/src/stores/useChallengeStore';
 import { gradients } from '@/constants/Colors';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
+
+function ChallengeMiniRow({ challenge }: { challenge: Challenge }) {
+  const progress = challenge.targetCount > 0
+    ? challenge.currentCount / challenge.targetCount
+    : 0;
+  const done = challenge.status === 'completed' || challenge.status === 'claimed';
+
+  return (
+    <View style={styles.challengeMiniRow}>
+      <FontAwesome
+        name={done ? 'check-circle' : (challenge.icon as any)}
+        size={11}
+        color={done ? '#4CAF50' : 'rgba(255,255,255,0.5)'}
+      />
+      <Text
+        style={[styles.challengeMiniTitle, done && styles.challengeMiniDone]}
+        numberOfLines={1}
+      >
+        {challenge.title}
+      </Text>
+      <Text style={styles.challengeMiniCount}>
+        {challenge.currentCount}/{challenge.targetCount}
+      </Text>
+    </View>
+  );
+}
 
 export function PlayerHeader() {
   const profile = useUserStore((s) => s.profile);
@@ -16,6 +43,18 @@ export function PlayerHeader() {
   const xpProgress = profile.xpToNextLevel > 0
     ? profile.currentXP / profile.xpToNextLevel
     : 0;
+
+  const dailyChallenges = useChallengeStore((s) => s.dailyChallenges);
+  const weeklyChallenges = useChallengeStore((s) => s.weeklyChallenges);
+
+  const dailyCompleted = dailyChallenges.filter(
+    (c) => c.status === 'completed' || c.status === 'claimed'
+  ).length;
+  const weeklyCompleted = weeklyChallenges.filter(
+    (c) => c.status === 'completed' || c.status === 'claimed'
+  ).length;
+
+  const hasChallenges = dailyChallenges.length > 0 || weeklyChallenges.length > 0;
 
   return (
     <LinearGradient
@@ -66,29 +105,67 @@ export function PlayerHeader() {
         />
       </View>
 
-      <TouchableOpacity
-        style={styles.statsRow}
-        activeOpacity={0.7}
-        onPress={() => router.push('/history')}
-      >
-        <View style={styles.stat}>
-          <FontAwesome name="fire" size={14} color="#E87D2F" />
-          <Text style={styles.statValue}>{profile.currentStreak}</Text>
-          <Text style={styles.statLabel}>Streak</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.stat}>
-          <FontAwesome name="check-circle" size={14} color="#4CAF50" />
-          <Text style={styles.statValue}>{profile.totalHabitsCompleted}</Text>
-          <Text style={styles.statLabel}>Done</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.stat}>
-          <FontAwesome name="trophy" size={14} color="#D4A44C" />
-          <Text style={styles.statValue}>{profile.totalMissionsCompleted}</Text>
-          <Text style={styles.statLabel}>Challenges</Text>
-        </View>
-      </TouchableOpacity>
+      {hasChallenges ? (
+        <TouchableOpacity
+          style={styles.challengeDashboard}
+          activeOpacity={0.7}
+          onPress={() => router.push('/challenges')}
+        >
+          {/* Daily column */}
+          <View style={styles.challengeCol}>
+            <View style={styles.challengeColHeader}>
+              <FontAwesome name="sun-o" size={11} color="#4ECDC4" />
+              <Text style={styles.challengeColTitle}>Daily</Text>
+              <Text style={styles.challengeColCount}>
+                {dailyCompleted}/{dailyChallenges.length}
+              </Text>
+            </View>
+            {dailyChallenges.map((c) => (
+              <ChallengeMiniRow key={c.id} challenge={c} />
+            ))}
+          </View>
+
+          <View style={styles.challengeDivider} />
+
+          {/* Weekly column */}
+          <View style={styles.challengeCol}>
+            <View style={styles.challengeColHeader}>
+              <FontAwesome name="calendar" size={11} color="#A78BFA" />
+              <Text style={styles.challengeColTitle}>Weekly</Text>
+              <Text style={styles.challengeColCount}>
+                {weeklyCompleted}/{weeklyChallenges.length}
+              </Text>
+            </View>
+            {weeklyChallenges.map((c) => (
+              <ChallengeMiniRow key={c.id} challenge={c} />
+            ))}
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={styles.statsRow}
+          activeOpacity={0.7}
+          onPress={() => router.push('/history')}
+        >
+          <View style={styles.stat}>
+            <FontAwesome name="fire" size={14} color="#E87D2F" />
+            <Text style={styles.statValue}>{profile.currentStreak}</Text>
+            <Text style={styles.statLabel}>Streak</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.stat}>
+            <FontAwesome name="check-circle" size={14} color="#4CAF50" />
+            <Text style={styles.statValue}>{profile.totalHabitsCompleted}</Text>
+            <Text style={styles.statLabel}>Done</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.stat}>
+            <FontAwesome name="trophy" size={14} color="#D4A44C" />
+            <Text style={styles.statValue}>{profile.totalMissionsCompleted}</Text>
+            <Text style={styles.statLabel}>Challenges</Text>
+          </View>
+        </TouchableOpacity>
+      )}
     </LinearGradient>
   );
 }
@@ -172,6 +249,62 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     fontWeight: '600',
   },
+
+  // ── Challenge dashboard ─────────────────────────────
+  challengeDashboard: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: borderRadius.lg,
+    padding: spacing.sm,
+    gap: spacing.sm,
+  },
+  challengeCol: {
+    flex: 1,
+    gap: 4,
+  },
+  challengeColHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  challengeColTitle: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: fontSize.xs,
+    fontWeight: '700',
+    flex: 1,
+  },
+  challengeColCount: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  challengeDivider: {
+    width: 1,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  challengeMiniRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 1,
+  },
+  challengeMiniTitle: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 10,
+    flex: 1,
+  },
+  challengeMiniDone: {
+    color: 'rgba(255,255,255,0.4)',
+    textDecorationLine: 'line-through',
+  },
+  challengeMiniCount: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 9,
+    fontWeight: '600',
+  },
+
+  // ── Fallback stats row ──────────────────────────────
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',

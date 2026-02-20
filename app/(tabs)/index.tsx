@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   ScrollView,
@@ -70,6 +70,9 @@ const HABIT_TYPES: { value: HabitType; label: string; icon: string }[] = [
   { value: 'negative', label: 'Negative', icon: 'minus' },
 ];
 
+const DAILY_BONUS_TICKETS = 10;
+const DAILY_BONUS_XP = 25;
+
 export default function HomeScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
@@ -107,6 +110,9 @@ export default function HomeScreen() {
   const removeCategory = useCategoryStore((s) => s.removeCategory);
   const updateCategory = useCategoryStore((s) => s.updateCategory);
 
+  // Track whether we've already paid the daily-all-complete bonus today
+  const dailyBonusPaidRef = useRef<string | null>(null);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -134,6 +140,7 @@ export default function HomeScreen() {
     activeHabits.length > 0
       ? Math.round((completedToday.length / activeHabits.length) * 100)
       : 0;
+  const allDailyComplete = activeHabits.length > 0 && completedToday.length >= activeHabits.length;
 
   const filteredHabits = activeHabits.filter((h) => {
     if (filterCategory && (h.customCategoryId || h.category) !== filterCategory) return false;
@@ -148,11 +155,18 @@ export default function HomeScreen() {
     const completedNow = allActive.filter((h) =>
       isHabitCompletedForPeriod(h.frequency, h.completedDates)
     );
-    const allComplete = completedNow.length >= allActive.length;
+    const allComplete = allActive.length > 0 && completedNow.length >= allActive.length;
     const totalCompletedToday = completedNow.length;
     const categoriesCompletedToday = [...new Set(completedNow.map((h) => h.category))];
     onChallengeHabitCompleted(category, allComplete, totalCompletedToday, categoriesCompletedToday);
     onChallengeStreakUpdated(updatedStreak);
+
+    // Award daily-all-complete bonus (once per day)
+    if (allComplete && dailyBonusPaidRef.current !== today) {
+      dailyBonusPaidRef.current = today;
+      addXP(DAILY_BONUS_XP);
+      addTickets(DAILY_BONUS_TICKETS);
+    }
   };
 
   const handleToggle = (habitId: string) => {
@@ -288,6 +302,45 @@ export default function HomeScreen() {
         <PlayerHeader />
 
         <View style={styles.body}>
+          {/* All-habits bonus banner */}
+          {activeHabits.length > 0 && (
+            <View
+              style={[
+                styles.bonusBanner,
+                {
+                  backgroundColor: allDailyComplete ? colors.success + '18' : colors.surfaceElevated,
+                  borderColor: allDailyComplete ? colors.success : colors.border,
+                },
+              ]}
+            >
+              <FontAwesome
+                name={allDailyComplete ? 'check-circle' : 'star'}
+                size={16}
+                color={allDailyComplete ? colors.success : '#D4A44C'}
+              />
+              <View style={styles.bonusInfo}>
+                <Text style={[styles.bonusTitle, { color: allDailyComplete ? colors.success : colors.text }]}>
+                  {allDailyComplete ? 'Daily Bonus Earned!' : 'Daily Completion Bonus'}
+                </Text>
+                <Text style={[styles.bonusDesc, { color: colors.textSecondary }]}>
+                  {allDailyComplete
+                    ? 'You completed all habits today'
+                    : `Complete all ${activeHabits.length} habits for a bonus`}
+                </Text>
+              </View>
+              <View style={styles.bonusRewards}>
+                <View style={styles.bonusRewardItem}>
+                  <FontAwesome name="ticket" size={11} color="#D4A44C" />
+                  <Text style={[styles.bonusRewardText, { color: '#D4A44C' }]}>+{DAILY_BONUS_TICKETS}</Text>
+                </View>
+                <View style={styles.bonusRewardItem}>
+                  <FontAwesome name="bolt" size={11} color="#E87D2F" />
+                  <Text style={[styles.bonusRewardText, { color: '#E87D2F' }]}>+{DAILY_BONUS_XP}</Text>
+                </View>
+              </View>
+            </View>
+          )}
+
           <View style={styles.sectionHeader}>
             <View>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -1087,6 +1140,40 @@ const styles = StyleSheet.create({
   body: {
     padding: spacing.md,
     marginTop: -spacing.md,
+  },
+  bonusBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  bonusInfo: {
+    flex: 1,
+  },
+  bonusTitle: {
+    fontSize: fontSize.xs,
+    fontWeight: '700',
+  },
+  bonusDesc: {
+    fontSize: 10,
+    marginTop: 1,
+  },
+  bonusRewards: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  bonusRewardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  bonusRewardText: {
+    fontSize: 10,
+    fontWeight: '700',
   },
   sectionHeader: {
     flexDirection: 'row',
