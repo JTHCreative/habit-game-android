@@ -299,48 +299,15 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <PlayerHeader />
+        <PlayerHeader
+          completedCount={completedToday.length}
+          totalCount={activeHabits.length}
+          allComplete={allDailyComplete}
+          bonusTickets={DAILY_BONUS_TICKETS}
+          bonusXP={DAILY_BONUS_XP}
+        />
 
         <View style={styles.body}>
-          {/* All-habits bonus banner */}
-          {activeHabits.length > 0 && (
-            <View
-              style={[
-                styles.bonusBanner,
-                {
-                  backgroundColor: allDailyComplete ? colors.success + '18' : colors.surfaceElevated,
-                  borderColor: allDailyComplete ? colors.success : colors.border,
-                },
-              ]}
-            >
-              <FontAwesome
-                name={allDailyComplete ? 'check-circle' : 'star'}
-                size={16}
-                color={allDailyComplete ? colors.success : '#D4A44C'}
-              />
-              <View style={styles.bonusInfo}>
-                <Text style={[styles.bonusTitle, { color: allDailyComplete ? colors.success : colors.text }]}>
-                  {allDailyComplete ? 'Daily Bonus Earned!' : 'Daily Completion Bonus'}
-                </Text>
-                <Text style={[styles.bonusDesc, { color: colors.textSecondary }]}>
-                  {allDailyComplete
-                    ? 'You completed all habits today'
-                    : `Complete all ${activeHabits.length} habits for a bonus`}
-                </Text>
-              </View>
-              <View style={styles.bonusRewards}>
-                <View style={styles.bonusRewardItem}>
-                  <FontAwesome name="ticket" size={11} color="#D4A44C" />
-                  <Text style={[styles.bonusRewardText, { color: '#D4A44C' }]}>+{DAILY_BONUS_TICKETS}</Text>
-                </View>
-                <View style={styles.bonusRewardItem}>
-                  <FontAwesome name="bolt" size={11} color="#E87D2F" />
-                  <Text style={[styles.bonusRewardText, { color: '#E87D2F' }]}>+{DAILY_BONUS_XP}</Text>
-                </View>
-              </View>
-            </View>
-          )}
-
           <View style={styles.sectionHeader}>
             <View>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -1140,40 +1107,6 @@ const styles = StyleSheet.create({
   body: {
     padding: spacing.md,
     marginTop: -spacing.md,
-  },
-  bonusBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    padding: spacing.sm,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
-  },
-  bonusInfo: {
-    flex: 1,
-  },
-  bonusTitle: {
-    fontSize: fontSize.xs,
-    fontWeight: '700',
-  },
-  bonusDesc: {
-    fontSize: 10,
-    marginTop: 1,
-  },
-  bonusRewards: {
-    alignItems: 'flex-end',
-    gap: 2,
-  },
-  bonusRewardItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  bonusRewardText: {
-    fontSize: 10,
-    fontWeight: '700',
   },
   sectionHeader: {
     flexDirection: 'row',

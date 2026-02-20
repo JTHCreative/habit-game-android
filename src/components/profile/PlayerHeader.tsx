@@ -11,18 +11,23 @@ import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 
+interface PlayerHeaderProps {
+  completedCount?: number;
+  totalCount?: number;
+  allComplete?: boolean;
+  bonusTickets?: number;
+  bonusXP?: number;
+}
+
 function ChallengeMiniRow({ challenge }: { challenge: Challenge }) {
-  const progress = challenge.targetCount > 0
-    ? challenge.currentCount / challenge.targetCount
-    : 0;
   const done = challenge.status === 'completed' || challenge.status === 'claimed';
 
   return (
     <View style={styles.challengeMiniRow}>
       <FontAwesome
         name={done ? 'check-circle' : (challenge.icon as any)}
-        size={11}
-        color={done ? '#4CAF50' : 'rgba(255,255,255,0.5)'}
+        size={10}
+        color={done ? '#4CAF50' : 'rgba(255,255,255,0.45)'}
       />
       <Text
         style={[styles.challengeMiniTitle, done && styles.challengeMiniDone]}
@@ -37,7 +42,13 @@ function ChallengeMiniRow({ challenge }: { challenge: Challenge }) {
   );
 }
 
-export function PlayerHeader() {
+export function PlayerHeader({
+  completedCount = 0,
+  totalCount = 0,
+  allComplete = false,
+  bonusTickets = 10,
+  bonusXP = 25,
+}: PlayerHeaderProps) {
   const profile = useUserStore((s) => s.profile);
   const router = useRouter();
   const xpProgress = profile.xpToNextLevel > 0
@@ -47,14 +58,13 @@ export function PlayerHeader() {
   const dailyChallenges = useChallengeStore((s) => s.dailyChallenges);
   const weeklyChallenges = useChallengeStore((s) => s.weeklyChallenges);
 
-  const dailyCompleted = dailyChallenges.filter(
-    (c) => c.status === 'completed' || c.status === 'claimed'
-  ).length;
-  const weeklyCompleted = weeklyChallenges.filter(
+  const allChallenges = [...dailyChallenges, ...weeklyChallenges];
+  const completedChallenges = allChallenges.filter(
     (c) => c.status === 'completed' || c.status === 'claimed'
   ).length;
 
-  const hasChallenges = dailyChallenges.length > 0 || weeklyChallenges.length > 0;
+  const hasChallenges = allChallenges.length > 0;
+  const hasHabits = totalCount > 0;
 
   return (
     <LinearGradient
@@ -105,42 +115,74 @@ export function PlayerHeader() {
         />
       </View>
 
-      {hasChallenges ? (
-        <TouchableOpacity
-          style={styles.challengeDashboard}
-          activeOpacity={0.7}
-          onPress={() => router.push('/challenges')}
-        >
-          {/* Daily column */}
-          <View style={styles.challengeCol}>
-            <View style={styles.challengeColHeader}>
-              <FontAwesome name="sun-o" size={11} color="#4ECDC4" />
-              <Text style={styles.challengeColTitle}>Daily</Text>
-              <Text style={styles.challengeColCount}>
-                {dailyCompleted}/{dailyChallenges.length}
-              </Text>
+      {(hasChallenges || hasHabits) ? (
+        <View style={styles.dashboard}>
+          {/* Left column – Daily Completion Bonus */}
+          <View style={styles.bonusCol}>
+            <FontAwesome
+              name={allComplete ? 'check-circle' : 'star'}
+              size={18}
+              color={allComplete ? '#4CAF50' : '#D4A44C'}
+            />
+            <Text style={[styles.bonusLabel, allComplete && styles.bonusLabelDone]}>
+              {allComplete ? 'Bonus\nEarned!' : 'Daily\nBonus'}
+            </Text>
+            {hasHabits && (
+              <View style={styles.bonusProgress}>
+                <Text style={styles.bonusProgressText}>
+                  {completedCount}/{totalCount}
+                </Text>
+                <ProgressBar
+                  progress={totalCount > 0 ? completedCount / totalCount : 0}
+                  height={3}
+                  gradientColors={allComplete ? ['#4CAF50', '#66BB6A'] : ['#D4A44C', '#E8C97A']}
+                  backgroundColor="rgba(255,255,255,0.12)"
+                />
+              </View>
+            )}
+            <View style={styles.bonusRewardRow}>
+              <FontAwesome name="ticket" size={9} color="#D4A44C" />
+              <Text style={styles.bonusRewardVal}>+{bonusTickets}</Text>
+              <FontAwesome name="bolt" size={9} color="#E87D2F" />
+              <Text style={styles.bonusRewardVal}>+{bonusXP}</Text>
             </View>
-            {dailyChallenges.map((c) => (
-              <ChallengeMiniRow key={c.id} challenge={c} />
-            ))}
           </View>
 
-          <View style={styles.challengeDivider} />
+          <View style={styles.dashDivider} />
 
-          {/* Weekly column */}
-          <View style={styles.challengeCol}>
+          {/* Right column – All challenges */}
+          <TouchableOpacity
+            style={styles.challengeCol}
+            activeOpacity={0.7}
+            onPress={() => router.push('/challenges')}
+          >
             <View style={styles.challengeColHeader}>
-              <FontAwesome name="calendar" size={11} color="#A78BFA" />
-              <Text style={styles.challengeColTitle}>Weekly</Text>
+              <FontAwesome name="bullseye" size={11} color="#D4A44C" />
+              <Text style={styles.challengeColTitle}>Challenges</Text>
               <Text style={styles.challengeColCount}>
-                {weeklyCompleted}/{weeklyChallenges.length}
+                {completedChallenges}/{allChallenges.length}
               </Text>
             </View>
-            {weeklyChallenges.map((c) => (
-              <ChallengeMiniRow key={c.id} challenge={c} />
-            ))}
-          </View>
-        </TouchableOpacity>
+
+            {dailyChallenges.length > 0 && (
+              <View style={styles.challengeGroup}>
+                <Text style={styles.challengeGroupLabel}>Daily</Text>
+                {dailyChallenges.map((c) => (
+                  <ChallengeMiniRow key={c.id} challenge={c} />
+                ))}
+              </View>
+            )}
+
+            {weeklyChallenges.length > 0 && (
+              <View style={styles.challengeGroup}>
+                <Text style={[styles.challengeGroupLabel, { color: '#A78BFA' }]}>Weekly</Text>
+                {weeklyChallenges.map((c) => (
+                  <ChallengeMiniRow key={c.id} challenge={c} />
+                ))}
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       ) : (
         <TouchableOpacity
           style={styles.statsRow}
@@ -250,17 +292,63 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ── Challenge dashboard ─────────────────────────────
-  challengeDashboard: {
+  // ── Two-column dashboard ──────────────────────────────
+  dashboard: {
     flexDirection: 'row',
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: borderRadius.lg,
     padding: spacing.sm,
     gap: spacing.sm,
   },
+
+  // Left – bonus
+  bonusCol: {
+    width: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  bonusLabel: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'center',
+    lineHeight: 13,
+  },
+  bonusLabelDone: {
+    color: '#4CAF50',
+  },
+  bonusProgress: {
+    width: '100%',
+    gap: 2,
+  },
+  bonusProgressText: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 9,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  bonusRewardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginTop: 2,
+  },
+  bonusRewardVal: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 9,
+    fontWeight: '700',
+  },
+
+  dashDivider: {
+    width: 1,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+
+  // Right – challenges
   challengeCol: {
     flex: 1,
-    gap: 4,
+    gap: 3,
   },
   challengeColHeader: {
     flexDirection: 'row',
@@ -279,9 +367,16 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
   },
-  challengeDivider: {
-    width: 1,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+  challengeGroup: {
+    gap: 1,
+  },
+  challengeGroupLabel: {
+    color: '#4ECDC4',
+    fontSize: 9,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 1,
   },
   challengeMiniRow: {
     flexDirection: 'row',
