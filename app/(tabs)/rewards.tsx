@@ -86,7 +86,8 @@ export default function RewardsScreen() {
   const purchasePin = usePinStore((s) => s.purchasePin);
   const hasPin = usePinStore((s) => s.hasPin);
 
-  const [activeTab, setActiveTab] = useState<'shop' | 'pins' | 'inventory'>('shop');
+  const [activeTab, setActiveTab] = useState<'store' | 'inventory'>('store');
+  const [storeSubTab, setStoreSubTab] = useState<'shop' | 'pins'>('shop');
   const [pinFilter, setPinFilter] = useState<PinRarity | 'all'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -248,43 +249,22 @@ export default function RewardsScreen() {
         <TouchableOpacity
           style={[
             styles.tab,
-            activeTab === 'shop' && { backgroundColor: colors.primary },
+            activeTab === 'store' && { backgroundColor: colors.primary },
           ]}
-          onPress={() => setActiveTab('shop')}
+          onPress={() => setActiveTab('store')}
         >
           <FontAwesome
             name="shopping-cart"
             size={14}
-            color={activeTab === 'shop' ? '#FFF' : colors.textSecondary}
+            color={activeTab === 'store' ? '#FFF' : colors.textSecondary}
           />
           <Text
             style={[
               styles.tabText,
-              { color: activeTab === 'shop' ? '#FFF' : colors.textSecondary },
+              { color: activeTab === 'store' ? '#FFF' : colors.textSecondary },
             ]}
           >
-            Shop
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === 'pins' && { backgroundColor: colors.primary },
-          ]}
-          onPress={() => setActiveTab('pins')}
-        >
-          <MaterialCommunityIcons
-            name="pin"
-            size={14}
-            color={activeTab === 'pins' ? '#FFF' : colors.textSecondary}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              { color: activeTab === 'pins' ? '#FFF' : colors.textSecondary },
-            ]}
-          >
-            Pins ({collectedPins.length}/{ALL_PINS.length})
+            Store
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -315,83 +295,139 @@ export default function RewardsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {activeTab === 'shop' ? (
-          displayed.length === 0 ? (
-            <View style={[styles.emptyState, { borderColor: colors.border }]}>
-              <FontAwesome
-                name="shopping-cart"
-                size={48}
-                color={colors.textMuted}
-              />
-              <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
-                No rewards yet
-              </Text>
-              <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                Add custom rewards to start earning!
-              </Text>
-            </View>
-          ) : (
-            displayed.map((reward) => (
-              <RewardCard
-                key={reward.id}
-                reward={reward}
-                canAfford={profile.tickets >= reward.ticketCost}
-                onPurchase={() => handlePurchase(reward.id)}
-                onLongPress={() => handleEditReward(reward)}
-              />
-            ))
-          )
-        ) : activeTab === 'pins' ? (
+        {activeTab === 'store' ? (
           <>
-            {/* Collection progress */}
-            <View style={[styles.pinCollectionHeader, { backgroundColor: colors.cardBackground, borderColor: colors.borderLight }]}>
-              <MaterialCommunityIcons name="pin" size={20} color="#D4A44C" />
-              <Text style={[styles.pinCollectionTitle, { color: colors.text }]}>
-                Pin Collection
-              </Text>
-              <Text style={[styles.pinCollectionCount, { color: colors.textSecondary }]}>
-                {collectedPins.length} / {ALL_PINS.length}
-              </Text>
-            </View>
-
-            {/* Rarity filter */}
-            <View style={styles.pinFilterRow}>
-              {(['all', 'common', 'uncommon', 'rare', 'legendary'] as const).map((r) => (
-                <TouchableOpacity
-                  key={r}
-                  style={[
-                    styles.pinFilterChip,
-                    {
-                      backgroundColor: pinFilter === r ? colors.primary : colors.inputBackground,
-                      borderColor: pinFilter === r ? colors.primary : colors.border,
-                    },
-                  ]}
-                  onPress={() => setPinFilter(r)}
-                >
-                  <Text
-                    style={[
-                      styles.pinFilterText,
-                      { color: pinFilter === r ? '#FFF' : colors.textSecondary },
-                    ]}
-                  >
-                    {r === 'all' ? 'All' : r.charAt(0).toUpperCase() + r.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {/* Pin grid */}
-            <View style={styles.pinGrid}>
-              {sortedPins.map((pin) => (
-                <PinCard
-                  key={pin.id}
-                  pin={pin}
-                  collected={hasPin(pin.id)}
-                  canAfford={profile.tickets >= pin.ticketCost}
-                  onPurchase={hasPin(pin.id) ? undefined : () => handlePurchasePin(pin.id)}
+            {/* Sub-tabs: Shop / Pins */}
+            <View style={styles.storeSubTabRow}>
+              <TouchableOpacity
+                style={[
+                  styles.storeSubTab,
+                  {
+                    backgroundColor: storeSubTab === 'shop' ? colors.primary + '20' : 'transparent',
+                    borderColor: storeSubTab === 'shop' ? colors.primary : 'transparent',
+                  },
+                ]}
+                onPress={() => setStoreSubTab('shop')}
+              >
+                <FontAwesome
+                  name="shopping-cart"
+                  size={12}
+                  color={storeSubTab === 'shop' ? colors.primary : colors.textSecondary}
                 />
-              ))}
+                <Text
+                  style={[
+                    styles.storeSubTabText,
+                    { color: storeSubTab === 'shop' ? colors.primary : colors.textSecondary },
+                  ]}
+                >
+                  Shop
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.storeSubTab,
+                  {
+                    backgroundColor: storeSubTab === 'pins' ? colors.primary + '20' : 'transparent',
+                    borderColor: storeSubTab === 'pins' ? colors.primary : 'transparent',
+                  },
+                ]}
+                onPress={() => setStoreSubTab('pins')}
+              >
+                <MaterialCommunityIcons
+                  name="pin"
+                  size={12}
+                  color={storeSubTab === 'pins' ? colors.primary : colors.textSecondary}
+                />
+                <Text
+                  style={[
+                    styles.storeSubTabText,
+                    { color: storeSubTab === 'pins' ? colors.primary : colors.textSecondary },
+                  ]}
+                >
+                  Pins ({collectedPins.length}/{ALL_PINS.length})
+                </Text>
+              </TouchableOpacity>
             </View>
+
+            {storeSubTab === 'shop' ? (
+              displayed.length === 0 ? (
+                <View style={[styles.emptyState, { borderColor: colors.border }]}>
+                  <FontAwesome
+                    name="shopping-cart"
+                    size={48}
+                    color={colors.textMuted}
+                  />
+                  <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+                    No rewards yet
+                  </Text>
+                  <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+                    Add custom rewards to start earning!
+                  </Text>
+                </View>
+              ) : (
+                displayed.map((reward) => (
+                  <RewardCard
+                    key={reward.id}
+                    reward={reward}
+                    canAfford={profile.tickets >= reward.ticketCost}
+                    onPurchase={() => handlePurchase(reward.id)}
+                    onLongPress={() => handleEditReward(reward)}
+                  />
+                ))
+              )
+            ) : (
+              <>
+                {/* Collection progress */}
+                <View style={[styles.pinCollectionHeader, { backgroundColor: colors.cardBackground, borderColor: colors.borderLight }]}>
+                  <MaterialCommunityIcons name="pin" size={20} color="#D4A44C" />
+                  <Text style={[styles.pinCollectionTitle, { color: colors.text }]}>
+                    Pin Collection
+                  </Text>
+                  <Text style={[styles.pinCollectionCount, { color: colors.textSecondary }]}>
+                    {collectedPins.length} / {ALL_PINS.length}
+                  </Text>
+                </View>
+
+                {/* Rarity filter */}
+                <View style={styles.pinFilterRow}>
+                  {(['all', 'common', 'uncommon', 'rare', 'legendary'] as const).map((r) => (
+                    <TouchableOpacity
+                      key={r}
+                      style={[
+                        styles.pinFilterChip,
+                        {
+                          backgroundColor: pinFilter === r ? colors.primary : colors.inputBackground,
+                          borderColor: pinFilter === r ? colors.primary : colors.border,
+                        },
+                      ]}
+                      onPress={() => setPinFilter(r)}
+                    >
+                      <Text
+                        style={[
+                          styles.pinFilterText,
+                          { color: pinFilter === r ? '#FFF' : colors.textSecondary },
+                        ]}
+                      >
+                        {r === 'all' ? 'All' : r.charAt(0).toUpperCase() + r.slice(1)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Pin grid */}
+                <View style={styles.pinGrid}>
+                  {sortedPins.map((pin) => (
+                    <PinCard
+                      key={pin.id}
+                      pin={pin}
+                      collected={hasPin(pin.id)}
+                      canAfford={profile.tickets >= pin.ticketCost}
+                      onPurchase={hasPin(pin.id) ? undefined : () => handlePurchasePin(pin.id)}
+                    />
+                  ))}
+                </View>
+              </>
+            )}
           </>
         ) : (
           activeInventory.length === 0 ? (
@@ -1248,6 +1284,26 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     textAlign: 'center',
     marginTop: spacing.md,
+  },
+
+  // ── Store sub-tabs ──────────────────────────────────────
+  storeSubTabRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  storeSubTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+  },
+  storeSubTabText: {
+    fontSize: fontSize.xs,
+    fontWeight: '700',
   },
 
   // ── Pins tab ──────────────────────────────────────────
