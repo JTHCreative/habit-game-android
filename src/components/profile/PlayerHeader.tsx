@@ -108,14 +108,14 @@ export function PlayerHeader() {
                   key={i}
                   style={[
                     styles.pinSlot,
-                    pin && { borderColor: pin.color + '40', borderStyle: 'solid', backgroundColor: pin.color + '10' },
+                    pin && { borderColor: pin.color + '60', borderStyle: 'solid', backgroundColor: pin.color + '20' },
                   ]}
                   activeOpacity={0.7}
                   onPress={() => setEditingSlot(i)}
                 >
                   {pin ? (
                     <View style={styles.pinSlotFilled}>
-                      <View style={[styles.pinSlotGlow, { backgroundColor: pin.color + '25' }]} />
+                      <View style={[styles.pinSlotGlow, { backgroundColor: pin.color + '40' }]} />
                       <DynamicIcon name={pin.icon} size={24} color={pin.color} />
                     </View>
                   ) : (
@@ -206,7 +206,7 @@ export function PlayerHeader() {
                         }
                       }}
                     >
-                      <View style={[styles.pinPickerCircle, { backgroundColor: pin.color + '18', borderColor: pin.color }]}>
+                      <View style={[styles.pinPickerCircle, { backgroundColor: pin.color + '30', borderColor: pin.color }]}>
                         <DynamicIcon name={pin.icon} size={24} color={pin.color} />
                       </View>
                       <Text
