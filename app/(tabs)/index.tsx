@@ -140,7 +140,13 @@ export default function HomeScreen() {
     activeHabits.length > 0
       ? Math.round((completedToday.length / activeHabits.length) * 100)
       : 0;
-  const allDailyComplete = activeHabits.length > 0 && completedToday.length >= activeHabits.length;
+
+  // Daily bonus only counts daily-frequency habits
+  const activeDailyHabits = activeHabits.filter((h) => h.frequency === 'daily');
+  const completedDailyToday = activeDailyHabits.filter((h) =>
+    isHabitCompletedForPeriod(h.frequency, h.completedDates)
+  );
+  const allDailyComplete = activeDailyHabits.length > 0 && completedDailyToday.length >= activeDailyHabits.length;
 
   const filteredHabits = activeHabits.filter((h) => {
     if (filterCategory && (h.customCategoryId || h.category) !== filterCategory) return false;
@@ -161,8 +167,13 @@ export default function HomeScreen() {
     onChallengeHabitCompleted(category, allComplete, totalCompletedToday, categoriesCompletedToday);
     onChallengeStreakUpdated(updatedStreak);
 
-    // Award daily-all-complete bonus (once per day)
-    if (allComplete && dailyBonusPaidRef.current !== today) {
+    // Award daily-all-complete bonus (once per day, only daily-frequency habits)
+    const dailyOnly = allActive.filter((h) => h.frequency === 'daily');
+    const dailyDone = dailyOnly.filter((h) =>
+      isHabitCompletedForPeriod(h.frequency, h.completedDates)
+    );
+    const dailyAllDone = dailyOnly.length > 0 && dailyDone.length >= dailyOnly.length;
+    if (dailyAllDone && dailyBonusPaidRef.current !== today) {
       dailyBonusPaidRef.current = today;
       addXP(DAILY_BONUS_XP);
       addTickets(DAILY_BONUS_TICKETS);
@@ -300,8 +311,8 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <PlayerHeader
-          completedCount={completedToday.length}
-          totalCount={activeHabits.length}
+          completedCount={completedDailyToday.length}
+          totalCount={activeDailyHabits.length}
           allComplete={allDailyComplete}
           bonusTickets={DAILY_BONUS_TICKETS}
           bonusXP={DAILY_BONUS_XP}
