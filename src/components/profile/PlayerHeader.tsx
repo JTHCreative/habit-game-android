@@ -100,7 +100,7 @@ export function PlayerHeader({
           <View style={styles.bonusCard}>
             <FontAwesome
               name={allComplete ? 'check-circle' : 'star'}
-              size={24}
+              size={36}
               color={allComplete ? '#4CAF50' : '#D4A44C'}
             />
             <Text style={[styles.bonusLabel, allComplete && styles.bonusLabelDone]}>
@@ -113,16 +113,16 @@ export function PlayerHeader({
                 </Text>
                 <ProgressBar
                   progress={totalCount > 0 ? completedCount / totalCount : 0}
-                  height={4}
+                  height={6}
                   gradientColors={allComplete ? ['#4CAF50', '#66BB6A'] : ['#D4A44C', '#E8C97A']}
                   backgroundColor="rgba(255,255,255,0.12)"
                 />
               </View>
             )}
             <View style={styles.bonusRewardRow}>
-              <FontAwesome name="ticket" size={12} color="#D4A44C" />
+              <FontAwesome name="ticket" size={16} color="#D4A44C" />
               <Text style={styles.bonusRewardVal}>+{bonusTickets}</Text>
-              <FontAwesome name="bolt" size={12} color="#E87D2F" />
+              <FontAwesome name="bolt" size={16} color="#E87D2F" />
               <Text style={styles.bonusRewardVal}>+{bonusXP} XP</Text>
             </View>
           </View>
@@ -310,12 +310,12 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   bonusLabel: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: fontSize.sm,
-    fontWeight: '700',
+    color: 'rgba(255,255,255,0.95)',
+    fontSize: fontSize.lg,
+    fontWeight: '800',
     textAlign: 'center',
   },
   bonusLabelDone: {
@@ -323,23 +323,23 @@ const styles = StyleSheet.create({
   },
   bonusProgress: {
     width: '100%',
-    gap: 3,
+    gap: 4,
   },
   bonusProgressText: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: fontSize.xs,
-    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: fontSize.md,
+    fontWeight: '700',
     textAlign: 'center',
   },
   bonusRewardRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
+    gap: 6,
+    marginTop: 4,
   },
   bonusRewardVal: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: fontSize.xs,
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: fontSize.sm,
     fontWeight: '700',
   },
 
