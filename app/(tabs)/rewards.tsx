@@ -13,16 +13,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RewardCard } from '@/src/components/rewards/RewardCard';
 import { InventoryCard } from '@/src/components/rewards/InventoryCard';
+import { PinCard } from '@/src/components/rewards/PinCard';
 import { TicketBadge } from '@/src/components/common/TicketBadge';
 import { DynamicIcon } from '@/src/components/common/DynamicIcon';
 import { useRewardStore } from '@/src/stores/useRewardStore';
 import { useUserStore } from '@/src/stores/useUserStore';
 import { useRewardCategoryStore, DEFAULT_REWARD_CATEGORY_IDS } from '@/src/stores/useRewardCategoryStore';
+import { usePinStore, ALL_PINS } from '@/src/stores/usePinStore';
 import Colors, { gradients } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { ReplenishPeriod, Reward, RewardCategory } from '@/src/types';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { ReplenishPeriod, Reward, RewardCategory, PinRarity } from '@/src/types';
 
 const COLOR_PALETTE = [
   '#FF6B6B', '#4ECDC4', '#A78BFA', '#F59E0B', '#3B82F6',
@@ -79,7 +82,12 @@ export default function RewardsScreen() {
   const removeCategory = useRewardCategoryStore((s) => s.removeCategory);
   const updateCategory = useRewardCategoryStore((s) => s.updateCategory);
 
-  const [activeTab, setActiveTab] = useState<'shop' | 'inventory'>('shop');
+  const collectedPins = usePinStore((s) => s.collected);
+  const purchasePin = usePinStore((s) => s.purchasePin);
+  const hasPin = usePinStore((s) => s.hasPin);
+
+  const [activeTab, setActiveTab] = useState<'shop' | 'pins' | 'inventory'>('shop');
+  const [pinFilter, setPinFilter] = useState<PinRarity | 'all'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingRewardId, setEditingRewardId] = useState<string | null>(null);
@@ -119,6 +127,25 @@ export default function RewardsScreen() {
       purchaseReward(rewardId);
     }
   };
+
+  const handlePurchasePin = (pinId: string) => {
+    const pin = ALL_PINS.find((p) => p.id === pinId);
+    if (!pin || hasPin(pinId)) return;
+    const success = spendTickets(pin.ticketCost);
+    if (success) {
+      purchasePin(pinId);
+    }
+  };
+
+  const filteredPins = pinFilter === 'all'
+    ? ALL_PINS
+    : ALL_PINS.filter((p) => p.rarity === pinFilter);
+
+  const sortedPins = [...filteredPins].sort((a, b) => {
+    const aOwned = hasPin(a.id) ? 1 : 0;
+    const bOwned = hasPin(b.id) ? 1 : 0;
+    return aOwned - bOwned;
+  });
 
   const resolveRewardCategory = (): RewardCategory => {
     return DEFAULT_REWARD_CATEGORY_IDS.includes(selectedCategoryId)
@@ -242,6 +269,27 @@ export default function RewardsScreen() {
         <TouchableOpacity
           style={[
             styles.tab,
+            activeTab === 'pins' && { backgroundColor: colors.primary },
+          ]}
+          onPress={() => setActiveTab('pins')}
+        >
+          <MaterialCommunityIcons
+            name="pin"
+            size={14}
+            color={activeTab === 'pins' ? '#FFF' : colors.textSecondary}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              { color: activeTab === 'pins' ? '#FFF' : colors.textSecondary },
+            ]}
+          >
+            Pins ({collectedPins.length}/{ALL_PINS.length})
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.tab,
             activeTab === 'inventory' && { backgroundColor: colors.primary },
           ]}
           onPress={() => setActiveTab('inventory')}
@@ -257,7 +305,7 @@ export default function RewardsScreen() {
               { color: activeTab === 'inventory' ? '#FFF' : colors.textSecondary },
             ]}
           >
-            Inventory ({activeInventory.length})
+            Inventory
           </Text>
         </TouchableOpacity>
       </View>
@@ -293,6 +341,58 @@ export default function RewardsScreen() {
               />
             ))
           )
+        ) : activeTab === 'pins' ? (
+          <>
+            {/* Collection progress */}
+            <View style={[styles.pinCollectionHeader, { backgroundColor: colors.cardBackground, borderColor: colors.borderLight }]}>
+              <MaterialCommunityIcons name="pin" size={20} color="#D4A44C" />
+              <Text style={[styles.pinCollectionTitle, { color: colors.text }]}>
+                Pin Collection
+              </Text>
+              <Text style={[styles.pinCollectionCount, { color: colors.textSecondary }]}>
+                {collectedPins.length} / {ALL_PINS.length}
+              </Text>
+            </View>
+
+            {/* Rarity filter */}
+            <View style={styles.pinFilterRow}>
+              {(['all', 'common', 'uncommon', 'rare', 'legendary'] as const).map((r) => (
+                <TouchableOpacity
+                  key={r}
+                  style={[
+                    styles.pinFilterChip,
+                    {
+                      backgroundColor: pinFilter === r ? colors.primary : colors.inputBackground,
+                      borderColor: pinFilter === r ? colors.primary : colors.border,
+                    },
+                  ]}
+                  onPress={() => setPinFilter(r)}
+                >
+                  <Text
+                    style={[
+                      styles.pinFilterText,
+                      { color: pinFilter === r ? '#FFF' : colors.textSecondary },
+                    ]}
+                  >
+                    {r === 'all' ? 'All' : r.charAt(0).toUpperCase() + r.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Pin grid */}
+            <View style={styles.pinGrid}>
+              {sortedPins.map((pin) => (
+                <PinCard
+                  key={pin.id}
+                  pin={pin}
+                  collected={hasPin(pin.id)}
+                  canAfford={profile.tickets >= pin.ticketCost}
+                  onPurchase={hasPin(pin.id) ? undefined : () => handlePurchasePin(pin.id)}
+                />
+              ))}
+            </View>
+          </>
         ) : (
           activeInventory.length === 0 ? (
             <View style={[styles.emptyState, { borderColor: colors.border }]}>
@@ -1148,5 +1248,47 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     textAlign: 'center',
     marginTop: spacing.md,
+  },
+
+  // ── Pins tab ──────────────────────────────────────────
+  pinCollectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    marginBottom: spacing.md,
+  },
+  pinCollectionTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: '700',
+    flex: 1,
+  },
+  pinCollectionCount: {
+    fontSize: fontSize.md,
+    fontWeight: '700',
+  },
+  pinFilterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  pinFilterChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+  },
+  pinFilterText: {
+    fontSize: fontSize.xs,
+    fontWeight: '700',
+  },
+  pinGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    justifyContent: 'space-between',
   },
 });

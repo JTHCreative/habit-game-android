@@ -140,3 +140,21 @@ export interface DailyCheckIn {
   ticketsEarned: number;
   xpEarned: number;
 }
+
+// ── Pins ────────────────────────────────────────────────
+export type PinRarity = 'common' | 'uncommon' | 'rare' | 'legendary';
+
+export interface Pin {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;           // FA or 'mci:' prefix
+  color: string;          // enamel accent colour
+  rarity: PinRarity;
+  ticketCost: number;
+}
+
+export interface CollectedPin {
+  pinId: string;
+  collectedAt: string;    // ISO date
+}
