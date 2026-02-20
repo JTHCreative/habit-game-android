@@ -20,6 +20,7 @@ import { useRewardStore } from '@/src/stores/useRewardStore';
 import { useUserStore } from '@/src/stores/useUserStore';
 import { useRewardCategoryStore, DEFAULT_REWARD_CATEGORY_IDS } from '@/src/stores/useRewardCategoryStore';
 import { usePinStore, ALL_PINS } from '@/src/stores/usePinStore';
+import { useSkillTreeStore, SKILL_TREE_PINS } from '@/src/stores/useSkillTreeStore';
 import Colors, { gradients } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
@@ -85,6 +86,7 @@ export default function RewardsScreen() {
   const collectedPins = usePinStore((s) => s.collected);
   const purchasePin = usePinStore((s) => s.purchasePin);
   const hasPin = usePinStore((s) => s.hasPin);
+  const skillTreeUnlocked = useSkillTreeStore((s) => s.unlocked);
 
   const [activeTab, setActiveTab] = useState<'store' | 'inventory'>('store');
   const [storeSubTab, setStoreSubTab] = useState<'shop' | 'pins'>('shop');
@@ -430,29 +432,89 @@ export default function RewardsScreen() {
             )}
           </>
         ) : (
-          activeInventory.length === 0 ? (
-            <View style={[styles.emptyState, { borderColor: colors.border }]}>
-              <FontAwesome
-                name="archive"
-                size={48}
-                color={colors.textMuted}
-              />
-              <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
-                No claimed rewards
+          <>
+            {/* Claimed Rewards section */}
+            <View style={styles.inventorySectionHeader}>
+              <FontAwesome name="gift" size={16} color="#D4A44C" />
+              <Text style={[styles.inventorySectionTitle, { color: colors.text }]}>
+                Claimed Rewards
               </Text>
-              <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                Claim rewards from the shop to see them here!
+              <Text style={[styles.inventorySectionCount, { color: colors.textMuted }]}>
+                {activeInventory.length}
               </Text>
             </View>
-          ) : (
-            activeInventory.map((item) => (
-              <InventoryCard
-                key={item.id}
-                item={item}
-                onRedeem={() => redeemInventoryItem(item.id)}
-              />
-            ))
-          )
+            {activeInventory.length === 0 ? (
+              <View style={[styles.inventoryEmptyMini, { borderColor: colors.border }]}>
+                <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+                  Claim rewards from the shop to see them here
+                </Text>
+              </View>
+            ) : (
+              activeInventory.map((item) => (
+                <InventoryCard
+                  key={item.id}
+                  item={item}
+                  onRedeem={() => redeemInventoryItem(item.id)}
+                />
+              ))
+            )}
+
+            {/* Pins Collected section */}
+            <View style={[styles.inventorySectionHeader, { marginTop: spacing.lg }]}>
+              <MaterialCommunityIcons name="pin" size={16} color="#D4A44C" />
+              <Text style={[styles.inventorySectionTitle, { color: colors.text }]}>
+                Pins Collected
+              </Text>
+              <Text style={[styles.inventorySectionCount, { color: colors.textMuted }]}>
+                {collectedPins.length + Object.keys(skillTreeUnlocked).length}
+              </Text>
+            </View>
+            {collectedPins.length === 0 && Object.keys(skillTreeUnlocked).length === 0 ? (
+              <View style={[styles.inventoryEmptyMini, { borderColor: colors.border }]}>
+                <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+                  Buy pins from the store or unlock them in the skill tree
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.pinGrid}>
+                {/* Shop pins */}
+                {collectedPins.map((cp) => {
+                  const pin = ALL_PINS.find((p) => p.id === cp.pinId);
+                  if (!pin) return null;
+                  return (
+                    <PinCard
+                      key={pin.id}
+                      pin={pin}
+                      collected={true}
+                      canAfford={false}
+                    />
+                  );
+                })}
+                {/* Skill tree pins */}
+                {Object.keys(skillTreeUnlocked).map((pinId) => {
+                  const stPin = SKILL_TREE_PINS.find((p) => p.id === pinId);
+                  if (!stPin) return null;
+                  const asPin = {
+                    id: stPin.id,
+                    name: stPin.name,
+                    description: stPin.description,
+                    icon: stPin.icon,
+                    color: stPin.color,
+                    rarity: stPin.rarity,
+                    ticketCost: 0,
+                  };
+                  return (
+                    <PinCard
+                      key={stPin.id}
+                      pin={asPin}
+                      collected={true}
+                      canAfford={false}
+                    />
+                  );
+                })}
+              </View>
+            )}
+          </>
         )}
       </ScrollView>
 
@@ -1284,6 +1346,31 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     textAlign: 'center',
     marginTop: spacing.md,
+  },
+
+  // ── Inventory sections ──────────────────────────────────
+  inventorySectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  inventorySectionTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: '700',
+    flex: 1,
+  },
+  inventorySectionCount: {
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+  },
+  inventoryEmptyMini: {
+    padding: spacing.lg,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    marginBottom: spacing.md,
   },
 
   // ── Store sub-tabs ──────────────────────────────────────
