@@ -24,6 +24,7 @@ import { useCategoryStore, DEFAULT_CATEGORY_IDS } from '@/src/stores/useCustomCa
 import { useMissionStore } from '@/src/stores/useMissionStore';
 import { useChallengeStore } from '@/src/stores/useChallengeStore';
 import { useAchievementChecker } from '@/src/hooks/useAchievementChecker';
+import { useSkillTreeStore } from '@/src/stores/useSkillTreeStore';
 import {
   getPSTDateString,
   isHabitCompletedForPeriod,
@@ -93,6 +94,7 @@ export default function HomeScreen() {
   const onHabitCompleted = useMissionStore((s) => s.onHabitCompleted);
   const onStreakUpdated = useMissionStore((s) => s.onStreakUpdated);
   const checkAchievements = useAchievementChecker();
+  const checkSkillTreeUnlocks = useSkillTreeStore((s) => s.checkUnlocks);
 
   const refreshChallenges = useChallengeStore((s) => s.refreshChallenges);
   const recordLogin = useChallengeStore((s) => s.recordLogin);
@@ -155,6 +157,16 @@ export default function HomeScreen() {
   });
   const hasActiveFilters = filterCategory !== null || filterFrequency !== null;
 
+  const checkSkillTree = () => {
+    const currentHabits = useHabitStore.getState().habits;
+    const counts: Record<string, number> = {};
+    for (const h of currentHabits) {
+      const cat = h.category;
+      counts[cat] = (counts[cat] ?? 0) + h.completedDates.length;
+    }
+    checkSkillTreeUnlocks(counts);
+  };
+
   const notifyChallenges = (category: string, updatedStreak: number) => {
     // Compute context for challenge tracking after this completion
     const allActive = habits.filter((h) => h.isActive);
@@ -205,6 +217,7 @@ export default function HomeScreen() {
           onStreakUpdated(updated.currentStreak);
           notifyChallenges(habit.category, updated.currentStreak);
           checkAchievements();
+          checkSkillTree();
         }
       }
     } else {
@@ -222,6 +235,7 @@ export default function HomeScreen() {
             updateHabit(habitId, { isActive: false });
           }
           checkAchievements();
+          checkSkillTree();
         } else {
           removeXP(updated.xpReward);
           removeTickets(updated.ticketReward);

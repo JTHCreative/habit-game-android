@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CollectedPin, Pin } from '../types';
+import { useSkillTreeStore } from './useSkillTreeStore';
 
 // ── 36 collectible enamel pins ──────────────────────────
 
@@ -382,8 +383,8 @@ export const usePinStore = create<PinState>()(
 
       setBoardSlot: (slot: number, pinId: string | null) => {
         if (slot < 0 || slot >= PIN_BOARD_SLOTS) return;
-        // If assigning a pin, make sure it's collected and not already on board
-        if (pinId && !get().hasPin(pinId)) return;
+        // If assigning a pin, make sure it's collected (shop or skill tree)
+        if (pinId && !get().hasPin(pinId) && !useSkillTreeStore.getState().isUnlocked(pinId)) return;
         set((state) => {
           const board = [...state.board];
           // Remove pinId from any existing slot first

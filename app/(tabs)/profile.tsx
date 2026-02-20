@@ -9,9 +9,12 @@ import Colors, { gradients } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { PinCollection } from '@/src/components/profile/PinCollection';
+import { SkillTree } from '@/src/components/profile/SkillTree';
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme() ?? 'light';
@@ -250,6 +253,18 @@ export default function ProfileScreen() {
               </View>
             ))}
           </View>
+
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            <MaterialCommunityIcons name="pin" size={18} color={colors.text} />{' '}
+            Pin Collection
+          </Text>
+          <PinCollection />
+
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            <FontAwesome name="sitemap" size={16} color={colors.text} />{' '}
+            Reward Tree
+          </Text>
+          <SkillTree />
 
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             Active Habits ({habits.filter((h) => h.isActive).length})

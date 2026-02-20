@@ -8,6 +8,7 @@ import { TicketBadge } from '../common/TicketBadge';
 import { DynamicIcon } from '../common/DynamicIcon';
 import { useUserStore } from '@/src/stores/useUserStore';
 import { usePinStore, ALL_PINS, PIN_BOARD_SLOTS } from '@/src/stores/usePinStore';
+import { useSkillTreeStore, SKILL_TREE_PINS } from '@/src/stores/useSkillTreeStore';
 import Colors, { gradients } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
@@ -35,17 +36,29 @@ export function PlayerHeader() {
   const board = usePinStore((s) => s.board);
   const collected = usePinStore((s) => s.collected);
   const setBoardSlot = usePinStore((s) => s.setBoardSlot);
+  const skillTreeUnlocked = useSkillTreeStore((s) => s.unlocked);
 
   const [editingSlot, setEditingSlot] = useState<number | null>(null);
 
-  const collectedPins: Pin[] = ALL_PINS.filter((p) =>
+  // Combine shop pins and unlocked skill tree pins
+  const shopPins: Pin[] = ALL_PINS.filter((p) =>
     collected.some((c) => c.pinId === p.id)
   );
+  const unlockedTreePins: Pin[] = SKILL_TREE_PINS
+    .filter((p) => skillTreeUnlocked[p.id])
+    .map((p) => ({ id: p.id, name: p.name, description: p.description, icon: p.icon, color: p.color, rarity: p.rarity, ticketCost: 0 }));
+  const collectedPins: Pin[] = [...shopPins, ...unlockedTreePins];
+
+  // All possible pins for board lookup
+  const ALL_DISPLAYABLE_PINS: Pin[] = [
+    ...ALL_PINS,
+    ...SKILL_TREE_PINS.map((p) => ({ id: p.id, name: p.name, description: p.description, icon: p.icon, color: p.color, rarity: p.rarity, ticketCost: 0 })),
+  ];
 
   const getBoardPin = (slot: number): Pin | undefined => {
     const pinId = board[slot];
     if (!pinId) return undefined;
-    return ALL_PINS.find((p) => p.id === pinId);
+    return ALL_DISPLAYABLE_PINS.find((p) => p.id === pinId);
   };
 
   return (

@@ -158,3 +158,27 @@ export interface CollectedPin {
   pinId: string;
   collectedAt: string;    // ISO date
 }
+
+// ── Skill-tree pins ────────────────────────────────────
+export type SkillTreeCategory =
+  | 'health'
+  | 'fitness'
+  | 'mindfulness'
+  | 'productivity'
+  | 'learning'
+  | 'social'
+  | 'finance';
+
+export interface SkillTreePin {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  rarity: PinRarity;
+  category: SkillTreeCategory;
+  /** Tier 1-6 within the branch */
+  tier: number;
+  /** Total category completions needed to unlock */
+  requiredCompletions: number;
+}
