@@ -320,12 +320,11 @@ const styles = StyleSheet.create({
   // ── Pin Display ──────────────────────────────────────
   pinDisplayBoard: {
     backgroundColor: 'rgba(0,0,0,0.2)',
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(212,164,76,0.15)',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
+    borderRadius: 4,
+    borderWidth: 2.5,
+    borderColor: 'rgba(212,164,76,0.25)',
+    padding: spacing.sm,
+    paddingBottom: spacing.xs,
   },
   pinDisplayTitle: {
     color: 'rgba(212,164,76,0.7)',
@@ -337,8 +336,8 @@ const styles = StyleSheet.create({
   pinDisplaySlots: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: spacing.md,
-    marginBottom: spacing.sm,
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
   },
   pinSlot: {
     width: 48,
