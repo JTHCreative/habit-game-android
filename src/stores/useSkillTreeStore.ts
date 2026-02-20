@@ -3,8 +3,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SkillTreeCategory, SkillTreePin } from '../types';
 
-// Exponential thresholds: 5, 15, 40, 100, 250, 500
-const THRESHOLDS = [5, 15, 40, 100, 250, 500];
+// Exponential thresholds: 100, 300, 750, 1500, 3000, 5000
+const THRESHOLDS = [100, 300, 750, 1500, 3000, 5000];
 
 // ── Skill-tree pin definitions (7 branches × 6 tiers) ──
 
