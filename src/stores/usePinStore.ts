@@ -8,10 +8,10 @@ import { CollectedPin, Pin } from '../types';
 export const ALL_PINS: Pin[] = [
   // ── Animals (10) ──────────────────────────────────────
   {
-    id: 'pin_fox',
-    name: 'Clever Fox',
-    description: 'A sly red fox with bright eyes',
-    icon: 'mci:fox',
+    id: 'pin_horse',
+    name: 'Wild Mustang',
+    description: 'An untamed stallion galloping through open plains',
+    icon: 'mci:horse',
     color: '#E8602C',
     rarity: 'uncommon',
     ticketCost: 150,
@@ -159,7 +159,7 @@ export const ALL_PINS: Pin[] = [
     id: 'pin_mountain',
     name: 'Summit',
     description: 'A snow-capped peak for the trailblazer',
-    icon: 'mci:mountain',
+    icon: 'mci:terrain',
     color: '#455A64',
     rarity: 'uncommon',
     ticketCost: 150,
