@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -7,7 +7,6 @@ import Animated, {
   withDelay,
   withSequence,
   Easing,
-  runOnJS,
   interpolate,
 } from 'react-native-reanimated';
 
@@ -20,10 +19,14 @@ const NUM_PARTICLES = 16;
 const NUM_STARS = 6;
 
 interface SparkConfig {
-  x: number;
-  y: number;
-  endX: number;
-  endY: number;
+  /** Start X as 0-1 fraction of card width */
+  xPct: number;
+  /** Start Y as 0-1 fraction of card height */
+  yPct: number;
+  /** Travel X in pixels */
+  dx: number;
+  /** Travel Y in pixels */
+  dy: number;
   size: number;
   color: string;
   delay: number;
@@ -31,8 +34,8 @@ interface SparkConfig {
 }
 
 interface StarConfig {
-  x: number;
-  y: number;
+  xPct: number;
+  yPct: number;
   size: number;
   color: string;
   delay: number;
@@ -44,15 +47,12 @@ function generateSparks(accentColor: string): SparkConfig[] {
 
   for (let i = 0; i < NUM_PARTICLES; i++) {
     const angle = (Math.PI * 2 * i) / NUM_PARTICLES + (Math.random() - 0.5) * 0.4;
-    const distance = 30 + Math.random() * 50;
-    // Start from scattered positions around the card center
-    const startX = 50 + (Math.random() - 0.5) * 60;
-    const startY = 50 + (Math.random() - 0.5) * 30;
+    const distance = 25 + Math.random() * 40;
     sparks.push({
-      x: startX,
-      y: startY,
-      endX: startX + Math.cos(angle) * distance,
-      endY: startY + Math.sin(angle) * distance,
+      xPct: 0.05 + Math.random() * 0.9,
+      yPct: 0.05 + Math.random() * 0.9,
+      dx: Math.cos(angle) * distance,
+      dy: Math.sin(angle) * distance,
       size: 3 + Math.random() * 4,
       color: colors[i % colors.length],
       delay: Math.random() * 150,
@@ -65,15 +65,15 @@ function generateSparks(accentColor: string): SparkConfig[] {
 function generateStars(accentColor: string): StarConfig[] {
   const colors = [accentColor, '#FFD700', '#FFF', accentColor, '#FFD700', '#FFF'];
   return Array.from({ length: NUM_STARS }, (_, i) => ({
-    x: 10 + Math.random() * 80,
-    y: 10 + Math.random() * 80,
+    xPct: 0.05 + Math.random() * 0.9,
+    yPct: 0.05 + Math.random() * 0.9,
     size: 3 + Math.random() * 3,
     color: colors[i % colors.length],
     delay: 100 + Math.random() * 300,
   }));
 }
 
-function Spark({ config }: { config: SparkConfig }) {
+function Spark({ config, cardW, cardH }: { config: SparkConfig; cardW: number; cardH: number }) {
   const progress = useSharedValue(0);
   const opacity = useSharedValue(0);
 
@@ -91,24 +91,37 @@ function Spark({ config }: { config: SparkConfig }) {
     );
   }, []);
 
+  const left = config.xPct * cardW;
+  const top = config.yPct * cardH;
+
   const style = useAnimatedStyle(() => ({
-    position: 'absolute' as const,
-    width: config.size,
-    height: config.size,
-    borderRadius: config.size / 2,
-    backgroundColor: config.color,
     opacity: opacity.value,
-    left: interpolate(progress.value, [0, 1], [config.x, config.endX]),
-    top: interpolate(progress.value, [0, 1], [config.y, config.endY]),
     transform: [
+      { translateX: interpolate(progress.value, [0, 1], [0, config.dx]) },
+      { translateY: interpolate(progress.value, [0, 1], [0, config.dy]) },
       { scale: interpolate(progress.value, [0, 0.3, 1], [0.2, 1.2, 0.2]) },
     ],
   }));
 
-  return <Animated.View style={style} />;
+  return (
+    <Animated.View
+      style={[
+        {
+          position: 'absolute',
+          left,
+          top,
+          width: config.size,
+          height: config.size,
+          borderRadius: config.size / 2,
+          backgroundColor: config.color,
+        },
+        style,
+      ]}
+    />
+  );
 }
 
-function Star({ config }: { config: StarConfig }) {
+function Star({ config, cardW, cardH }: { config: StarConfig; cardW: number; cardH: number }) {
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0);
 
@@ -129,18 +142,24 @@ function Star({ config }: { config: StarConfig }) {
     );
   }, []);
 
-  const containerStyle = useAnimatedStyle(() => ({
-    position: 'absolute' as const,
-    left: config.x,
-    top: config.y,
-    width: config.size * 2,
-    height: config.size * 2,
+  const animStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
     transform: [{ scale: scale.value }],
   }));
 
   return (
-    <Animated.View style={containerStyle}>
+    <Animated.View
+      style={[
+        {
+          position: 'absolute',
+          left: config.xPct * cardW,
+          top: config.yPct * cardH,
+          width: config.size * 2,
+          height: config.size * 2,
+        },
+        animStyle,
+      ]}
+    >
       <View
         style={{
           position: 'absolute',
@@ -173,6 +192,12 @@ interface ClaimSparklesProps {
 export function ClaimSparkles({ color, onFinish }: ClaimSparklesProps) {
   const sparks = useMemo(() => generateSparks(color), []);
   const stars = useMemo(() => generateStars(color), []);
+  const [layout, setLayout] = useState<{ w: number; h: number } | null>(null);
+
+  const handleLayout = (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    setLayout({ w: width, h: height });
+  };
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -182,13 +207,17 @@ export function ClaimSparkles({ color, onFinish }: ClaimSparklesProps) {
   }, []);
 
   return (
-    <View style={styles.overlay} pointerEvents="none">
-      {sparks.map((s, i) => (
-        <Spark key={i} config={s} />
-      ))}
-      {stars.map((s, i) => (
-        <Star key={`star-${i}`} config={s} />
-      ))}
+    <View style={styles.overlay} pointerEvents="none" onLayout={handleLayout}>
+      {layout && (
+        <>
+          {sparks.map((s, i) => (
+            <Spark key={i} config={s} cardW={layout.w} cardH={layout.h} />
+          ))}
+          {stars.map((s, i) => (
+            <Star key={`star-${i}`} config={s} cardW={layout.w} cardH={layout.h} />
+          ))}
+        </>
+      )}
     </View>
   );
 }
