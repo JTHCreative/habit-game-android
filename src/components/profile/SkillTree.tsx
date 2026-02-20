@@ -115,15 +115,11 @@ export function SkillTree() {
                             },
                           ]}
                         >
-                          {isOwned ? (
-                            <DynamicIcon name={pin.icon} size={20} color={catColor} />
-                          ) : (
-                            <FontAwesome
-                              name="lock"
-                              size={14}
-                              color={prevUnlocked ? colors.textSecondary : colors.textMuted}
-                            />
-                          )}
+                          <DynamicIcon
+                            name={pin.icon}
+                            size={isOwned ? 20 : 18}
+                            color={isOwned ? catColor : (prevUnlocked ? colors.textSecondary : colors.textMuted)}
+                          />
                         </View>
                         <View style={styles.tierInfo}>
                           <View style={styles.tierNameRow}>

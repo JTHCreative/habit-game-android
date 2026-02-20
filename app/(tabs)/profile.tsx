@@ -198,6 +198,52 @@ export default function ProfileScreen() {
           </View>
 
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            <FontAwesome name="sitemap" size={16} color={colors.text} />{' '}
+            Rewards & Pins
+          </Text>
+          <PinCollection />
+          <View style={{ marginTop: spacing.md }}>
+            <SkillTree />
+          </View>
+
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Active Habits ({habits.filter((h) => h.isActive).length})
+          </Text>
+          {habits.filter((h) => h.isActive).length === 0 ? (
+            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+              No active habits. Go to the Home tab to add some!
+            </Text>
+          ) : (
+            habits
+              .filter((h) => h.isActive)
+              .map((habit) => (
+                <Card key={habit.id} style={styles.habitSummary}>
+                  <View style={styles.habitSummaryRow}>
+                    <View
+                      style={[
+                        styles.habitDot,
+                        { backgroundColor: habit.color },
+                      ]}
+                    />
+                    <View style={styles.habitSummaryInfo}>
+                      <Text style={[styles.habitName, { color: colors.text }]}>
+                        {habit.name}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.habitMeta,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        {habit.currentStreak} day streak | {habit.completedDates.length} total
+                      </Text>
+                    </View>
+                  </View>
+                </Card>
+              ))
+          )}
+
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
             Achievements ({unlockedAchievements.length}/{achievements.length})
           </Text>
           <ProgressBar
@@ -253,55 +299,6 @@ export default function ProfileScreen() {
               </View>
             ))}
           </View>
-
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            <MaterialCommunityIcons name="pin" size={18} color={colors.text} />{' '}
-            Pin Collection
-          </Text>
-          <PinCollection />
-
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            <FontAwesome name="sitemap" size={16} color={colors.text} />{' '}
-            Reward Tree
-          </Text>
-          <SkillTree />
-
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Active Habits ({habits.filter((h) => h.isActive).length})
-          </Text>
-          {habits.filter((h) => h.isActive).length === 0 ? (
-            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-              No active habits. Go to the Home tab to add some!
-            </Text>
-          ) : (
-            habits
-              .filter((h) => h.isActive)
-              .map((habit) => (
-                <Card key={habit.id} style={styles.habitSummary}>
-                  <View style={styles.habitSummaryRow}>
-                    <View
-                      style={[
-                        styles.habitDot,
-                        { backgroundColor: habit.color },
-                      ]}
-                    />
-                    <View style={styles.habitSummaryInfo}>
-                      <Text style={[styles.habitName, { color: colors.text }]}>
-                        {habit.name}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.habitMeta,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        {habit.currentStreak} day streak | {habit.completedDates.length} total
-                      </Text>
-                    </View>
-                  </View>
-                </Card>
-              ))
-          )}
         </View>
       </ScrollView>
     </View>
