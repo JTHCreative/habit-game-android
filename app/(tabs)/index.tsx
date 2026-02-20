@@ -310,13 +310,7 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <PlayerHeader
-          completedCount={completedDailyToday.length}
-          totalCount={activeDailyHabits.length}
-          allComplete={allDailyComplete}
-          bonusTickets={DAILY_BONUS_TICKETS}
-          bonusXP={DAILY_BONUS_XP}
-        />
+        <PlayerHeader />
 
         <View style={styles.body}>
           <View style={styles.sectionHeader}>

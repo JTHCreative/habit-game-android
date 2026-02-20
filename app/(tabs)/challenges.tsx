@@ -5,13 +5,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { AchievementCard } from '@/src/components/achievements/AchievementCard';
 import { ChallengeCard } from '@/src/components/challenges/ChallengeCard';
 import { ProgressBar } from '@/src/components/common/ProgressBar';
+import { TicketBadge } from '@/src/components/common/TicketBadge';
 import { useChallengeStore } from '@/src/stores/useChallengeStore';
 import { useUserStore } from '@/src/stores/useUserStore';
+import { useHabitStore } from '@/src/stores/useHabitStore';
 import Colors, { gradients } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useAchievementChecker } from '@/src/hooks/useAchievementChecker';
+import { getPSTDateString, isHabitCompletedForPeriod } from '@/src/utils/levels';
+
+const DAILY_BONUS_TICKETS = 10;
+const DAILY_BONUS_XP = 25;
 
 export default function ChallengesScreen() {
   const colorScheme = useColorScheme() ?? 'light';
@@ -21,6 +27,15 @@ export default function ChallengesScreen() {
   const incrementMissionsCompleted = useUserStore((s) => s.incrementMissionsCompleted);
   const achievements = useUserStore((s) => s.achievements);
   const checkAchievements = useAchievementChecker();
+
+  const habits = useHabitStore((s) => s.habits);
+  const today = getPSTDateString();
+  const activeDailyHabits = habits.filter((h) => h.isActive && h.frequency === 'daily');
+  const completedDailyToday = activeDailyHabits.filter((h) =>
+    isHabitCompletedForPeriod(h.frequency, h.completedDates)
+  );
+  const allDailyComplete = activeDailyHabits.length > 0 && completedDailyToday.length >= activeDailyHabits.length;
+  const hasHabits = activeDailyHabits.length > 0;
 
   const dailyChallenges = useChallengeStore((s) => s.dailyChallenges);
   const weeklyChallenges = useChallengeStore((s) => s.weeklyChallenges);
@@ -69,6 +84,39 @@ export default function ChallengesScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Daily Completion Bonus */}
+        {hasHabits && (
+          <View style={[styles.bonusCard, { backgroundColor: colors.cardBackground, borderColor: colors.borderLight }]}>
+            <View style={styles.bonusIconRow}>
+              <FontAwesome
+                name={allDailyComplete ? 'check-circle' : 'star'}
+                size={32}
+                color={allDailyComplete ? '#4CAF50' : '#D4A44C'}
+              />
+            </View>
+            <Text style={[styles.bonusLabel, allDailyComplete && styles.bonusLabelDone, { color: colors.text }]}>
+              {allDailyComplete ? 'Bonus Earned!' : 'Daily Bonus'}
+            </Text>
+            <View style={styles.bonusProgress}>
+              <Text style={[styles.bonusProgressText, { color: colors.textSecondary }]}>
+                {completedDailyToday.length}/{activeDailyHabits.length} daily habits
+              </Text>
+              <ProgressBar
+                progress={activeDailyHabits.length > 0 ? completedDailyToday.length / activeDailyHabits.length : 0}
+                height={6}
+                gradientColors={allDailyComplete ? ['#4CAF50', '#66BB6A'] : ['#D4A44C', '#E8C97A']}
+                backgroundColor={colors.inputBackground}
+              />
+            </View>
+            <View style={styles.bonusRewardRow}>
+              <FontAwesome name="ticket" size={14} color="#D4A44C" />
+              <Text style={[styles.bonusRewardVal, { color: colors.textSecondary }]}>+{DAILY_BONUS_TICKETS}</Text>
+              <FontAwesome name="bolt" size={14} color="#E87D2F" />
+              <Text style={[styles.bonusRewardVal, { color: colors.textSecondary }]}>+{DAILY_BONUS_XP} XP</Text>
+            </View>
+          </View>
+        )}
+
         {/* Daily Challenges */}
         <View style={styles.challengeSection}>
           <View style={styles.challengeSectionHeader}>
@@ -240,5 +288,43 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     fontWeight: '600',
     marginTop: spacing.xs,
+  },
+
+  // ── Daily bonus card ──────────────────────────────────
+  bonusCard: {
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    padding: spacing.md,
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  bonusIconRow: {
+    marginBottom: 2,
+  },
+  bonusLabel: {
+    fontSize: fontSize.lg,
+    fontWeight: '800',
+  },
+  bonusLabelDone: {
+    color: '#4CAF50',
+  },
+  bonusProgress: {
+    width: '100%',
+    gap: 4,
+  },
+  bonusProgressText: {
+    fontSize: fontSize.md,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  bonusRewardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  bonusRewardVal: {
+    fontSize: fontSize.sm,
+    fontWeight: '700',
   },
 });

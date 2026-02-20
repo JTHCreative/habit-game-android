@@ -287,17 +287,26 @@ export const ALL_PINS: Pin[] = [
 
 // ── Store ────────────────────────────────────────────────
 
+export const PIN_BOARD_SLOTS = 5;
+
 interface PinState {
   collected: CollectedPin[];
+  /** 5 display slots – each holds a pinId or null */
+  board: (string | null)[];
   purchasePin: (pinId: string) => boolean;
   hasPin: (pinId: string) => boolean;
   collectedCount: () => number;
+  /** Assign a pin to a board slot (0-4). Pass null to clear. */
+  setBoardSlot: (slot: number, pinId: string | null) => void;
 }
+
+const EMPTY_BOARD: (string | null)[] = [null, null, null, null, null];
 
 export const usePinStore = create<PinState>()(
   persist(
     (set, get) => ({
       collected: [] as CollectedPin[],
+      board: EMPTY_BOARD,
 
       purchasePin: (pinId: string) => {
         if (get().collected.some((c) => c.pinId === pinId)) return false;
@@ -314,10 +323,36 @@ export const usePinStore = create<PinState>()(
         get().collected.some((c) => c.pinId === pinId),
 
       collectedCount: () => get().collected.length,
+
+      setBoardSlot: (slot: number, pinId: string | null) => {
+        if (slot < 0 || slot >= PIN_BOARD_SLOTS) return;
+        // If assigning a pin, make sure it's collected and not already on board
+        if (pinId && !get().hasPin(pinId)) return;
+        set((state) => {
+          const board = [...state.board];
+          // Remove pinId from any existing slot first
+          if (pinId) {
+            for (let i = 0; i < board.length; i++) {
+              if (board[i] === pinId) board[i] = null;
+            }
+          }
+          board[slot] = pinId;
+          return { board };
+        });
+      },
     }),
     {
       name: 'pin-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      merge: (persisted, current) => {
+        const state = persisted as any;
+        if (!state) return current as PinState;
+        return {
+          ...(current as PinState),
+          collected: state.collected || [],
+          board: state.board || EMPTY_BOARD,
+        };
+      },
     }
   )
 );

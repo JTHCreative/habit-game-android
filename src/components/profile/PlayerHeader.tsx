@@ -1,218 +1,234 @@
-import React from 'react';
-import { StyleSheet, View, Image, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Image, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { Text } from '@/components/Themed';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ProgressBar } from '../common/ProgressBar';
 import { TicketBadge } from '../common/TicketBadge';
+import { DynamicIcon } from '../common/DynamicIcon';
 import { useUserStore } from '@/src/stores/useUserStore';
-import { useChallengeStore } from '@/src/stores/useChallengeStore';
-import { gradients } from '@/constants/Colors';
+import { usePinStore, ALL_PINS, PIN_BOARD_SLOTS } from '@/src/stores/usePinStore';
+import Colors, { gradients } from '@/constants/Colors';
+import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
+import { Pin, PinRarity } from '@/src/types';
 
-interface PlayerHeaderProps {
-  completedCount?: number;
-  totalCount?: number;
-  allComplete?: boolean;
-  bonusTickets?: number;
-  bonusXP?: number;
-}
+const RARITY_COLORS: Record<PinRarity, string> = {
+  common: '#8B9DAF',
+  uncommon: '#4CAF50',
+  rare: '#3B82F6',
+  legendary: '#D4A44C',
+};
 
-export function PlayerHeader({
-  completedCount = 0,
-  totalCount = 0,
-  allComplete = false,
-  bonusTickets = 10,
-  bonusXP = 25,
-}: PlayerHeaderProps) {
+export function PlayerHeader() {
   const profile = useUserStore((s) => s.profile);
   const router = useRouter();
+  const colorScheme = useColorScheme() ?? 'light';
+  const colors = Colors[colorScheme];
   const xpProgress = profile.xpToNextLevel > 0
     ? profile.currentXP / profile.xpToNextLevel
     : 0;
 
-  const dailyChallenges = useChallengeStore((s) => s.dailyChallenges);
-  const weeklyChallenges = useChallengeStore((s) => s.weeklyChallenges);
+  const board = usePinStore((s) => s.board);
+  const collected = usePinStore((s) => s.collected);
+  const setBoardSlot = usePinStore((s) => s.setBoardSlot);
 
-  const dailyCompleted = dailyChallenges.filter(
-    (c) => c.status === 'completed' || c.status === 'claimed'
-  ).length;
-  const weeklyCompleted = weeklyChallenges.filter(
-    (c) => c.status === 'completed' || c.status === 'claimed'
-  ).length;
+  const [editingSlot, setEditingSlot] = useState<number | null>(null);
 
-  const hasChallenges = dailyChallenges.length > 0 || weeklyChallenges.length > 0;
-  const hasHabits = totalCount > 0;
+  const collectedPins: Pin[] = ALL_PINS.filter((p) =>
+    collected.some((c) => c.pinId === p.id)
+  );
+
+  const getBoardPin = (slot: number): Pin | undefined => {
+    const pinId = board[slot];
+    if (!pinId) return undefined;
+    return ALL_PINS.find((p) => p.id === pinId);
+  };
 
   return (
-    <LinearGradient
-      colors={gradients.primary}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
-      <View style={styles.topRow}>
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
-            {profile.profileImageUri ? (
-              <Image
-                source={{ uri: profile.profileImageUri }}
-                style={styles.avatarImage}
-              />
-            ) : (
-              <FontAwesome name="user" size={28} color="#D4A44C" />
-            )}
-          </View>
-          <View style={styles.levelBadge}>
-            <Text style={styles.levelText}>{profile.level}</Text>
-          </View>
-        </View>
-
-        <View style={styles.info}>
-          <Text style={styles.name}>{profile.displayName}</Text>
-          <Text style={styles.title}>{profile.title}</Text>
-        </View>
-
-        <TicketBadge amount={profile.tickets} size="medium" />
-      </View>
-
-      <View style={styles.xpSection}>
-        <View style={styles.xpHeader}>
-          <Text style={styles.xpLabel}>
-            <FontAwesome name="bolt" size={12} color="#D4A44C" /> XP
-          </Text>
-          <Text style={styles.xpNumbers}>
-            {profile.currentXP} / {profile.xpToNextLevel}
-          </Text>
-        </View>
-        <ProgressBar
-          progress={xpProgress}
-          height={8}
-          gradientColors={['#D4A44C', '#E8C97A']}
-          backgroundColor="rgba(255,255,255,0.15)"
-        />
-      </View>
-
-      {(hasChallenges || hasHabits) ? (
-        <View style={styles.dashboard}>
-          {/* Left card – Daily Completion Bonus */}
-          <View style={styles.bonusCard}>
-            <FontAwesome
-              name={allComplete ? 'check-circle' : 'star'}
-              size={36}
-              color={allComplete ? '#4CAF50' : '#D4A44C'}
-            />
-            <Text style={[styles.bonusLabel, allComplete && styles.bonusLabelDone]}>
-              {allComplete ? 'Bonus Earned!' : 'Daily Bonus'}
-            </Text>
-            {hasHabits && (
-              <View style={styles.bonusProgress}>
-                <Text style={styles.bonusProgressText}>
-                  {completedCount}/{totalCount} daily habits
-                </Text>
-                <ProgressBar
-                  progress={totalCount > 0 ? completedCount / totalCount : 0}
-                  height={6}
-                  gradientColors={allComplete ? ['#4CAF50', '#66BB6A'] : ['#D4A44C', '#E8C97A']}
-                  backgroundColor="rgba(255,255,255,0.12)"
+    <>
+      <LinearGradient
+        colors={gradients.primary}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.container}
+      >
+        <View style={styles.topRow}>
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatar}>
+              {profile.profileImageUri ? (
+                <Image
+                  source={{ uri: profile.profileImageUri }}
+                  style={styles.avatarImage}
                 />
+              ) : (
+                <FontAwesome name="user" size={28} color="#D4A44C" />
+              )}
+            </View>
+            <View style={styles.levelBadge}>
+              <Text style={styles.levelText}>{profile.level}</Text>
+            </View>
+          </View>
+
+          <View style={styles.info}>
+            <Text style={styles.name}>{profile.displayName}</Text>
+            <Text style={styles.title}>{profile.title}</Text>
+          </View>
+
+          <TicketBadge amount={profile.tickets} size="medium" />
+        </View>
+
+        <View style={styles.xpSection}>
+          <View style={styles.xpHeader}>
+            <Text style={styles.xpLabel}>
+              <FontAwesome name="bolt" size={12} color="#D4A44C" /> XP
+            </Text>
+            <Text style={styles.xpNumbers}>
+              {profile.currentXP} / {profile.xpToNextLevel}
+            </Text>
+          </View>
+          <ProgressBar
+            progress={xpProgress}
+            height={8}
+            gradientColors={['#D4A44C', '#E8C97A']}
+            backgroundColor="rgba(255,255,255,0.15)"
+          />
+        </View>
+
+        {/* Pin Board */}
+        <View style={styles.pinBoardSection}>
+          <View style={styles.pinBoardHeader}>
+            <MaterialCommunityIcons name="pin" size={14} color="rgba(255,255,255,0.6)" />
+            <Text style={styles.pinBoardTitle}>Pin Board</Text>
+          </View>
+          <View style={styles.pinBoardSlots}>
+            {Array.from({ length: PIN_BOARD_SLOTS }).map((_, i) => {
+              const pin = getBoardPin(i);
+              return (
+                <TouchableOpacity
+                  key={i}
+                  style={[
+                    styles.pinSlot,
+                    pin && { borderColor: pin.color + '60' },
+                  ]}
+                  activeOpacity={0.7}
+                  onPress={() => setEditingSlot(i)}
+                >
+                  {pin ? (
+                    <View style={[styles.pinSlotFilled, { backgroundColor: pin.color + '20' }]}>
+                      <DynamicIcon name={pin.icon} size={22} color={pin.color} />
+                    </View>
+                  ) : (
+                    <View style={styles.pinSlotEmpty}>
+                      <FontAwesome name="plus" size={12} color="rgba(255,255,255,0.25)" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      </LinearGradient>
+
+      {/* Pin picker modal */}
+      <Modal
+        visible={editingSlot !== null}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setEditingSlot(null)}
+      >
+        <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+            <TouchableOpacity onPress={() => setEditingSlot(null)}>
+              <Text style={[styles.modalCancel, { color: colors.textSecondary }]}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Choose a Pin
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                if (editingSlot !== null) {
+                  setBoardSlot(editingSlot, null);
+                  setEditingSlot(null);
+                }
+              }}
+            >
+              <Text style={[styles.modalClear, { color: '#EF4444' }]}>
+                Clear
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            style={styles.modalBody}
+            contentContainerStyle={styles.modalBodyContent}
+          >
+            {collectedPins.length === 0 ? (
+              <View style={styles.emptyPins}>
+                <MaterialCommunityIcons name="pin-off" size={48} color={colors.textMuted} />
+                <Text style={[styles.emptyPinsTitle, { color: colors.textSecondary }]}>
+                  No pins collected yet
+                </Text>
+                <Text style={[styles.emptyPinsText, { color: colors.textMuted }]}>
+                  Purchase pins from the Rewards shop to display them here!
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.pinPickerGrid}>
+                {collectedPins.map((pin) => {
+                  const isOnBoard = board.includes(pin.id);
+                  const rarityColor = RARITY_COLORS[pin.rarity];
+                  return (
+                    <TouchableOpacity
+                      key={pin.id}
+                      style={[
+                        styles.pinPickerItem,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: isOnBoard ? colors.border : pin.color,
+                        },
+                      ]}
+                      activeOpacity={0.7}
+                      disabled={isOnBoard && !board.includes(pin.id)}
+                      onPress={() => {
+                        if (editingSlot !== null) {
+                          setBoardSlot(editingSlot, pin.id);
+                          setEditingSlot(null);
+                        }
+                      }}
+                    >
+                      <View style={[styles.pinPickerCircle, { backgroundColor: pin.color + '18', borderColor: pin.color }]}>
+                        <DynamicIcon name={pin.icon} size={24} color={pin.color} />
+                      </View>
+                      <Text
+                        style={[styles.pinPickerName, { color: colors.text }]}
+                        numberOfLines={1}
+                      >
+                        {pin.name}
+                      </Text>
+                      <View style={[styles.pinPickerRarity, { backgroundColor: rarityColor + '20' }]}>
+                        <Text style={[styles.pinPickerRarityText, { color: rarityColor }]}>
+                          {pin.rarity}
+                        </Text>
+                      </View>
+                      {isOnBoard && (
+                        <Text style={[styles.pinPickerOnBoard, { color: colors.textMuted }]}>
+                          On board
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             )}
-            <View style={styles.bonusRewardRow}>
-              <FontAwesome name="ticket" size={16} color="#D4A44C" />
-              <Text style={styles.bonusRewardVal}>+{bonusTickets}</Text>
-              <FontAwesome name="bolt" size={16} color="#E87D2F" />
-              <Text style={styles.bonusRewardVal}>+{bonusXP} XP</Text>
-            </View>
-          </View>
-
-          {/* Right card – Challenge status */}
-          <TouchableOpacity
-            style={styles.challengeCard}
-            activeOpacity={0.7}
-            onPress={() => router.push('/challenges')}
-          >
-            {/* Decorative corner icons */}
-            <View style={styles.challengeDecoTopLeft}>
-              <FontAwesome name="bookmark" size={10} color="rgba(167,139,250,0.3)" />
-            </View>
-            <View style={styles.challengeDecoTopRight}>
-              <FontAwesome name="bookmark" size={10} color="rgba(78,205,196,0.3)" />
-            </View>
-
-            {/* Trophy header */}
-            <View style={styles.challengeHeader}>
-              <FontAwesome name="trophy" size={20} color="#D4A44C" />
-              <Text style={styles.challengeTitle}>Challenges</Text>
-            </View>
-
-            {/* Daily row */}
-            <View style={styles.challengeStatusRow}>
-              <View style={styles.challengeIconWrap}>
-                <FontAwesome name="certificate" size={18} color="#4ECDC4" />
-              </View>
-              <Text style={styles.challengeStatusLabel}>Daily</Text>
-              <Text style={[
-                styles.challengeStatusValue,
-                dailyCompleted >= dailyChallenges.length && dailyChallenges.length > 0 && styles.challengeStatusDone,
-              ]}>
-                {dailyCompleted}/{dailyChallenges.length}
-              </Text>
-            </View>
-
-            {/* Weekly row */}
-            <View style={styles.challengeStatusRow}>
-              <View style={styles.challengeIconWrap}>
-                <FontAwesome name="shield" size={18} color="#A78BFA" />
-              </View>
-              <Text style={styles.challengeStatusLabel}>Weekly</Text>
-              <Text style={[
-                styles.challengeStatusValue,
-                weeklyCompleted >= weeklyChallenges.length && weeklyChallenges.length > 0 && styles.challengeStatusDone,
-              ]}>
-                {weeklyCompleted}/{weeklyChallenges.length}
-              </Text>
-            </View>
-
-            {/* Bottom decorative ribbon */}
-            <View style={styles.challengeRibbon}>
-              <FontAwesome name="star" size={8} color="rgba(212,164,76,0.5)" />
-              <View style={styles.ribbonLine} />
-              <FontAwesome name="diamond" size={7} color="rgba(212,164,76,0.4)" />
-              <View style={styles.ribbonLine} />
-              <FontAwesome name="star" size={8} color="rgba(212,164,76,0.5)" />
-            </View>
-
-            <Text style={styles.challengeTapHint}>Tap to view</Text>
-          </TouchableOpacity>
+          </ScrollView>
         </View>
-      ) : (
-        <TouchableOpacity
-          style={styles.statsRow}
-          activeOpacity={0.7}
-          onPress={() => router.push('/history')}
-        >
-          <View style={styles.stat}>
-            <FontAwesome name="fire" size={16} color="#E87D2F" />
-            <Text style={styles.statValue}>{profile.currentStreak}</Text>
-            <Text style={styles.statLabel}>Streak</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.stat}>
-            <FontAwesome name="check-circle" size={16} color="#4CAF50" />
-            <Text style={styles.statValue}>{profile.totalHabitsCompleted}</Text>
-            <Text style={styles.statLabel}>Done</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.stat}>
-            <FontAwesome name="trophy" size={16} color="#D4A44C" />
-            <Text style={styles.statValue}>{profile.totalMissionsCompleted}</Text>
-            <Text style={styles.statLabel}>Challenges</Text>
-          </View>
-        </TouchableOpacity>
-      )}
-    </LinearGradient>
+      </Modal>
+    </>
   );
 }
 
@@ -296,155 +312,134 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ── Two-card dashboard ──────────────────────────────
-  dashboard: {
-    flexDirection: 'row',
+  // ── Pin Board ─────────────────────────────────────────
+  pinBoardSection: {
     gap: spacing.sm,
   },
-
-  // Left card – bonus
-  bonusCard: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
-  bonusLabel: {
-    color: 'rgba(255,255,255,0.95)',
-    fontSize: fontSize.lg,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  bonusLabelDone: {
-    color: '#4CAF50',
-  },
-  bonusProgress: {
-    width: '100%',
-    gap: 4,
-  },
-  bonusProgressText: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: fontSize.md,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  bonusRewardRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 4,
-  },
-  bonusRewardVal: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: fontSize.sm,
-    fontWeight: '700',
-  },
-
-  // Right card – challenges
-  challengeCard: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: 'rgba(212,164,76,0.15)',
-    overflow: 'hidden',
-  },
-  challengeDecoTopLeft: {
-    position: 'absolute',
-    top: 6,
-    left: 6,
-  },
-  challengeDecoTopRight: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-  },
-  challengeHeader: {
+  pinBoardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
   },
-  challengeTitle: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: fontSize.sm,
-    fontWeight: '700',
-  },
-  challengeIconWrap: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  challengeStatusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    width: '100%',
-    justifyContent: 'center',
-  },
-  challengeStatusLabel: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-  },
-  challengeStatusValue: {
-    color: '#FFF',
-    fontSize: fontSize.lg,
-    fontWeight: '800',
-  },
-  challengeStatusDone: {
-    color: '#4CAF50',
-  },
-  challengeRibbon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
-  },
-  ribbonLine: {
-    width: 16,
-    height: 1,
-    backgroundColor: 'rgba(212,164,76,0.25)',
-  },
-  challengeTapHint: {
-    color: 'rgba(255,255,255,0.35)',
-    fontSize: fontSize.xs,
-    fontWeight: '500',
-  },
-
-  // ── Fallback stats row ──────────────────────────────
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-  },
-  stat: {
-    alignItems: 'center',
-    gap: 2,
-  },
-  statValue: {
-    color: '#FFF',
-    fontSize: fontSize.lg,
-    fontWeight: '700',
-  },
-  statLabel: {
+  pinBoardTitle: {
     color: 'rgba(255,255,255,0.6)',
     fontSize: fontSize.xs,
-    fontWeight: '500',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  statDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+  pinBoardSlots: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  pinSlot: {
+    flex: 1,
+    aspectRatio: 1,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  pinSlotFilled: {
+    width: '100%',
+    height: '100%',
+    borderRadius: borderRadius.lg - 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pinSlotEmpty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // ── Pin picker modal ──────────────────────────────────
+  modalContainer: {
+    flex: 1,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderBottomWidth: 1,
+  },
+  modalCancel: {
+    fontSize: fontSize.md,
+  },
+  modalTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: '700',
+  },
+  modalClear: {
+    fontSize: fontSize.md,
+    fontWeight: '600',
+  },
+  modalBody: {
+    flex: 1,
+    padding: spacing.md,
+  },
+  modalBodyContent: {
+    paddingBottom: spacing.xxl * 2,
+  },
+  emptyPins: {
+    alignItems: 'center',
+    paddingVertical: spacing.xxl,
+    gap: spacing.sm,
+  },
+  emptyPinsTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: '600',
+  },
+  emptyPinsText: {
+    fontSize: fontSize.sm,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  pinPickerGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    justifyContent: 'space-between',
+  },
+  pinPickerItem: {
+    width: '47%' as any,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1.5,
+    padding: spacing.md,
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  pinPickerCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pinPickerName: {
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  pinPickerRarity: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+  },
+  pinPickerRarityText: {
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  pinPickerOnBoard: {
+    fontSize: fontSize.xs,
+    fontWeight: '600',
+    fontStyle: 'italic',
   },
 });
