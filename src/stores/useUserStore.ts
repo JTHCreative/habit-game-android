@@ -8,6 +8,7 @@ import { getXPForLevel, getTitleForLevel, calculateLevelFromTotalXP, getPSTDateS
 interface UserState {
   profile: UserProfile;
   achievements: Achievement[];
+  pendingLevelUp: number | null;
   addXP: (amount: number) => void;
   removeXP: (amount: number) => void;
   addTickets: (amount: number) => void;
@@ -21,6 +22,7 @@ interface UserState {
   applyDecay: (habits: Habit[]) => number;
   setDisplayName: (name: string) => void;
   setProfileImage: (uri: string) => void;
+  clearPendingLevelUp: () => void;
   resetProfile: () => void;
 }
 
@@ -125,9 +127,11 @@ export const useUserStore = create<UserState>()(
     (set) => ({
       profile: createDefaultProfile(),
       achievements: DEFAULT_ACHIEVEMENTS,
+      pendingLevelUp: null,
 
       addXP: (amount: number) =>
         set((state) => {
+          const oldLevel = state.profile.level;
           let { level, currentXP, xpToNextLevel } = state.profile;
           const totalXPEarned = state.profile.totalXPEarned + amount;
           currentXP += amount;
@@ -141,6 +145,7 @@ export const useUserStore = create<UserState>()(
           const title = getTitleForLevel(level);
 
           return {
+            pendingLevelUp: level > oldLevel ? level : state.pendingLevelUp,
             profile: {
               ...state.profile,
               level,
@@ -247,6 +252,7 @@ export const useUserStore = create<UserState>()(
           const xpAmount = achievement.xpReward;
           const ticketAmount = achievement.ticketReward;
 
+          const oldLevel = state.profile.level;
           let { level, currentXP, xpToNextLevel } = state.profile;
           const totalXPEarned = state.profile.totalXPEarned + xpAmount;
           currentXP += xpAmount;
@@ -260,6 +266,7 @@ export const useUserStore = create<UserState>()(
           const title = getTitleForLevel(level);
 
           return {
+            pendingLevelUp: level > oldLevel ? level : state.pendingLevelUp,
             profile: {
               ...state.profile,
               level,
@@ -389,15 +396,22 @@ export const useUserStore = create<UserState>()(
           },
         })),
 
+      clearPendingLevelUp: () => set({ pendingLevelUp: null }),
+
       resetProfile: () =>
         set({
           profile: createDefaultProfile(),
           achievements: DEFAULT_ACHIEVEMENTS,
+          pendingLevelUp: null,
         }),
     }),
     {
       name: 'user-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        profile: state.profile,
+        achievements: state.achievements,
+      }),
       merge: (persisted, current) => {
         const state = persisted as any;
         if (!state || !state.profile) return current as UserState;

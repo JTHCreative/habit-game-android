@@ -10,6 +10,8 @@ import { useAppFont } from '@/components/Themed';
 import { useDecayCheck } from '@/src/hooks/useDecayCheck';
 import { useRewardStore } from '@/src/stores/useRewardStore';
 import { useChallengeStore } from '@/src/stores/useChallengeStore';
+import { useUserStore } from '@/src/stores/useUserStore';
+import { LevelUpSplash } from '@/src/components/common/LevelUpSplash';
 
 const ICON_BOX = { width: 28, height: 28, alignItems: 'center' as const, justifyContent: 'center' as const };
 
@@ -90,74 +92,82 @@ export default function TabLayout() {
     dailyChallenges.some((c) => c.status === 'completed') ||
     weeklyChallenges.some((c) => c.status === 'completed');
 
+  const pendingLevelUp = useUserStore((s) => s.pendingLevelUp);
+  const clearPendingLevelUp = useUserStore((s) => s.clearPendingLevelUp);
+
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: colors.tint,
-        tabBarInactiveTintColor: colors.tabIconDefault,
-        tabBarStyle: {
-          backgroundColor: colors.tabBarBackground,
-          borderTopColor: colors.border,
-          borderTopWidth: 1,
-          paddingTop: 4,
-          height: 88,
-          marginBottom: 24,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-          ...(bold ? { fontFamily: bold } : {}),
-        },
-        headerShown: false,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Habits',
-          tabBarIcon: ({ color }) => <TabBarIcon name="check-square-o" color={color} />,
+    <>
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: colors.tint,
+          tabBarInactiveTintColor: colors.tabIconDefault,
+          tabBarStyle: {
+            backgroundColor: colors.tabBarBackground,
+            borderTopColor: colors.border,
+            borderTopWidth: 1,
+            paddingTop: 4,
+            height: 88,
+            marginBottom: 24,
+          },
+          tabBarLabelStyle: {
+            fontSize: 11,
+            fontWeight: '600',
+            ...(bold ? { fontFamily: bold } : {}),
+          },
+          headerShown: false,
         }}
-      />
-      <Tabs.Screen
-        name="rewards"
-        options={{
-          title: 'Rewards',
-          tabBarIcon: ({ color }) => (
-            <View style={ICON_BOX}>
-              <MaterialCommunityIcons size={24} name="store" color={color} />
-              {hasUnredeemedRewards && <AlertBadge />}
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="history"
-        options={{
-          title: 'History',
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="history" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="challenges"
-        options={{
-          title: 'Challenges',
-          tabBarIcon: ({ color }) => (
-            <View style={ICON_BOX}>
-              <FontAwesome size={22} name="bullseye" color={color} />
-              {hasClaimableChallenges && <AlertBadge />}
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Habits',
+            tabBarIcon: ({ color }) => <TabBarIcon name="check-square-o" color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="rewards"
+          options={{
+            title: 'Rewards',
+            tabBarIcon: ({ color }) => (
+              <View style={ICON_BOX}>
+                <MaterialCommunityIcons size={24} name="store" color={color} />
+                {hasUnredeemedRewards && <AlertBadge />}
+              </View>
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="history"
+          options={{
+            title: 'History',
+            tabBarIcon: ({ color }) => (
+              <TabBarIcon name="history" color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="challenges"
+          options={{
+            title: 'Challenges',
+            tabBarIcon: ({ color }) => (
+              <View style={ICON_BOX}>
+                <FontAwesome size={22} name="bullseye" color={color} />
+                {hasClaimableChallenges && <AlertBadge />}
+              </View>
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: 'Profile',
+            tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
+          }}
+        />
+      </Tabs>
+      {pendingLevelUp !== null && (
+        <LevelUpSplash level={pendingLevelUp} onFinish={clearPendingLevelUp} />
+      )}
+    </>
   );
 }
