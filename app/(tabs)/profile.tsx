@@ -198,13 +198,16 @@ export default function ProfileScreen() {
           </View>
 
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            <FontAwesome name="sitemap" size={16} color={colors.text} />{' '}
-            Rewards & Pins
+            Pins
+          </Text>
+          <Text style={[styles.subSectionTitle, { color: colors.textSecondary }]}>
+            Pin Collection
           </Text>
           <PinCollection />
-          <View style={{ marginTop: spacing.md }}>
-            <SkillTree />
-          </View>
+          <Text style={[styles.subSectionTitle, { color: colors.textSecondary, marginTop: spacing.lg }]}>
+            Skill Tree
+          </Text>
+          <SkillTree />
 
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             Active Habits ({habits.filter((h) => h.isActive).length})
@@ -413,6 +416,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: spacing.lg,
     marginBottom: spacing.md,
+  },
+  subSectionTitle: {
+    fontSize: fontSize.md,
+    fontWeight: '600',
+    marginBottom: spacing.sm,
   },
   statsGrid: {
     flexDirection: 'row',
