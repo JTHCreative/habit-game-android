@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   ScrollView,
@@ -22,6 +22,7 @@ import { DynamicIcon } from '@/src/components/common/DynamicIcon';
 import { HabitCategory, HabitFrequency, HabitType } from '@/src/types';
 import { useCategoryStore, DEFAULT_CATEGORY_IDS } from '@/src/stores/useCustomCategoryStore';
 import { useMissionStore } from '@/src/stores/useMissionStore';
+import { useChallengeStore } from '@/src/stores/useChallengeStore';
 import { useAchievementChecker } from '@/src/hooks/useAchievementChecker';
 import {
   getPSTDateString,
@@ -90,6 +91,17 @@ export default function HomeScreen() {
   const onStreakUpdated = useMissionStore((s) => s.onStreakUpdated);
   const checkAchievements = useAchievementChecker();
 
+  const refreshChallenges = useChallengeStore((s) => s.refreshChallenges);
+  const recordLogin = useChallengeStore((s) => s.recordLogin);
+  const onChallengeHabitCompleted = useChallengeStore((s) => s.onHabitCompleted);
+  const onChallengeStreakUpdated = useChallengeStore((s) => s.onStreakUpdated);
+
+  // Refresh challenges and record login on mount (app open)
+  useEffect(() => {
+    refreshChallenges();
+    recordLogin();
+  }, []);
+
   const categories = useCategoryStore((s) => s.categories);
   const addCategory = useCategoryStore((s) => s.addCategory);
   const removeCategory = useCategoryStore((s) => s.removeCategory);
@@ -130,6 +142,19 @@ export default function HomeScreen() {
   });
   const hasActiveFilters = filterCategory !== null || filterFrequency !== null;
 
+  const notifyChallenges = (category: string, updatedStreak: number) => {
+    // Compute context for challenge tracking after this completion
+    const allActive = habits.filter((h) => h.isActive);
+    const completedNow = allActive.filter((h) =>
+      isHabitCompletedForPeriod(h.frequency, h.completedDates)
+    );
+    const allComplete = completedNow.length >= allActive.length;
+    const totalCompletedToday = completedNow.length;
+    const categoriesCompletedToday = [...new Set(completedNow.map((h) => h.category))];
+    onChallengeHabitCompleted(category, allComplete, totalCompletedToday, categoriesCompletedToday);
+    onChallengeStreakUpdated(updatedStreak);
+  };
+
   const handleToggle = (habitId: string) => {
     const habit = habits.find((h) => h.id === habitId);
     if (!habit) return;
@@ -153,6 +178,7 @@ export default function HomeScreen() {
           incrementHabitsCompleted();
           onHabitCompleted(habit.category);
           onStreakUpdated(updated.currentStreak);
+          notifyChallenges(habit.category, updated.currentStreak);
           checkAchievements();
         }
       }
@@ -166,6 +192,7 @@ export default function HomeScreen() {
           incrementHabitsCompleted();
           onHabitCompleted(habit.category);
           onStreakUpdated(updated.currentStreak);
+          notifyChallenges(habit.category, updated.currentStreak);
           if (habit.frequency === 'one_time') {
             updateHabit(habitId, { isActive: false });
           }
