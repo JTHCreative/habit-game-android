@@ -96,8 +96,8 @@ export function PlayerHeader({
 
       {(hasChallenges || hasHabits) ? (
         <View style={styles.dashboard}>
-          {/* Left – Daily Completion Bonus */}
-          <View style={styles.bonusCol}>
+          {/* Left card – Daily Completion Bonus */}
+          <View style={styles.bonusCard}>
             <FontAwesome
               name={allComplete ? 'check-circle' : 'star'}
               size={24}
@@ -127,18 +127,31 @@ export function PlayerHeader({
             </View>
           </View>
 
-          <View style={styles.dashDivider} />
-
-          {/* Right – Challenge status */}
+          {/* Right card – Challenge status */}
           <TouchableOpacity
-            style={styles.challengeCol}
+            style={styles.challengeCard}
             activeOpacity={0.7}
             onPress={() => router.push('/challenges')}
           >
-            <Text style={styles.challengeTitle}>Challenges</Text>
+            {/* Decorative corner icons */}
+            <View style={styles.challengeDecoTopLeft}>
+              <FontAwesome name="bookmark" size={10} color="rgba(167,139,250,0.3)" />
+            </View>
+            <View style={styles.challengeDecoTopRight}>
+              <FontAwesome name="bookmark" size={10} color="rgba(78,205,196,0.3)" />
+            </View>
 
+            {/* Trophy header */}
+            <View style={styles.challengeHeader}>
+              <FontAwesome name="trophy" size={20} color="#D4A44C" />
+              <Text style={styles.challengeTitle}>Challenges</Text>
+            </View>
+
+            {/* Daily row */}
             <View style={styles.challengeStatusRow}>
-              <FontAwesome name="sun-o" size={16} color="#4ECDC4" />
+              <View style={styles.challengeIconWrap}>
+                <FontAwesome name="certificate" size={18} color="#4ECDC4" />
+              </View>
               <Text style={styles.challengeStatusLabel}>Daily</Text>
               <Text style={[
                 styles.challengeStatusValue,
@@ -148,8 +161,11 @@ export function PlayerHeader({
               </Text>
             </View>
 
+            {/* Weekly row */}
             <View style={styles.challengeStatusRow}>
-              <FontAwesome name="calendar" size={16} color="#A78BFA" />
+              <View style={styles.challengeIconWrap}>
+                <FontAwesome name="shield" size={18} color="#A78BFA" />
+              </View>
               <Text style={styles.challengeStatusLabel}>Weekly</Text>
               <Text style={[
                 styles.challengeStatusValue,
@@ -157,6 +173,15 @@ export function PlayerHeader({
               ]}>
                 {weeklyCompleted}/{weeklyChallenges.length}
               </Text>
+            </View>
+
+            {/* Bottom decorative ribbon */}
+            <View style={styles.challengeRibbon}>
+              <FontAwesome name="star" size={8} color="rgba(212,164,76,0.5)" />
+              <View style={styles.ribbonLine} />
+              <FontAwesome name="diamond" size={7} color="rgba(212,164,76,0.4)" />
+              <View style={styles.ribbonLine} />
+              <FontAwesome name="star" size={8} color="rgba(212,164,76,0.5)" />
             </View>
 
             <Text style={styles.challengeTapHint}>Tap to view</Text>
@@ -271,18 +296,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ── Two-column dashboard ──────────────────────────────
+  // ── Two-card dashboard ──────────────────────────────
   dashboard: {
     flexDirection: 'row',
+    gap: spacing.sm,
+  },
+
+  // Left card – bonus
+  bonusCard: {
+    flex: 1,
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: borderRadius.lg,
     padding: spacing.md,
-    gap: spacing.md,
-  },
-
-  // Left – bonus
-  bonusCol: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
@@ -318,22 +343,44 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  dashDivider: {
-    width: 1,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-  },
-
-  // Right – challenges
-  challengeCol: {
+  // Right card – challenges
+  challengeCard: {
     flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(212,164,76,0.15)',
+    overflow: 'hidden',
+  },
+  challengeDecoTopLeft: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+  },
+  challengeDecoTopRight: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+  },
+  challengeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   challengeTitle: {
     color: 'rgba(255,255,255,0.9)',
     fontSize: fontSize.sm,
     fontWeight: '700',
+  },
+  challengeIconWrap: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   challengeStatusRow: {
     flexDirection: 'row',
@@ -354,6 +401,17 @@ const styles = StyleSheet.create({
   },
   challengeStatusDone: {
     color: '#4CAF50',
+  },
+  challengeRibbon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  ribbonLine: {
+    width: 16,
+    height: 1,
+    backgroundColor: 'rgba(212,164,76,0.25)',
   },
   challengeTapHint: {
     color: 'rgba(255,255,255,0.35)',
