@@ -14,6 +14,7 @@ interface HabitState {
   getCompletedHabitsForDate: (date: string) => Habit[];
   getStreakForHabit: (id: string) => number;
   updateHabit: (id: string, updates: Partial<Habit>) => void;
+  resetAll: () => void;
 }
 
 export const useHabitStore = create<HabitState>()(
@@ -101,6 +102,8 @@ export const useHabitStore = create<HabitState>()(
             h.id === id ? { ...h, ...updates } : h
           ),
         })),
+
+      resetAll: () => set({ habits: [] }),
     }),
     {
       name: 'habit-storage',

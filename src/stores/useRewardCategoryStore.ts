@@ -18,6 +18,7 @@ interface RewardCategoryState {
   addCategory: (name: string, color: string, icon: string) => Category;
   removeCategory: (id: string) => void;
   updateCategory: (id: string, updates: Partial<Omit<Category, 'id'>>) => void;
+  resetAll: () => void;
 }
 
 export const useRewardCategoryStore = create<RewardCategoryState>()(
@@ -49,6 +50,8 @@ export const useRewardCategoryStore = create<RewardCategoryState>()(
             c.id === id ? { ...c, ...updates } : c
           ),
         })),
+
+      resetAll: () => set({ categories: DEFAULT_REWARD_CATEGORIES }),
     }),
     {
       name: 'reward-category-storage',

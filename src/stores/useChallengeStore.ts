@@ -155,6 +155,7 @@ interface ChallengeState {
   onStreakUpdated: (streak: number) => void;
   /** Claim reward for a completed challenge */
   claimChallenge: (challengeId: string) => { tickets: number; xp: number } | null;
+  resetAll: () => void;
 }
 
 export const useChallengeStore = create<ChallengeState>()(
@@ -322,6 +323,9 @@ export const useChallengeStore = create<ChallengeState>()(
 
         return { tickets: challenge.ticketReward, xp: challenge.xpReward };
       },
+
+      resetAll: () =>
+        set({ dailyChallenges: [], weeklyChallenges: [], lastDailyDate: '', lastWeeklyDate: '' }),
     }),
     {
       name: 'challenge-storage',

@@ -21,6 +21,7 @@ interface CategoryState {
   addCategory: (name: string, color: string, icon: string) => Category;
   removeCategory: (id: string) => void;
   updateCategory: (id: string, updates: Partial<Omit<Category, 'id'>>) => void;
+  resetAll: () => void;
 }
 
 export const useCategoryStore = create<CategoryState>()(
@@ -52,6 +53,8 @@ export const useCategoryStore = create<CategoryState>()(
             c.id === id ? { ...c, ...updates } : c
           ),
         })),
+
+      resetAll: () => set({ categories: DEFAULT_CATEGORIES }),
     }),
     {
       name: 'category-storage',

@@ -45,6 +45,7 @@ interface RewardState {
   getActiveInventory: () => InventoryItem[];
   getPurchasedRewards: () => Reward[];
   getAvailableRewards: () => Reward[];
+  resetAll: () => void;
 }
 
 const DEFAULT_REWARDS: Reward[] = [
@@ -307,6 +308,8 @@ export const useRewardStore = create<RewardState>()(
 
       getAvailableRewards: () =>
         get().rewards.filter((r) => r.remainingQuantity > 0),
+
+      resetAll: () => set({ rewards: DEFAULT_REWARDS, inventory: [] }),
     }),
     {
       name: 'reward-storage',

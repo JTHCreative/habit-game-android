@@ -355,6 +355,7 @@ interface PinState {
   collectedCount: () => number;
   /** Assign a pin to a board slot (0-4). Pass null to clear. */
   setBoardSlot: (slot: number, pinId: string | null) => void;
+  resetAll: () => void;
 }
 
 const EMPTY_BOARD: (string | null)[] = [null, null, null, null, null];
@@ -380,6 +381,8 @@ export const usePinStore = create<PinState>()(
         get().collected.some((c) => c.pinId === pinId),
 
       collectedCount: () => get().collected.length,
+
+      resetAll: () => set({ collected: [], board: [...EMPTY_BOARD] }),
 
       setBoardSlot: (slot: number, pinId: string | null) => {
         if (slot < 0 || slot >= PIN_BOARD_SLOTS) return;

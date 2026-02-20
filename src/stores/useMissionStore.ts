@@ -11,6 +11,7 @@ interface MissionState {
   onStreakUpdated: (streak: number) => void;
   claimMissionReward: (missionId: string) => { tickets: number; xp: number } | null;
   getAvailableMissions: (level: number) => Mission[];
+  resetAll: () => void;
 }
 
 const DEFAULT_MISSIONS: Mission[] = [
@@ -264,6 +265,8 @@ export const useMissionStore = create<MissionState>()(
             m.status !== 'locked'
         );
       },
+
+      resetAll: () => set({ missions: DEFAULT_MISSIONS }),
     }),
     {
       name: 'mission-storage',

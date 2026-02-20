@@ -78,6 +78,7 @@ interface SkillTreeState {
   /** Check and unlock any newly earned pins. Returns newly unlocked pin IDs. */
   checkUnlocks: (categoryCompletions: Record<string, number>) => string[];
   isUnlocked: (pinId: string) => boolean;
+  resetAll: () => void;
 }
 
 export const useSkillTreeStore = create<SkillTreeState>()(
@@ -112,6 +113,8 @@ export const useSkillTreeStore = create<SkillTreeState>()(
       },
 
       isUnlocked: (pinId) => !!get().unlocked[pinId],
+
+      resetAll: () => set({ unlocked: {} }),
     }),
     {
       name: 'skill-tree-storage',
