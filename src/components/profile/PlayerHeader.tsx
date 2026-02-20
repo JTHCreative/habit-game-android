@@ -100,13 +100,6 @@ export function PlayerHeader() {
 
         {/* Pin Display */}
         <View style={styles.pinDisplayBoard}>
-          <View style={styles.pinDisplayHeader}>
-            <View style={styles.pinDisplayHeaderLine} />
-            <MaterialCommunityIcons name="pin" size={12} color="rgba(212,164,76,0.6)" />
-            <Text style={styles.pinDisplayTitle}>Pin Display</Text>
-            <MaterialCommunityIcons name="pin" size={12} color="rgba(212,164,76,0.6)" />
-            <View style={styles.pinDisplayHeaderLine} />
-          </View>
           <View style={styles.pinDisplaySlots}>
             {Array.from({ length: PIN_BOARD_SLOTS }).map((_, i) => {
               const pin = getBoardPin(i);
@@ -136,7 +129,9 @@ export function PlayerHeader() {
           </View>
           <View style={styles.pinDisplayFooter}>
             <View style={styles.pinDisplayFooterLine} />
-            <FontAwesome name="diamond" size={6} color="rgba(212,164,76,0.3)" />
+            <MaterialCommunityIcons name="pin" size={10} color="rgba(212,164,76,0.4)" />
+            <Text style={styles.pinDisplayTitle}>Pin Display</Text>
+            <MaterialCommunityIcons name="pin" size={10} color="rgba(212,164,76,0.4)" />
             <View style={styles.pinDisplayFooterLine} />
           </View>
         </View>
@@ -328,19 +323,9 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: 'rgba(212,164,76,0.15)',
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  pinDisplayHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
-  pinDisplayHeaderLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: 'rgba(212,164,76,0.15)',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
   pinDisplayTitle: {
     color: 'rgba(212,164,76,0.7)',
@@ -353,14 +338,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: spacing.md,
-    paddingVertical: spacing.sm,
+    marginBottom: spacing.sm,
   },
   pinSlot: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.1)',
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
@@ -372,9 +357,9 @@ const styles = StyleSheet.create({
   },
   pinSlotGlow: {
     position: 'absolute',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
   },
   pinSlotEmpty: {
     alignItems: 'center',
@@ -384,7 +369,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   pinDisplayFooter: {
     flexDirection: 'row',
@@ -395,7 +380,7 @@ const styles = StyleSheet.create({
   pinDisplayFooterLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(212,164,76,0.1)',
+    backgroundColor: 'rgba(212,164,76,0.12)',
   },
 
   // ── Pin picker modal ──────────────────────────────────
