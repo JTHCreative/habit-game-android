@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CollectedPin, Pin } from '../types';
 import { useSkillTreeStore } from './useSkillTreeStore';
 
-// ── 16 collectible enamel pins ──────────────────────────
+// ── 20 collectible enamel pins ──────────────────────────
 
 export const ALL_PINS: Pin[] = [
   // ── Chinese Zodiac (12) ─────────────────────────────────
@@ -151,6 +151,44 @@ export const ALL_PINS: Pin[] = [
     description: 'Freedom and wisdom of the Air Nomads',
     icon: 'mci:weather-windy',
     color: '#FFB74D',
+    rarity: 'rare',
+    ticketCost: 300,
+  },
+
+  // ── Hogwarts Houses (4) ─────────────────────────────────
+  {
+    id: 'pin_gryffindor',
+    name: 'Gryffindor',
+    description: 'Where dwell the brave at heart, their daring and chivalry set Gryffindors apart',
+    icon: 'mci:shield-sword',
+    color: '#AE0001',
+    rarity: 'rare',
+    ticketCost: 300,
+  },
+  {
+    id: 'pin_hufflepuff',
+    name: 'Hufflepuff',
+    description: 'Those patient Hufflepuffs are true and unafraid of toil',
+    icon: 'mci:sprout',
+    color: '#ECBA22',
+    rarity: 'rare',
+    ticketCost: 300,
+  },
+  {
+    id: 'pin_slytherin',
+    name: 'Slytherin',
+    description: 'Those cunning folk use any means to achieve their ends',
+    icon: 'mci:snake',
+    color: '#1A472A',
+    rarity: 'rare',
+    ticketCost: 300,
+  },
+  {
+    id: 'pin_ravenclaw',
+    name: 'Ravenclaw',
+    description: 'Wit beyond measure is man\'s greatest treasure',
+    icon: 'mci:bird',
+    color: '#0E1A40',
     rarity: 'rare',
     ticketCost: 300,
   },
