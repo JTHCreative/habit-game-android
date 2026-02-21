@@ -39,6 +39,7 @@ export function PlayerHeader() {
   const skillTreeUnlocked = useSkillTreeStore((s) => s.unlocked);
 
   const [editingSlot, setEditingSlot] = useState<number | null>(null);
+  const [tooltipPin, setTooltipPin] = useState<Pin | null>(null);
 
   // Combine shop pins and unlocked skill tree pins
   const shopPins: Pin[] = ALL_PINS.filter((p) =>
@@ -116,15 +117,17 @@ export function PlayerHeader() {
           <View style={styles.pinDisplaySlots}>
             {Array.from({ length: PIN_BOARD_SLOTS }).map((_, i) => {
               const pin = getBoardPin(i);
+              const rarityColor = pin ? RARITY_COLORS[pin.rarity] : undefined;
               return (
                 <TouchableOpacity
                   key={i}
                   style={[
                     styles.pinSlot,
-                    pin && { borderColor: pin.color + '60', borderStyle: 'solid', backgroundColor: pin.color + '20' },
+                    pin && rarityColor && { borderColor: rarityColor, borderStyle: 'solid', backgroundColor: pin.color + '20' },
                   ]}
                   activeOpacity={0.7}
-                  onPress={() => setEditingSlot(i)}
+                  onPress={() => pin ? setTooltipPin(pin) : setEditingSlot(i)}
+                  onLongPress={() => setEditingSlot(i)}
                 >
                   {pin ? (
                     <View style={styles.pinSlotFilled}>
@@ -149,6 +152,35 @@ export function PlayerHeader() {
           </View>
         </View>
       </LinearGradient>
+
+      {/* Pin tooltip modal */}
+      <Modal
+        visible={tooltipPin !== null}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setTooltipPin(null)}
+      >
+        <TouchableOpacity
+          style={styles.tooltipOverlay}
+          activeOpacity={1}
+          onPress={() => setTooltipPin(null)}
+        >
+          {tooltipPin && (
+            <View style={[styles.tooltipCard, { backgroundColor: colors.cardBackground }]}>
+              <View style={[styles.tooltipCircle, { backgroundColor: tooltipPin.color + '25', borderColor: tooltipPin.color }]}>
+                <DynamicIcon name={tooltipPin.icon} size={32} color={tooltipPin.color} />
+              </View>
+              <Text style={[styles.tooltipName, { color: colors.text }]}>{tooltipPin.name}</Text>
+              <View style={[styles.tooltipRarityBadge, { backgroundColor: RARITY_COLORS[tooltipPin.rarity] + '20' }]}>
+                <Text style={[styles.tooltipRarityText, { color: RARITY_COLORS[tooltipPin.rarity] }]}>
+                  {tooltipPin.rarity}
+                </Text>
+              </View>
+              <Text style={[styles.tooltipDesc, { color: colors.textSecondary }]}>{tooltipPin.description}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </Modal>
 
       {/* Pin picker modal */}
       <Modal
@@ -207,7 +239,7 @@ export function PlayerHeader() {
                         styles.pinPickerItem,
                         {
                           backgroundColor: colors.cardBackground,
-                          borderColor: isOnBoard ? colors.border : pin.color,
+                          borderColor: isOnBoard ? colors.border : rarityColor,
                         },
                       ]}
                       activeOpacity={0.7}
@@ -393,6 +425,55 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 1,
     backgroundColor: 'rgba(212,164,76,0.12)',
+  },
+
+  // ── Pin tooltip ─────────────────────────────────────
+  tooltipOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tooltipCard: {
+    borderRadius: borderRadius.xl,
+    padding: spacing.xl,
+    alignItems: 'center',
+    gap: spacing.sm,
+    width: 240,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  tooltipCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tooltipName: {
+    fontSize: fontSize.lg,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  tooltipRarityBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+  },
+  tooltipRarityText: {
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  tooltipDesc: {
+    fontSize: fontSize.sm,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 
   // ── Pin picker modal ──────────────────────────────────
