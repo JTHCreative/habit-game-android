@@ -73,6 +73,7 @@ const HABIT_TYPES: { value: HabitType; label: string; icon: string }[] = [
 
 const DAILY_BONUS_TICKETS = 10;
 const DAILY_BONUS_XP = 25;
+const DAILY_BONUS_MIN_HABITS = 5;
 
 export default function HomeScreen() {
   const colorScheme = useColorScheme() ?? 'light';
@@ -120,7 +121,7 @@ export default function HomeScreen() {
     if (dailyBonusPaidRef.current !== null) return;
     const allHabits = useHabitStore.getState().habits;
     const dailyOnly = allHabits.filter((h) => h.isActive && h.frequency === 'daily');
-    if (dailyOnly.length === 0) return;
+    if (dailyOnly.length < DAILY_BONUS_MIN_HABITS) return;
     const allDone = dailyOnly.every((h) =>
       isHabitCompletedForPeriod(h.frequency, h.completedDates)
     );
@@ -160,7 +161,9 @@ export default function HomeScreen() {
   const completedDailyToday = activeDailyHabits.filter((h) =>
     isHabitCompletedForPeriod(h.frequency, h.completedDates)
   );
-  const allDailyComplete = activeDailyHabits.length > 0 && completedDailyToday.length >= activeDailyHabits.length;
+  const allDailyComplete = activeDailyHabits.length >= DAILY_BONUS_MIN_HABITS && completedDailyToday.length >= activeDailyHabits.length;
+  const dailyBonusClaimed = dailyBonusPaidRef.current === today;
+  const dailyBonusEligible = activeDailyHabits.length >= DAILY_BONUS_MIN_HABITS;
 
   const filteredHabits = activeHabits.filter((h) => {
     if (filterCategory && (h.customCategoryId || h.category) !== filterCategory) return false;
@@ -193,12 +196,12 @@ export default function HomeScreen() {
     onChallengeHabitCompleted(category, allComplete, totalCompletedToday, categoriesCompletedToday);
     onChallengeStreakUpdated(updatedStreak);
 
-    // Award daily-all-complete bonus (once per day, only daily-frequency habits)
+    // Award daily-all-complete bonus (once per day, minimum 5 daily habits)
     const dailyOnly = allActive.filter((h) => h.frequency === 'daily');
     const dailyDone = dailyOnly.filter((h) =>
       isHabitCompletedForPeriod(h.frequency, h.completedDates)
     );
-    const dailyAllDone = dailyOnly.length > 0 && dailyDone.length >= dailyOnly.length;
+    const dailyAllDone = dailyOnly.length >= DAILY_BONUS_MIN_HABITS && dailyDone.length >= dailyOnly.length;
     if (dailyAllDone && dailyBonusPaidRef.current !== today) {
       dailyBonusPaidRef.current = today;
       addXP(DAILY_BONUS_XP);
@@ -479,6 +482,79 @@ export default function HomeScreen() {
                   </Text>
                 </TouchableOpacity>
               )}
+            </View>
+          )}
+
+          {/* Daily bonus indicator */}
+          {dailyBonusEligible && (
+            <View
+              style={[
+                styles.dailyBonusBanner,
+                {
+                  backgroundColor: allDailyComplete
+                    ? (dailyBonusClaimed ? colors.surfaceElevated : '#F59E0B' + '18')
+                    : colors.surfaceElevated,
+                  borderColor: allDailyComplete
+                    ? (dailyBonusClaimed ? colors.border : '#F59E0B')
+                    : colors.border,
+                },
+              ]}
+            >
+              <View style={styles.dailyBonusLeft}>
+                <FontAwesome
+                  name={allDailyComplete ? 'check-circle' : 'star'}
+                  size={16}
+                  color={allDailyComplete ? '#F59E0B' : colors.textMuted}
+                />
+                <View>
+                  <Text style={[styles.dailyBonusTitle, { color: allDailyComplete ? '#F59E0B' : colors.textSecondary }]}>
+                    {allDailyComplete
+                      ? (dailyBonusClaimed ? 'Daily Bonus Claimed!' : 'Daily Bonus Unlocked!')
+                      : 'Daily Bonus'}
+                  </Text>
+                  <Text style={[styles.dailyBonusProgress, { color: colors.textMuted }]}>
+                    {allDailyComplete
+                      ? `All ${activeDailyHabits.length} daily habits complete`
+                      : `${completedDailyToday.length}/${activeDailyHabits.length} daily habits`}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.dailyBonusRewards}>
+                <Text style={[styles.dailyBonusRewardText, { color: allDailyComplete ? '#F59E0B' : colors.textMuted }]}>
+                  +{DAILY_BONUS_XP} XP
+                </Text>
+                <Text style={[styles.dailyBonusRewardText, { color: allDailyComplete ? '#F59E0B' : colors.textMuted }]}>
+                  +{DAILY_BONUS_TICKETS} Tickets
+                </Text>
+              </View>
+            </View>
+          )}
+          {!dailyBonusEligible && activeDailyHabits.length > 0 && (
+            <View
+              style={[
+                styles.dailyBonusBanner,
+                { backgroundColor: colors.surfaceElevated, borderColor: colors.border },
+              ]}
+            >
+              <View style={styles.dailyBonusLeft}>
+                <FontAwesome name="lock" size={14} color={colors.textMuted} />
+                <View>
+                  <Text style={[styles.dailyBonusTitle, { color: colors.textMuted }]}>
+                    Daily Bonus
+                  </Text>
+                  <Text style={[styles.dailyBonusProgress, { color: colors.textMuted }]}>
+                    Add {DAILY_BONUS_MIN_HABITS - activeDailyHabits.length} more daily habit{DAILY_BONUS_MIN_HABITS - activeDailyHabits.length !== 1 ? 's' : ''} to unlock
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.dailyBonusRewards}>
+                <Text style={[styles.dailyBonusRewardText, { color: colors.textMuted }]}>
+                  +{DAILY_BONUS_XP} XP
+                </Text>
+                <Text style={[styles.dailyBonusRewardText, { color: colors.textMuted }]}>
+                  +{DAILY_BONUS_TICKETS} Tickets
+                </Text>
+              </View>
             </View>
           )}
 
@@ -1228,6 +1304,38 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     fontWeight: '600',
   },
+  // ── Daily bonus banner ────────────────────────────────
+  dailyBonusBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    marginBottom: spacing.md,
+  },
+  dailyBonusLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flex: 1,
+  },
+  dailyBonusTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+  },
+  dailyBonusProgress: {
+    fontSize: fontSize.xs,
+    marginTop: 1,
+  },
+  dailyBonusRewards: {
+    alignItems: 'flex-end',
+  },
+  dailyBonusRewardText: {
+    fontSize: fontSize.xs,
+    fontWeight: '700',
+  },
+
   addButton: {
     width: 40,
     height: 40,
