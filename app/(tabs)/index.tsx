@@ -112,8 +112,20 @@ export default function HomeScreen() {
   const removeCategory = useCategoryStore((s) => s.removeCategory);
   const updateCategory = useCategoryStore((s) => s.updateCategory);
 
-  // Track whether we've already paid the daily-all-complete bonus today
+  // Track whether we've already paid the daily-all-complete bonus today.
+  // Initialize to today if daily habits are already all complete on mount,
+  // so completing a non-daily habit doesn't re-trigger the bonus.
   const dailyBonusPaidRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (dailyBonusPaidRef.current !== null) return;
+    const allHabits = useHabitStore.getState().habits;
+    const dailyOnly = allHabits.filter((h) => h.isActive && h.frequency === 'daily');
+    if (dailyOnly.length === 0) return;
+    const allDone = dailyOnly.every((h) =>
+      isHabitCompletedForPeriod(h.frequency, h.completedDates)
+    );
+    if (allDone) dailyBonusPaidRef.current = today;
+  }, []);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
@@ -169,7 +181,9 @@ export default function HomeScreen() {
 
   const notifyChallenges = (category: string, updatedStreak: number) => {
     // Compute context for challenge tracking after this completion
-    const allActive = habits.filter((h) => h.isActive);
+    // Read fresh habits from the store to avoid stale closure data
+    const freshHabits = useHabitStore.getState().habits;
+    const allActive = freshHabits.filter((h) => h.isActive);
     const completedNow = allActive.filter((h) =>
       isHabitCompletedForPeriod(h.frequency, h.completedDates)
     );
