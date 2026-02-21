@@ -145,6 +145,8 @@ interface ChallengeState {
   weeklyChallenges: Challenge[];
   lastDailyDate: string;
   lastWeeklyDate: string;
+  /** Dates (PST) on which the user has logged in this week */
+  loginDates: string[];
   /** Call on app open / navigation to challenges tab */
   refreshChallenges: () => void;
   /** Record a login for the day (call on app open) */
@@ -165,6 +167,7 @@ export const useChallengeStore = create<ChallengeState>()(
       weeklyChallenges: [],
       lastDailyDate: '',
       lastWeeklyDate: '',
+      loginDates: [],
 
       refreshChallenges: () => {
         const today = getPSTDateString();
@@ -181,44 +184,57 @@ export const useChallengeStore = create<ChallengeState>()(
           lastDailyDate = today;
         }
 
+        let loginDates = state.loginDates;
+
         if (lastWeeklyDate !== weekStart) {
           weeklyChallenges = selectChallengesForPeriod(WEEKLY_POOL, weekStart, 3);
           lastWeeklyDate = weekStart;
+          loginDates = [];
         }
 
-        set({ dailyChallenges, weeklyChallenges, lastDailyDate, lastWeeklyDate });
+        set({ dailyChallenges, weeklyChallenges, lastDailyDate, lastWeeklyDate, loginDates });
       },
 
       recordLogin: () => {
         const today = getPSTDateString();
         set((state) => {
-          // Mark daily login challenge
-          const dailyChallenges = state.dailyChallenges.map((c) => {
-            if (c.poolId === 'd_login' && c.status === 'active') {
-              const newCount = Math.min(c.currentCount + 1, c.targetCount);
-              return {
-                ...c,
-                currentCount: newCount,
-                status: (newCount >= c.targetCount ? 'completed' : 'active') as ChallengeStatus,
-              };
-            }
-            return c;
-          });
+          const alreadyLoggedToday = state.loginDates.includes(today);
 
-          // Increment weekly login challenge
-          const weeklyChallenges = state.weeklyChallenges.map((c) => {
-            if (c.poolId === 'w_login_7' && c.status === 'active') {
-              const newCount = Math.min(c.currentCount + 1, c.targetCount);
-              return {
-                ...c,
-                currentCount: newCount,
-                status: (newCount >= c.targetCount ? 'completed' : 'active') as ChallengeStatus,
-              };
-            }
-            return c;
-          });
+          // Mark daily login challenge (only once per day)
+          const dailyChallenges = alreadyLoggedToday
+            ? state.dailyChallenges
+            : state.dailyChallenges.map((c) => {
+                if (c.poolId === 'd_login' && c.status === 'active') {
+                  const newCount = Math.min(c.currentCount + 1, c.targetCount);
+                  return {
+                    ...c,
+                    currentCount: newCount,
+                    status: (newCount >= c.targetCount ? 'completed' : 'active') as ChallengeStatus,
+                  };
+                }
+                return c;
+              });
 
-          return { dailyChallenges, weeklyChallenges };
+          // Increment weekly login challenge (only once per unique day)
+          const weeklyChallenges = alreadyLoggedToday
+            ? state.weeklyChallenges
+            : state.weeklyChallenges.map((c) => {
+                if (c.poolId === 'w_login_7' && c.status === 'active') {
+                  const newCount = Math.min(c.currentCount + 1, c.targetCount);
+                  return {
+                    ...c,
+                    currentCount: newCount,
+                    status: (newCount >= c.targetCount ? 'completed' : 'active') as ChallengeStatus,
+                  };
+                }
+                return c;
+              });
+
+          const loginDates = alreadyLoggedToday
+            ? state.loginDates
+            : [...state.loginDates, today];
+
+          return { dailyChallenges, weeklyChallenges, loginDates };
         });
       },
 
@@ -325,11 +341,20 @@ export const useChallengeStore = create<ChallengeState>()(
       },
 
       resetAll: () =>
-        set({ dailyChallenges: [], weeklyChallenges: [], lastDailyDate: '', lastWeeklyDate: '' }),
+        set({ dailyChallenges: [], weeklyChallenges: [], lastDailyDate: '', lastWeeklyDate: '', loginDates: [] }),
     }),
     {
       name: 'challenge-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      merge: (persisted, current) => {
+        const state = persisted as any;
+        if (!state) return current as ChallengeState;
+        return {
+          ...(current as ChallengeState),
+          ...state,
+          loginDates: state.loginDates ?? [],
+        };
+      },
     }
   )
 );
