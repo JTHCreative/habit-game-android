@@ -14,8 +14,8 @@ export const ALL_PINS: Pin[] = [
     description: 'Clever and resourceful, first of the zodiac',
     icon: 'mci:rodent',
     color: '#78909C',
-    rarity: 'common',
-    ticketCost: 75,
+    rarity: 'uncommon',
+    ticketCost: 150,
   },
   {
     id: 'pin_ox',
@@ -23,8 +23,8 @@ export const ALL_PINS: Pin[] = [
     description: 'Diligent and dependable, strength without end',
     icon: 'mci:cow',
     color: '#8D6E63',
-    rarity: 'common',
-    ticketCost: 75,
+    rarity: 'uncommon',
+    ticketCost: 150,
   },
   {
     id: 'pin_tiger',
@@ -41,8 +41,8 @@ export const ALL_PINS: Pin[] = [
     description: 'Gentle and elegant, leaping through moonlight',
     icon: 'mci:rabbit',
     color: '#F5C6AA',
-    rarity: 'common',
-    ticketCost: 75,
+    rarity: 'uncommon',
+    ticketCost: 150,
   },
   {
     id: 'pin_dragon',
@@ -50,8 +50,8 @@ export const ALL_PINS: Pin[] = [
     description: 'Majestic and powerful, the emperor of the zodiac',
     icon: 'mci:unicorn',
     color: '#FFD700',
-    rarity: 'legendary',
-    ticketCost: 600,
+    rarity: 'uncommon',
+    ticketCost: 150,
   },
   {
     id: 'pin_snake',
@@ -77,8 +77,8 @@ export const ALL_PINS: Pin[] = [
     description: 'Creative and gentle, at peace with the world',
     icon: 'mci:sheep',
     color: '#CE93D8',
-    rarity: 'common',
-    ticketCost: 75,
+    rarity: 'uncommon',
+    ticketCost: 150,
   },
   {
     id: 'pin_monkey',
@@ -86,8 +86,8 @@ export const ALL_PINS: Pin[] = [
     description: 'Witty and inventive, the trickster of the zodiac',
     icon: 'mci:panda',
     color: '#FF7043',
-    rarity: 'rare',
-    ticketCost: 300,
+    rarity: 'uncommon',
+    ticketCost: 150,
   },
   {
     id: 'pin_rooster',
@@ -104,8 +104,8 @@ export const ALL_PINS: Pin[] = [
     description: 'Loyal and honest, a faithful companion',
     icon: 'mci:dog',
     color: '#D4A44C',
-    rarity: 'common',
-    ticketCost: 75,
+    rarity: 'uncommon',
+    ticketCost: 150,
   },
   {
     id: 'pin_pig',
@@ -113,8 +113,8 @@ export const ALL_PINS: Pin[] = [
     description: 'Generous and compassionate, last of the zodiac',
     icon: 'mci:pig',
     color: '#F48FB1',
-    rarity: 'common',
-    ticketCost: 75,
+    rarity: 'uncommon',
+    ticketCost: 150,
   },
 
   // ── Avatar Benders (4) ──────────────────────────────────
