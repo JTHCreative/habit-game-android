@@ -89,7 +89,7 @@ export default function RewardsScreen() {
   const skillTreeUnlocked = useSkillTreeStore((s) => s.unlocked);
 
   const [activeTab, setActiveTab] = useState<'store' | 'inventory'>('store');
-  const [storeSubTab, setStoreSubTab] = useState<'shop' | 'pins'>('shop');
+  const [storeSubTab, setStoreSubTab] = useState<'shop' | 'pins'>('pins');
   const [pinFilter, setPinFilter] = useState<PinRarity | 'all'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -299,32 +299,8 @@ export default function RewardsScreen() {
       >
         {activeTab === 'store' ? (
           <>
-            {/* Sub-tabs: Shop / Pins */}
+            {/* Sub-tabs: Pins / Prizes */}
             <View style={styles.storeSubTabRow}>
-              <TouchableOpacity
-                style={[
-                  styles.storeSubTab,
-                  {
-                    backgroundColor: storeSubTab === 'shop' ? colors.primary + '20' : 'transparent',
-                    borderColor: storeSubTab === 'shop' ? colors.primary : 'transparent',
-                  },
-                ]}
-                onPress={() => setStoreSubTab('shop')}
-              >
-                <FontAwesome
-                  name="shopping-cart"
-                  size={12}
-                  color={storeSubTab === 'shop' ? colors.primary : colors.textSecondary}
-                />
-                <Text
-                  style={[
-                    styles.storeSubTabText,
-                    { color: storeSubTab === 'shop' ? colors.primary : colors.textSecondary },
-                  ]}
-                >
-                  Shop
-                </Text>
-              </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.storeSubTab,
@@ -337,7 +313,7 @@ export default function RewardsScreen() {
               >
                 <MaterialCommunityIcons
                   name="pin"
-                  size={12}
+                  size={14}
                   color={storeSubTab === 'pins' ? colors.primary : colors.textSecondary}
                 />
                 <Text
@@ -347,6 +323,30 @@ export default function RewardsScreen() {
                   ]}
                 >
                   Pins ({collectedPins.length}/{ALL_PINS.length})
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.storeSubTab,
+                  {
+                    backgroundColor: storeSubTab === 'shop' ? colors.primary + '20' : 'transparent',
+                    borderColor: storeSubTab === 'shop' ? colors.primary : 'transparent',
+                  },
+                ]}
+                onPress={() => setStoreSubTab('shop')}
+              >
+                <FontAwesome
+                  name="trophy"
+                  size={14}
+                  color={storeSubTab === 'shop' ? colors.primary : colors.textSecondary}
+                />
+                <Text
+                  style={[
+                    styles.storeSubTabText,
+                    { color: storeSubTab === 'shop' ? colors.primary : colors.textSecondary },
+                  ]}
+                >
+                  Prizes
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1380,16 +1380,17 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   storeSubTab: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
+    paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
     borderWidth: 1,
   },
   storeSubTabText: {
-    fontSize: fontSize.xs,
+    fontSize: fontSize.sm,
     fontWeight: '700',
   },
 
