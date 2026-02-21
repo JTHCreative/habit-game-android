@@ -88,7 +88,7 @@ export default function RewardsScreen() {
   const hasPin = usePinStore((s) => s.hasPin);
   const skillTreeUnlocked = useSkillTreeStore((s) => s.unlocked);
 
-  const [activeTab, setActiveTab] = useState<'store' | 'inventory'>('store');
+  const [showInventory, setShowInventory] = useState(false);
   const [storeSubTab, setStoreSubTab] = useState<'shop' | 'pins'>('pins');
   const [pinFilter, setPinFilter] = useState<PinRarity | 'all'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -226,7 +226,16 @@ export default function RewardsScreen() {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <FontAwesome name="ticket" size={28} color="#FFF" />
+          <View style={styles.headerTopRow}>
+            <FontAwesome name="ticket" size={28} color="#FFF" />
+            <TouchableOpacity
+              style={styles.inventoryHeaderButton}
+              onPress={() => setShowInventory(true)}
+            >
+              <FontAwesome name="archive" size={14} color="#FFF" />
+              <Text style={styles.inventoryHeaderButtonText}>Inventory</Text>
+            </TouchableOpacity>
+          </View>
           <Text style={styles.headerTitle}>Rewards</Text>
           <View style={styles.headerBottomRow}>
             <View style={styles.balanceRow}>
@@ -237,58 +246,11 @@ export default function RewardsScreen() {
         </View>
       </LinearGradient>
 
-      <View style={styles.tabRow}>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === 'store' && { backgroundColor: colors.primary },
-          ]}
-          onPress={() => setActiveTab('store')}
-        >
-          <FontAwesome
-            name="shopping-cart"
-            size={14}
-            color={activeTab === 'store' ? '#FFF' : colors.textSecondary}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              { color: activeTab === 'store' ? '#FFF' : colors.textSecondary },
-            ]}
-          >
-            Store
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === 'inventory' && { backgroundColor: colors.primary },
-          ]}
-          onPress={() => setActiveTab('inventory')}
-        >
-          <FontAwesome
-            name="archive"
-            size={14}
-            color={activeTab === 'inventory' ? '#FFF' : colors.textSecondary}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              { color: activeTab === 'inventory' ? '#FFF' : colors.textSecondary },
-            ]}
-          >
-            Inventory
-          </Text>
-        </TouchableOpacity>
-      </View>
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {activeTab === 'store' ? (
-          <>
             {/* Sub-tabs: Pins / Prizes */}
             <View style={styles.storeSubTabRow}>
               <TouchableOpacity
@@ -434,9 +396,34 @@ export default function RewardsScreen() {
                 </View>
               </>
             )}
-          </>
-        ) : (
-          <>
+      </ScrollView>
+
+      {/* Inventory Modal */}
+      <Modal
+        visible={showInventory}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowInventory(false)}
+      >
+        <SafeAreaView
+          style={[styles.modalContainer, { backgroundColor: colors.background }]}
+        >
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setShowInventory(false)}>
+              <Text style={[styles.modalCancel, { color: colors.textSecondary }]}>
+                Close
+              </Text>
+            </TouchableOpacity>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Inventory
+            </Text>
+            <View style={{ width: 50 }} />
+          </View>
+
+          <ScrollView
+            style={styles.modalBody}
+            contentContainerStyle={styles.modalBodyContent}
+          >
             {/* Claimed Rewards section */}
             <View style={styles.inventorySectionHeader}>
               <FontAwesome name="gift" size={16} color="#D4A44C" />
@@ -518,9 +505,9 @@ export default function RewardsScreen() {
                 })}
               </View>
             )}
-          </>
-        )}
-      </ScrollView>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
 
       {/* Add/Edit Reward Modal */}
       <Modal
@@ -1092,24 +1079,24 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     fontWeight: '500',
   },
-  tabRow: {
+  headerTopRow: {
     flexDirection: 'row',
-    padding: spacing.md,
-    gap: spacing.sm,
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  tab: {
-    flex: 1,
+  inventoryHeaderButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
   },
-  tabText: {
+  inventoryHeaderButtonText: {
+    color: '#FFF',
     fontSize: fontSize.sm,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   scrollView: {
     flex: 1,
