@@ -233,16 +233,6 @@ export default function RewardsScreen() {
               <Text style={styles.balanceLabel}>Your Balance:</Text>
               <TicketBadge amount={profile.tickets} size="large" variant="dark" />
             </View>
-            <TouchableOpacity
-              style={styles.addHeaderButton}
-              onPress={() => {
-                resetModal();
-                setShowAddModal(true);
-              }}
-            >
-              <FontAwesome name="plus" size={14} color="#FFF" />
-              <Text style={styles.addHeaderButtonText}>Add Reward</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </LinearGradient>
@@ -352,7 +342,20 @@ export default function RewardsScreen() {
             </View>
 
             {storeSubTab === 'shop' ? (
-              displayed.length === 0 ? (
+              <>
+                <TouchableOpacity
+                  style={[styles.addRewardButton, { borderColor: colors.border }]}
+                  onPress={() => {
+                    resetModal();
+                    setShowAddModal(true);
+                  }}
+                >
+                  <FontAwesome name="plus" size={14} color={colors.primary} />
+                  <Text style={[styles.addRewardButtonText, { color: colors.primary }]}>
+                    Add Reward
+                  </Text>
+                </TouchableOpacity>
+                {displayed.length === 0 ? (
                 <View style={[styles.emptyState, { borderColor: colors.border }]}>
                   <FontAwesome
                     name="shopping-cart"
@@ -376,7 +379,8 @@ export default function RewardsScreen() {
                     onLongPress={() => handleEditReward(reward)}
                   />
                 ))
-              )
+              )}
+              </>
             ) : (
               <>
                 {/* Collection progress */}
@@ -1072,20 +1076,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.sm,
   },
-  addHeaderButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-  },
-  addHeaderButtonText: {
-    color: '#FFF',
-    fontSize: fontSize.sm,
-    fontWeight: '700',
-  },
   headerTitle: {
     color: '#FFF',
     fontSize: fontSize.xxxl,
@@ -1391,6 +1381,23 @@ const styles = StyleSheet.create({
   },
   storeSubTabText: {
     fontSize: fontSize.sm,
+    fontWeight: '700',
+  },
+
+  // ── Add Reward button (Prizes sub-tab) ─────────────────
+  addRewardButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    marginBottom: spacing.md,
+  },
+  addRewardButtonText: {
+    fontSize: fontSize.md,
     fontWeight: '700',
   },
 
