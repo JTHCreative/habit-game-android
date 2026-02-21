@@ -178,7 +178,7 @@ export const ALL_PINS: Pin[] = [
     id: 'pin_slytherin',
     name: 'Slytherin',
     description: 'Those cunning folk use any means to achieve their ends',
-    icon: 'mci:snake',
+    icon: 'mci:alpha-s-circle',
     color: '#1A472A',
     rarity: 'rare',
     ticketCost: 300,
