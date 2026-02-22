@@ -18,6 +18,7 @@ import { getPSTDateString, isHabitCompletedForPeriod } from '@/src/utils/levels'
 
 const DAILY_BONUS_TICKETS = 10;
 const DAILY_BONUS_XP = 25;
+const DAILY_BONUS_MIN_HABITS = 5;
 
 export default function ChallengesScreen() {
   const colorScheme = useColorScheme() ?? 'light';
@@ -34,8 +35,8 @@ export default function ChallengesScreen() {
   const completedDailyToday = activeDailyHabits.filter((h) =>
     isHabitCompletedForPeriod(h.frequency, h.completedDates)
   );
-  const allDailyComplete = activeDailyHabits.length > 0 && completedDailyToday.length >= activeDailyHabits.length;
-  const hasHabits = activeDailyHabits.length > 0;
+  const dailyBonusEligible = activeDailyHabits.length >= DAILY_BONUS_MIN_HABITS;
+  const allDailyComplete = dailyBonusEligible && completedDailyToday.length >= activeDailyHabits.length;
 
   const dailyChallenges = useChallengeStore((s) => s.dailyChallenges);
   const weeklyChallenges = useChallengeStore((s) => s.weeklyChallenges);
@@ -85,8 +86,8 @@ export default function ChallengesScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Daily Completion Bonus */}
-        {hasHabits && (
-          <View style={[styles.bonusCard, { backgroundColor: colors.cardBackground, borderColor: colors.borderLight }]}>
+        {dailyBonusEligible && (
+          <View style={[styles.bonusCard, { backgroundColor: colors.cardBackground, borderColor: allDailyComplete ? '#F59E0B' : colors.borderLight }]}>
             <View style={styles.bonusIconRow}>
               <FontAwesome
                 name={allDailyComplete ? 'check-circle' : 'star'}
@@ -113,6 +114,27 @@ export default function ChallengesScreen() {
               <Text style={[styles.bonusRewardVal, { color: colors.textSecondary }]}>+{DAILY_BONUS_TICKETS}</Text>
               <FontAwesome name="bolt" size={14} color="#E87D2F" />
               <Text style={[styles.bonusRewardVal, { color: colors.textSecondary }]}>+{DAILY_BONUS_XP} XP</Text>
+            </View>
+          </View>
+        )}
+        {!dailyBonusEligible && activeDailyHabits.length > 0 && (
+          <View style={[styles.bonusCard, { backgroundColor: colors.cardBackground, borderColor: colors.borderLight }]}>
+            <View style={styles.bonusIconRow}>
+              <FontAwesome name="lock" size={28} color={colors.textMuted} />
+            </View>
+            <Text style={[styles.bonusLabel, { color: colors.textMuted }]}>
+              Daily Bonus
+            </Text>
+            <View style={styles.bonusProgress}>
+              <Text style={[styles.bonusProgressText, { color: colors.textMuted }]}>
+                Add {DAILY_BONUS_MIN_HABITS - activeDailyHabits.length} more daily habit{DAILY_BONUS_MIN_HABITS - activeDailyHabits.length !== 1 ? 's' : ''} to unlock
+              </Text>
+            </View>
+            <View style={styles.bonusRewardRow}>
+              <FontAwesome name="ticket" size={14} color={colors.textMuted} />
+              <Text style={[styles.bonusRewardVal, { color: colors.textMuted }]}>+{DAILY_BONUS_TICKETS}</Text>
+              <FontAwesome name="bolt" size={14} color={colors.textMuted} />
+              <Text style={[styles.bonusRewardVal, { color: colors.textMuted }]}>+{DAILY_BONUS_XP} XP</Text>
             </View>
           </View>
         )}
