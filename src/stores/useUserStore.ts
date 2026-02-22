@@ -107,7 +107,7 @@ function createDefaultProfile(): UserProfile {
     displayName: 'Adventurer',
     level: 1,
     currentXP: 0,
-    xpToNextLevel: 100,
+    xpToNextLevel: getXPForLevel(1),
     totalXPEarned: 0,
     tickets: 0,
     totalTicketsEarned: 0,
@@ -423,6 +423,7 @@ export const useUserStore = create<UserState>()(
             tickets: p.tickets ?? p.tokens ?? 0,
             totalTicketsEarned: p.totalTicketsEarned ?? p.totalTokensEarned ?? 0,
             totalTicketsSpent: p.totalTicketsSpent ?? p.totalTokensSpent ?? 0,
+            xpToNextLevel: getXPForLevel(p.level ?? 1),
           },
           achievements: (state.achievements || (current as UserState).achievements).map((a: any) => ({
             ...a,
