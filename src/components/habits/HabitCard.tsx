@@ -15,12 +15,14 @@ const FREQUENCY_LABELS: Record<string, string> = {
   one_time: 'One-time',
   daily: 'Daily',
   weekly: 'Weekly',
+  monthly: 'Monthly',
 };
 
 const FREQUENCY_COLORS: Record<string, string> = {
   one_time: '#9CA3AF',
   daily: '#3B82F6',
   weekly: '#8B5CF6',
+  monthly: '#EC4899',
 };
 
 interface HabitCardProps {
