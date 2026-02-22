@@ -16,6 +16,7 @@ import { InventoryCard } from '@/src/components/rewards/InventoryCard';
 import { PinCard } from '@/src/components/rewards/PinCard';
 import { TicketBadge } from '@/src/components/common/TicketBadge';
 import { DynamicIcon } from '@/src/components/common/DynamicIcon';
+import { PinClaimSplash } from '@/src/components/common/PinClaimSplash';
 import { useRewardStore } from '@/src/stores/useRewardStore';
 import { useUserStore } from '@/src/stores/useUserStore';
 import { useRewardCategoryStore, DEFAULT_REWARD_CATEGORY_IDS } from '@/src/stores/useRewardCategoryStore';
@@ -26,7 +27,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { borderRadius, fontSize, spacing } from '@/constants/Spacing';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { ReplenishPeriod, Reward, RewardCategory, PinRarity } from '@/src/types';
+import { Pin, ReplenishPeriod, Reward, RewardCategory, PinRarity } from '@/src/types';
 
 const COLOR_PALETTE = [
   '#FF6B6B', '#4ECDC4', '#A78BFA', '#F59E0B', '#3B82F6',
@@ -91,6 +92,7 @@ export default function RewardsScreen() {
   const [showInventory, setShowInventory] = useState(false);
   const [storeSubTab, setStoreSubTab] = useState<'shop' | 'pins'>('pins');
   const [pinFilter, setPinFilter] = useState<PinRarity | 'all'>('all');
+  const [claimedPin, setClaimedPin] = useState<Pin | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingRewardId, setEditingRewardId] = useState<string | null>(null);
@@ -137,6 +139,7 @@ export default function RewardsScreen() {
     const success = spendTickets(pin.ticketCost);
     if (success) {
       purchasePin(pinId);
+      setClaimedPin(pin);
     }
   };
 
@@ -1039,6 +1042,10 @@ export default function RewardsScreen() {
           </ScrollView>
         </SafeAreaView>
       </Modal>
+
+      {claimedPin && (
+        <PinClaimSplash pin={claimedPin} onFinish={() => setClaimedPin(null)} />
+      )}
     </View>
   );
 }
