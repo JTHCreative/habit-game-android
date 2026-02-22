@@ -49,6 +49,8 @@ export interface MissionObjective {
   currentCount: number;
   habitCategory?: HabitCategory;
   trackStreak?: boolean;
+  /** Tracks unique completion keys to prevent double-counting on toggle */
+  completedHabitIds?: string[];
 }
 
 export interface Mission {

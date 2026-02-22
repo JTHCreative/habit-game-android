@@ -93,6 +93,7 @@ export default function HomeScreen() {
   const decrementHabitsCompleted = useUserStore((s) => s.decrementHabitsCompleted);
 
   const onHabitCompleted = useMissionStore((s) => s.onHabitCompleted);
+  const onHabitUncompleted = useMissionStore((s) => s.onHabitUncompleted);
   const onStreakUpdated = useMissionStore((s) => s.onStreakUpdated);
   const checkAchievements = useAchievementChecker();
   const checkSkillTreeUnlocks = useSkillTreeStore((s) => s.checkUnlocks);
@@ -100,6 +101,7 @@ export default function HomeScreen() {
   const refreshChallenges = useChallengeStore((s) => s.refreshChallenges);
   const recordLogin = useChallengeStore((s) => s.recordLogin);
   const onChallengeHabitCompleted = useChallengeStore((s) => s.onHabitCompleted);
+  const onChallengeHabitUncompleted = useChallengeStore((s) => s.onHabitUncompleted);
   const onChallengeStreakUpdated = useChallengeStore((s) => s.onStreakUpdated);
 
   // Refresh challenges and record login on mount (app open)
@@ -182,9 +184,7 @@ export default function HomeScreen() {
     checkSkillTreeUnlocks(counts);
   };
 
-  const notifyChallenges = (category: string, updatedStreak: number) => {
-    // Compute context for challenge tracking after this completion
-    // Read fresh habits from the store to avoid stale closure data
+  const computeChallengeContext = () => {
     const freshHabits = useHabitStore.getState().habits;
     const allActive = freshHabits.filter((h) => h.isActive);
     const completedNow = allActive.filter((h) =>
@@ -193,10 +193,17 @@ export default function HomeScreen() {
     const allComplete = allActive.length > 0 && completedNow.length >= allActive.length;
     const totalCompletedToday = completedNow.length;
     const categoriesCompletedToday = [...new Set(completedNow.map((h) => h.category))];
-    onChallengeHabitCompleted(category, allComplete, totalCompletedToday, categoriesCompletedToday);
+    return { allComplete, totalCompletedToday, categoriesCompletedToday };
+  };
+
+  const notifyChallenges = (habitId: string, category: string, updatedStreak: number) => {
+    const { allComplete, totalCompletedToday, categoriesCompletedToday } = computeChallengeContext();
+    onChallengeHabitCompleted(habitId, category, allComplete, totalCompletedToday, categoriesCompletedToday);
     onChallengeStreakUpdated(updatedStreak);
 
     // Award daily-all-complete bonus (once per day, minimum 5 daily habits)
+    const freshHabits = useHabitStore.getState().habits;
+    const allActive = freshHabits.filter((h) => h.isActive);
     const dailyOnly = allActive.filter((h) => h.frequency === 'daily');
     const dailyDone = dailyOnly.filter((h) =>
       isHabitCompletedForPeriod(h.frequency, h.completedDates)
@@ -207,6 +214,12 @@ export default function HomeScreen() {
       addXP(DAILY_BONUS_XP);
       addTickets(DAILY_BONUS_TICKETS);
     }
+  };
+
+  const notifyUnchecked = (habitId: string, category: HabitCategory) => {
+    onHabitUncompleted(habitId, category);
+    const { allComplete, totalCompletedToday, categoriesCompletedToday } = computeChallengeContext();
+    onChallengeHabitUncompleted(habitId, category, allComplete, totalCompletedToday, categoriesCompletedToday);
   };
 
   const handleToggle = (habitId: string) => {
@@ -222,6 +235,7 @@ export default function HomeScreen() {
           removeXP(updated.xpReward);
           removeTickets(updated.ticketReward);
           decrementHabitsCompleted();
+          notifyUnchecked(habitId, habit.category);
         }
       } else {
         // Mark: add today's PST date
@@ -230,9 +244,9 @@ export default function HomeScreen() {
           addXP(updated.xpReward);
           addTickets(updated.ticketReward);
           incrementHabitsCompleted();
-          onHabitCompleted(habit.category);
+          onHabitCompleted(habitId, habit.category);
           onStreakUpdated(updated.currentStreak);
-          notifyChallenges(habit.category, updated.currentStreak);
+          notifyChallenges(habitId, habit.category, updated.currentStreak);
           checkAchievements();
           checkSkillTree();
         }
@@ -245,9 +259,9 @@ export default function HomeScreen() {
           addXP(updated.xpReward);
           addTickets(updated.ticketReward);
           incrementHabitsCompleted();
-          onHabitCompleted(habit.category);
+          onHabitCompleted(habitId, habit.category);
           onStreakUpdated(updated.currentStreak);
-          notifyChallenges(habit.category, updated.currentStreak);
+          notifyChallenges(habitId, habit.category, updated.currentStreak);
           if (habit.frequency === 'one_time') {
             updateHabit(habitId, { isActive: false });
           }
@@ -257,6 +271,7 @@ export default function HomeScreen() {
           removeXP(updated.xpReward);
           removeTickets(updated.ticketReward);
           decrementHabitsCompleted();
+          notifyUnchecked(habitId, habit.category);
         }
       }
     }

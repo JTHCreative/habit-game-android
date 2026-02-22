@@ -20,6 +20,8 @@ export interface Challenge {
   xpReward: number;
   /** Pinned challenges always appear (e.g. "Log In") */
   pinned?: boolean;
+  /** Tracks unique completion keys to prevent double-counting on toggle */
+  completedHabitIds?: string[];
 }
 
 interface ChallengePool {
@@ -152,7 +154,9 @@ interface ChallengeState {
   /** Record a login for the day (call on app open) */
   recordLogin: () => void;
   /** Called when a habit is completed */
-  onHabitCompleted: (category: string, allHabitsComplete: boolean, totalCompletedToday: number, categoriesCompletedToday: string[]) => void;
+  onHabitCompleted: (habitId: string, category: string, allHabitsComplete: boolean, totalCompletedToday: number, categoriesCompletedToday: string[]) => void;
+  /** Called when a habit is uncompleted */
+  onHabitUncompleted: (habitId: string, category: string, allHabitsComplete: boolean, totalCompletedToday: number, categoriesCompletedToday: string[]) => void;
   /** Called when streak changes */
   onStreakUpdated: (streak: number) => void;
   /** Claim reward for a completed challenge */
@@ -238,14 +242,27 @@ export const useChallengeStore = create<ChallengeState>()(
         });
       },
 
-      onHabitCompleted: (category, allHabitsComplete, totalCompletedToday, categoriesCompletedToday) => {
+      onHabitCompleted: (habitId, category, allHabitsComplete, totalCompletedToday, categoriesCompletedToday) => {
+        const today = getPSTDateString();
         const updateChallenge = (c: Challenge): Challenge => {
           if (c.status !== 'active') return c;
 
-          let increment = 0;
           const pid = c.poolId;
 
-          // Daily challenges
+          // State-derived challenges (no dedup needed, always recomputed)
+          if (pid === 'd_all_habits' && allHabitsComplete) {
+            return { ...c, currentCount: c.targetCount, status: 'completed' };
+          }
+          if (pid === 'd_variety' || pid === 'w_categories_3' || pid === 'w_categories_5') {
+            return {
+              ...c,
+              currentCount: Math.min(categoriesCompletedToday.length, c.targetCount),
+              status: categoriesCompletedToday.length >= c.targetCount ? 'completed' : 'active',
+            };
+          }
+
+          // Counter-based challenges: check for duplicate
+          let increment = 0;
           if (pid === 'd_complete_1' || pid === 'd_complete_3' || pid === 'd_complete_5') increment = 1;
           else if (pid === 'd_health' && category === 'health') increment = 1;
           else if (pid === 'd_fitness' && category === 'fitness') increment = 1;
@@ -260,18 +277,6 @@ export const useChallengeStore = create<ChallengeState>()(
             const hour = new Date().getHours();
             if (hour < 12) increment = 1;
           }
-          else if (pid === 'd_all_habits' && allHabitsComplete) {
-            return { ...c, currentCount: c.targetCount, status: 'completed' };
-          }
-          else if (pid === 'd_variety') {
-            return {
-              ...c,
-              currentCount: Math.min(categoriesCompletedToday.length, c.targetCount),
-              status: categoriesCompletedToday.length >= c.targetCount ? 'completed' : 'active',
-            };
-          }
-
-          // Weekly challenges
           else if (pid === 'w_complete_10' || pid === 'w_complete_20' || pid === 'w_complete_30') increment = 1;
           else if (pid === 'w_health_5' && category === 'health') increment = 1;
           else if (pid === 'w_fitness_5' && category === 'fitness') increment = 1;
@@ -280,20 +285,65 @@ export const useChallengeStore = create<ChallengeState>()(
           else if (pid === 'w_learning_5' && category === 'learning') increment = 1;
           else if (pid === 'w_social_3' && category === 'social') increment = 1;
           else if (pid === 'w_finance_3' && category === 'finance') increment = 1;
-          else if (pid === 'w_categories_3' || pid === 'w_categories_5') {
+          else if (pid === 'w_perfect_3' && allHabitsComplete) increment = 1;
+
+          if (increment === 0) return c;
+
+          // Use habitId for daily (one completion per habit per day),
+          // habitId_date for weekly (same habit on different days counts separately)
+          const ids = c.completedHabitIds || [];
+          const key = c.type === 'daily' ? habitId : `${habitId}_${today}`;
+          if (ids.includes(key)) return c; // already counted
+
+          const newCount = Math.min(c.currentCount + increment, c.targetCount);
+          return {
+            ...c,
+            currentCount: newCount,
+            completedHabitIds: [...ids, key],
+            status: newCount >= c.targetCount ? 'completed' : 'active',
+          };
+        };
+
+        set((state) => ({
+          dailyChallenges: state.dailyChallenges.map(updateChallenge),
+          weeklyChallenges: state.weeklyChallenges.map(updateChallenge),
+        }));
+      },
+
+      onHabitUncompleted: (habitId, category, allHabitsComplete, totalCompletedToday, categoriesCompletedToday) => {
+        const today = getPSTDateString();
+        const updateChallenge = (c: Challenge): Challenge => {
+          if (c.status === 'claimed') return c;
+
+          const pid = c.poolId;
+
+          // State-derived challenges: recompute from current state
+          if (pid === 'd_all_habits') {
+            const newCount = allHabitsComplete ? c.targetCount : 0;
+            return {
+              ...c,
+              currentCount: newCount,
+              status: newCount >= c.targetCount ? 'completed' : 'active',
+            };
+          }
+          if (pid === 'd_variety' || pid === 'w_categories_3' || pid === 'w_categories_5') {
             return {
               ...c,
               currentCount: Math.min(categoriesCompletedToday.length, c.targetCount),
               status: categoriesCompletedToday.length >= c.targetCount ? 'completed' : 'active',
             };
           }
-          else if (pid === 'w_perfect_3' && allHabitsComplete) increment = 1;
 
-          if (increment === 0) return c;
-          const newCount = Math.min(c.currentCount + increment, c.targetCount);
+          // Counter-based challenges: remove from tracked IDs and decrement
+          const ids = c.completedHabitIds || [];
+          const key = c.type === 'daily' ? habitId : `${habitId}_${today}`;
+          if (!ids.includes(key)) return c; // wasn't counted
+
+          const newCount = Math.max(c.currentCount - 1, 0);
           return {
             ...c,
             currentCount: newCount,
+            completedHabitIds: ids.filter((id) => id !== key),
             status: newCount >= c.targetCount ? 'completed' : 'active',
           };
         };

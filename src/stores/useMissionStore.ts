@@ -2,12 +2,14 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Mission, MissionDifficulty, HabitCategory } from '../types';
+import { getPSTDateString } from '../utils/levels';
 
 interface MissionState {
   missions: Mission[];
   initializeDefaultMissions: () => void;
   updateMissionProgress: (missionId: string, objectiveId: string, increment: number) => void;
-  onHabitCompleted: (category: HabitCategory) => void;
+  onHabitCompleted: (habitId: string, category: HabitCategory) => void;
+  onHabitUncompleted: (habitId: string, category: HabitCategory) => void;
   onStreakUpdated: (streak: number) => void;
   claimMissionReward: (missionId: string) => { tickets: number; xp: number } | null;
   getAvailableMissions: (level: number) => Mission[];
@@ -192,7 +194,9 @@ export const useMissionStore = create<MissionState>()(
           }),
         })),
 
-      onHabitCompleted: (category) =>
+      onHabitCompleted: (habitId, category) => {
+        const today = getPSTDateString();
+        const key = `${habitId}_${today}`;
         set((state) => ({
           missions: state.missions.map((mission) => {
             if (mission.status === 'completed' || mission.status === 'claimed' || mission.status === 'locked')
@@ -202,10 +206,15 @@ export const useMissionStore = create<MissionState>()(
             const objectives = mission.objectives.map((obj) => {
               if (obj.trackStreak) return obj;
               if (obj.currentCount >= obj.targetCount) return obj;
-              // Match if no category filter or matching category
               if (obj.habitCategory && obj.habitCategory !== category) return obj;
+              const ids = obj.completedHabitIds || [];
+              if (ids.includes(key)) return obj; // already counted
               changed = true;
-              return { ...obj, currentCount: Math.min(obj.currentCount + 1, obj.targetCount) };
+              return {
+                ...obj,
+                currentCount: Math.min(obj.currentCount + 1, obj.targetCount),
+                completedHabitIds: [...ids, key],
+              };
             });
 
             if (!changed) return mission;
@@ -217,7 +226,42 @@ export const useMissionStore = create<MissionState>()(
               status: allComplete ? ('completed' as const) : ('in_progress' as const),
             };
           }),
-        })),
+        }));
+      },
+
+      onHabitUncompleted: (habitId, category) => {
+        const today = getPSTDateString();
+        const key = `${habitId}_${today}`;
+        set((state) => ({
+          missions: state.missions.map((mission) => {
+            if (mission.status === 'claimed' || mission.status === 'locked')
+              return mission;
+
+            let changed = false;
+            const objectives = mission.objectives.map((obj) => {
+              if (obj.trackStreak) return obj;
+              if (obj.habitCategory && obj.habitCategory !== category) return obj;
+              const ids = obj.completedHabitIds || [];
+              if (!ids.includes(key)) return obj; // wasn't counted
+              changed = true;
+              return {
+                ...obj,
+                currentCount: Math.max(obj.currentCount - 1, 0),
+                completedHabitIds: ids.filter((id) => id !== key),
+              };
+            });
+
+            if (!changed) return mission;
+
+            const allComplete = objectives.every((obj) => obj.currentCount >= obj.targetCount);
+            return {
+              ...mission,
+              objectives,
+              status: allComplete ? ('completed' as const) : ('in_progress' as const),
+            };
+          }),
+        }));
+      },
 
       onStreakUpdated: (streak) =>
         set((state) => ({
