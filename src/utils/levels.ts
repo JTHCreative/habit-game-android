@@ -1,7 +1,7 @@
 import { HabitFrequency } from '../types';
 
 export const FREQUENCY_REWARDS: Record<HabitFrequency, { tickets: number; xp: number }> = {
-  daily: { tickets: 1, xp: 5 },
+  daily: { tickets: 2, xp: 5 },
   weekly: { tickets: 10, xp: 20 },
   monthly: { tickets: 40, xp: 50 },
   one_time: { tickets: 1, xp: 5 },
@@ -60,8 +60,19 @@ const TITLES: Record<number, string> = {
   50: 'Atomic Legend',
 };
 
+// XP required per level: 25 → 5000 over 50 levels
+const XP_TABLE: number[] = [
+  25, 50, 100, 110, 120, 130, 140, 150, 165, 180,       // 1-10
+  195, 210, 230, 250, 270, 295, 320, 350, 380, 410,      // 11-20
+  445, 485, 530, 575, 625, 680, 735, 800, 870, 945,      // 21-30
+  1030, 1120, 1215, 1320, 1435, 1560, 1695, 1840, 2000, 2175, // 31-40
+  2365, 2570, 2790, 3035, 3300, 3585, 3895, 4235, 4600, 5000, // 41-50
+];
+
 export function getXPForLevel(level: number): number {
-  return Math.floor(100 * Math.pow(1.15, level - 1));
+  if (level < 1) return XP_TABLE[0];
+  if (level > XP_TABLE.length) return XP_TABLE[XP_TABLE.length - 1];
+  return XP_TABLE[level - 1];
 }
 
 export function getTitleForLevel(level: number): string {
