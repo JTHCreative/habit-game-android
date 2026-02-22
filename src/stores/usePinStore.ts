@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CollectedPin, Pin } from '../types';
 import { useSkillTreeStore } from './useSkillTreeStore';
 
-// ── 20 collectible enamel pins ──────────────────────────
+// ── 29 collectible enamel pins ──────────────────────────
 
 export const ALL_PINS: Pin[] = [
   // ── Chinese Zodiac (12) ─────────────────────────────────
@@ -113,6 +113,89 @@ export const ALL_PINS: Pin[] = [
     description: 'Generous and compassionate, last of the zodiac',
     icon: 'mci:pig',
     color: '#F48FB1',
+    rarity: 'uncommon',
+    ticketCost: 150,
+  },
+
+  // ── Enneagram Types (9) ────────────────────────────────
+  {
+    id: 'pin_ennea_1',
+    name: 'Type 1 – The Reformer',
+    description: 'Principled and purposeful, striving for integrity',
+    icon: 'mci:scale-balance',
+    color: '#5C6BC0',
+    rarity: 'uncommon',
+    ticketCost: 150,
+  },
+  {
+    id: 'pin_ennea_2',
+    name: 'Type 2 – The Helper',
+    description: 'Generous and warm-hearted, driven by love',
+    icon: 'heart',
+    color: '#E91E63',
+    rarity: 'uncommon',
+    ticketCost: 150,
+  },
+  {
+    id: 'pin_ennea_3',
+    name: 'Type 3 – The Achiever',
+    description: 'Ambitious and adaptable, reaching for the summit',
+    icon: 'trophy',
+    color: '#FFB300',
+    rarity: 'uncommon',
+    ticketCost: 150,
+  },
+  {
+    id: 'pin_ennea_4',
+    name: 'Type 4 – The Individualist',
+    description: 'Expressive and introspective, beautifully unique',
+    icon: 'mci:palette',
+    color: '#AB47BC',
+    rarity: 'uncommon',
+    ticketCost: 150,
+  },
+  {
+    id: 'pin_ennea_5',
+    name: 'Type 5 – The Investigator',
+    description: 'Perceptive and curious, seeking understanding',
+    icon: 'mci:microscope',
+    color: '#26A69A',
+    rarity: 'uncommon',
+    ticketCost: 150,
+  },
+  {
+    id: 'pin_ennea_6',
+    name: 'Type 6 – The Loyalist',
+    description: 'Committed and reliable, courage under pressure',
+    icon: 'shield',
+    color: '#42A5F5',
+    rarity: 'uncommon',
+    ticketCost: 150,
+  },
+  {
+    id: 'pin_ennea_7',
+    name: 'Type 7 – The Enthusiast',
+    description: 'Spontaneous and versatile, chasing every adventure',
+    icon: 'mci:lightning-bolt',
+    color: '#FFA726',
+    rarity: 'uncommon',
+    ticketCost: 150,
+  },
+  {
+    id: 'pin_ennea_8',
+    name: 'Type 8 – The Challenger',
+    description: 'Powerful and decisive, protecting what matters',
+    icon: 'mci:arm-flex',
+    color: '#EF5350',
+    rarity: 'uncommon',
+    ticketCost: 150,
+  },
+  {
+    id: 'pin_ennea_9',
+    name: 'Type 9 – The Peacemaker',
+    description: 'Easygoing and harmonious, bringing people together',
+    icon: 'mci:peace',
+    color: '#66BB6A',
     rarity: 'uncommon',
     ticketCost: 150,
   },
