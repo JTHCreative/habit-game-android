@@ -17,6 +17,7 @@ import { PinCard } from '@/src/components/rewards/PinCard';
 import { TicketBadge } from '@/src/components/common/TicketBadge';
 import { DynamicIcon } from '@/src/components/common/DynamicIcon';
 import { PinClaimSplash } from '@/src/components/common/PinClaimSplash';
+import { PrizeClaimSplash } from '@/src/components/common/PrizeClaimSplash';
 import { useRewardStore } from '@/src/stores/useRewardStore';
 import { useUserStore } from '@/src/stores/useUserStore';
 import { useRewardCategoryStore, DEFAULT_REWARD_CATEGORY_IDS } from '@/src/stores/useRewardCategoryStore';
@@ -93,6 +94,7 @@ export default function RewardsScreen() {
   const [storeSubTab, setStoreSubTab] = useState<'shop' | 'pins'>('pins');
   const [pinFilter, setPinFilter] = useState<PinRarity | 'all'>('all');
   const [claimedPin, setClaimedPin] = useState<Pin | null>(null);
+  const [claimedReward, setClaimedReward] = useState<Reward | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingRewardId, setEditingRewardId] = useState<string | null>(null);
@@ -130,6 +132,7 @@ export default function RewardsScreen() {
     const success = spendTickets(reward.ticketCost);
     if (success) {
       purchaseReward(rewardId);
+      setClaimedReward(reward);
     }
   };
 
@@ -1045,6 +1048,10 @@ export default function RewardsScreen() {
 
       {claimedPin && (
         <PinClaimSplash pin={claimedPin} onFinish={() => setClaimedPin(null)} />
+      )}
+
+      {claimedReward && (
+        <PrizeClaimSplash reward={claimedReward} onFinish={() => setClaimedReward(null)} />
       )}
     </View>
   );
